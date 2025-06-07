@@ -1,4 +1,4 @@
-module github.com/nicoberocal/galaxyCore
+module github.com/nicoberrocal/galaxyCore
 
 go 1.24.0
 

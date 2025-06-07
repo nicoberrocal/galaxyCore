@@ -1,7 +1,7 @@
 package orbitables
 
 import (
-	b "github.com/nicoberocal/galaxyCore/buildings"
+	b "github.com/nicoberrocal/galaxyCore/buildings"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
