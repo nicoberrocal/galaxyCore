@@ -19,6 +19,6 @@ type PlayerAction struct {
 	Finised     time.Time     `bson:"finished"`              // When the action should be processed
 	CreatedAt   time.Time     `bson:"createdAt"`             // When the action was created
 	ProcessedAt time.Time     `bson:"processedAt,omitempty"` // When the action was processed
-	Version     int           `bson:"version"`               // For optimistic locking
+	Version     int64         `bson:"version"`               // For optimistic locking
 	Payload     bson.D        `bson:"payload,omitempty"`     // Additional action-specific data
 }
