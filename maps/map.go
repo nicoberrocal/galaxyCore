@@ -7,6 +7,9 @@ type MongoMap struct {
 	ReadableId int64          `bson:"readableId,omitempty"`
 	CreatorID  bson.ObjectID  `bson:"creatorId,omitempty"`
 	Players    []PlayerConfig `bson:"players"`
+	GameName   string         `bson:"gameName"`
+	QPlayers   int8           `bson:"qPlayers"`
+	PeaceDays  int8           `bson:"peaceDays"`
 }
 type PlayerConfig struct {
 	PlayerID bson.ObjectID `bson:"playerId,omitempty"`
