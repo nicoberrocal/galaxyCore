@@ -8,12 +8,16 @@ import (
 
 // Define the structs
 type System struct {
-	ID      bson.ObjectID `bson:"_id,omitempty"`
-	X       float64       `bson:"x"`
-	Y       float64       `bson:"y"`
-	MapID   bson.ObjectID `bson:"mapId,omitempty"`
-	Name    string        `bson:"name"`
-	Texture string        `bson:"texture"`
+	ID       bson.ObjectID `bson:"_id,omitempty"`
+	X        float64       `bson:"x"`
+	Y        float64       `bson:"y"`
+	MapID    bson.ObjectID `bson:"mapId,omitempty"`
+	Name     string        `bson:"name"`
+	Texture  string        `bson:"texture"`
+	Metals   int64         `bson:"metals"`
+	Crystals int64         `bson:"crystals"`
+	Hydrogen int64         `bson:"hydrogen"`
+	Plasma   int64         `bson:"plasma"`
 }
 
 type Planet struct {
