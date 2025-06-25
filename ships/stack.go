@@ -8,6 +8,7 @@ const (
 	Drone     ShipType = "drone"
 	Scout     ShipType = "scout"
 	Fighter   ShipType = "fighter"
+	Bomber    ShipType = "bomber"
 	Carrier   ShipType = "carrier"
 	Destroyer ShipType = "destroyer"
 )
