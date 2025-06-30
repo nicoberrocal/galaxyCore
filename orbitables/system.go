@@ -71,11 +71,11 @@ type Planet struct {
 	ID                  bson.ObjectID         `bson:"_id,omitempty"`
 	SystemID            bson.ObjectID         `bson:"systemId,omitempty"`
 	Name                string                `bson:"name"`
-	NorthPole           b.EnergyBuilding      `bson:"northPole"`
-	Left                b.EnergyBuilding      `bson:"left"`
-	Right               b.EnergyBuilding      `bson:"right"`
-	Back                b.EnergyBuilding      `bson:"back"`
-	Front               b.EnergyBuilding      `bson:"front"`
+	NorthPole           b.Building            `bson:"northPole"`
+	Left                b.Building            `bson:"left"`
+	Right               b.Building            `bson:"right"`
+	Back                b.Building            `bson:"back"`
+	Front               b.Building            `bson:"front"`
 	ShipYard            b.ShipYard            `bson:"shipyard"`
 	ParticleAccelerator b.ParticleAccelerator `bson:"particleAccelerator"`
 	FusionReactor       b.FusionReactor       `bson:"fusionReactor"`

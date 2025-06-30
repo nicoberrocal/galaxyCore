@@ -2,3 +2,8 @@
 .idea/vcs.xml
 .idea/modules.xml
 ships/ship2.go
+orbitables/mongo_example.go
+orbitables/mongo_test.go
+orbitables/planet_mongo.go
+orbitables/planet_helpers.go
+MONGODB_INTEGRATION.md
