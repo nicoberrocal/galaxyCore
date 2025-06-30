@@ -11,6 +11,4 @@ type Asteroid struct {
 	Texture            string             `bson:"texture"`
 	ResourceExtraction ResourceExtraction `bson:"resourceExtraction"`
 	CollisionRadius    float64            `bson:"collisionRadius"`
-	TotalMetal         int64              `bson:"totalMetal"`
-	TotalCrystal       int64              `bson:"totalCrystal"`
 }

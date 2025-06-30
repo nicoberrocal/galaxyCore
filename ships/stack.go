@@ -17,6 +17,26 @@ const (
 	Destroyer ShipType = "destroyer"
 )
 
+// ShipStack represents a fleet that is NOT currently defending a system
+// When a stack colonizes a system, it gets embedded in the system's DefendingFleet
+// and this document is deleted (hybrid approach)
+// Battles in free space/mining locations are handled by updating this document directly
+type ShipStack struct {
+	ID        bson.ObjectID `bson:"_id,omitempty"`
+	PlayerID  bson.ObjectID `bson:"playerId"`
+	MapID     bson.ObjectID `bson:"mapId"`
+	PositionX float64       `bson:"x"`
+	PositionY float64       `bson:"y"`
+
+	// Fleet composition
+	Ships     map[ShipType][]HPBucket `bson:"ships"`     // HP bucketed ships
+	CreatedAt time.Time               `bson:"createdAt"` // tick timestamp
+
+	// Current activity and movement
+	Movement MovementState `bson:"movement"`
+	Battle   BattleState   `bson:"battle"` // Combat state for free space battles
+}
+
 type HPBucket struct {
 	HP    int `bson:"hp"`    // full HP of that ship
 	Count int `bson:"count"` // how many ships at this HP
@@ -41,24 +61,4 @@ type MovementState struct {
 	TargetY    float64       `bson:"targetY,omitempty"`
 	StartedAt  time.Time     `bson:"startedAt,omitempty"` // When current action started
 	Activity   string        `bson:"activity,omitempty"`  // "mining_metal", "mining_crystal", "mining_hydrogen"
-}
-
-// ShipStack represents a fleet that is NOT currently defending a system
-// When a stack colonizes a system, it gets embedded in the system's DefendingFleet
-// and this document is deleted (hybrid approach)
-// Battles in free space/mining locations are handled by updating this document directly
-type ShipStack struct {
-	ID        bson.ObjectID `bson:"_id,omitempty"`
-	PlayerID  bson.ObjectID `bson:"playerId"`
-	MapID     bson.ObjectID `bson:"mapId"`
-	PositionX float64       `bson:"x"`
-	PositionY float64       `bson:"y"`
-
-	// Fleet composition
-	Ships     map[ShipType][]HPBucket `bson:"ships"`     // HP bucketed ships
-	CreatedAt time.Time               `bson:"createdAt"` // tick timestamp
-
-	// Current activity and movement
-	Movement MovementState `bson:"movement"`
-	Battle   BattleState   `bson:"battle"` // Combat state for free space battles
 }
