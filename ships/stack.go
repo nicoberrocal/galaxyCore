@@ -1,6 +1,10 @@
 package ships
 
-import "go.mongodb.org/mongo-driver/v2/bson"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+)
 
 type ShipType string
 
@@ -18,13 +22,43 @@ type HPBucket struct {
 	Count int `bson:"count"` // how many ships at this HP
 }
 
+// BattleState tracks combat information for stacks in free space or mining locations
+type BattleState struct {
+	IsInCombat      bool            `bson:"isInCombat"`                // Currently engaged in battle
+	EnemyStackID    []bson.ObjectID `bson:"enemyStackId,omitempty"`    // Opponent stack ID
+	EnemyPlayerID   []bson.ObjectID `bson:"enemyPlayerId,omitempty"`   // Opponent player ID
+	BattleStartedAt time.Time       `bson:"battleStartedAt,omitempty"` // When battle began
+	BattleLocation  string          `bson:"battleLocation,omitempty"`  // "empty_space", "asteroid", "nebula"
+	LocationID      bson.ObjectID   `bson:"locationId,omitempty"`      // ID of asteroid/nebula if applicable
+}
+
+// MovementState tracks what the stack is currently doing in free space or at mining locations
+type MovementState struct {
+	State      string        `bson:"state"`                // "traveling", "mining", "idle", "in_combat"
+	TargetID   bson.ObjectID `bson:"targetId,omitempty"`   // Target for movement/mining
+	TargetType string        `bson:"targetType,omitempty"` // "asteroid", "nebula", "coordinate"
+	TargetX    float64       `bson:"targetX,omitempty"`    // Target coordinates
+	TargetY    float64       `bson:"targetY,omitempty"`
+	StartedAt  time.Time     `bson:"startedAt,omitempty"` // When current action started
+	Activity   string        `bson:"activity,omitempty"`  // "mining_metal", "mining_crystal", "mining_hydrogen"
+}
+
+// ShipStack represents a fleet that is NOT currently defending a system
+// When a stack colonizes a system, it gets embedded in the system's DefendingFleet
+// and this document is deleted (hybrid approach)
+// Battles in free space/mining locations are handled by updating this document directly
 type ShipStack struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
 	PlayerID  bson.ObjectID `bson:"playerId"`
 	MapID     bson.ObjectID `bson:"mapId"`
 	PositionX float64       `bson:"x"`
 	PositionY float64       `bson:"y"`
-	// One entry per ship type
+
+	// Fleet composition
 	Ships     map[ShipType][]HPBucket `bson:"ships"`     // HP bucketed ships
-	CreatedAt int64                   `bson:"createdAt"` // tick timestamp
+	CreatedAt time.Time               `bson:"createdAt"` // tick timestamp
+
+	// Current activity and movement
+	Movement MovementState `bson:"movement"`
+	Battle   BattleState   `bson:"battle"` // Combat state for free space battles
 }

@@ -90,7 +90,7 @@ var Ships = []Ship{
 	},
 	{
 		ShipType:          "Carrier",
-		AttackType:        "Laser",
+		AttackType:        "Antimatter",
 		LaserShield:       40,
 		NuclearShield:     35,
 		AntimatterShield:  45,
@@ -98,7 +98,7 @@ var Ships = []Ship{
 		VisibilityRange:   80,
 		AttackRange:       45,
 		HP:                400,
-		AttackDamage:      15,
+		AttackDamage:      20,
 		AttackInterval:    1.0,
 		SpecialAbility:    "FTL Jump",
 		AbilityCooldown:   24.0, // 24 hours

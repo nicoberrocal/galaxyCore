@@ -1,6 +1,10 @@
 package buildings
 
-import "go.mongodb.org/mongo-driver/v2/bson"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+)
 
 // Shared interface — useful for matching types, even if logic is reimplemented
 type Building interface {
@@ -9,9 +13,16 @@ type Building interface {
 
 // Core building structs with only fields and bson tags — NO METHODS
 type BaseBuilding struct {
-	Name  string  `bson:"name"`
-	Level int     `bson:"level"`
-	Queue []Queue `bson:"queue"`
+	Name            string    `bson:"name"`
+	Level           int       `bson:"level"`
+	ConstuctionTime time.Time `bson:"constuctionTime"`
+	Queue           []Queue   `bson:"queue"`
+	Upkeep          int       `bson:"upkeep"`
+}
+
+type MineBuilding struct {
+	BaseBuilding
+	Production int `bson:"production"`
 }
 
 type EnergyBuilding struct {
@@ -52,4 +63,12 @@ type HydroElectricDam struct {
 
 type Balloon struct {
 	EnergyBuilding
+}
+
+type CrystalMine struct {
+	MineBuilding
+}
+
+type MetalMine struct {
+	MineBuilding
 }
