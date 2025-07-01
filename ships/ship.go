@@ -24,8 +24,8 @@ type Ship struct {
 	CanTransport      []string
 }
 
-var Ships = []Ship{
-	{
+var Ships = map[ShipType]Ship{
+	Drone: {
 		ShipType:          "Drone",
 		AttackType:        "Laser",
 		LaserShield:       5,
@@ -46,7 +46,7 @@ var Ships = []Ship{
 		TransportCapacity: 0,
 		CanTransport:      []string{},
 	},
-	{
+	Fighter: {
 		ShipType:          "Fighter",
 		AttackType:        "Nuclear",
 		LaserShield:       30,
@@ -67,7 +67,7 @@ var Ships = []Ship{
 		TransportCapacity: 0,
 		CanTransport:      []string{},
 	},
-	{
+	Scout: {
 		ShipType:          "Scout",
 		AttackType:        "Laser",
 		LaserShield:       10,
@@ -88,7 +88,7 @@ var Ships = []Ship{
 		TransportCapacity: 0,
 		CanTransport:      []string{},
 	},
-	{
+	Carrier: {
 		ShipType:          "Carrier",
 		AttackType:        "Antimatter",
 		LaserShield:       40,
@@ -109,7 +109,7 @@ var Ships = []Ship{
 		TransportCapacity: 20,
 		CanTransport:      []string{"Drone", "Fighter", "Scout"},
 	},
-	{
+	Bomber: {
 		ShipType:          "Bomber",
 		AttackType:        "Antimatter",
 		LaserShield:       35,
@@ -130,7 +130,7 @@ var Ships = []Ship{
 		TransportCapacity: 0,
 		CanTransport:      []string{},
 	},
-	{
+	Destroyer: {
 		ShipType:          "Destroyer",
 		AttackType:        "Nuclear",
 		LaserShield:       45,
