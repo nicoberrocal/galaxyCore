@@ -70,6 +70,7 @@ type System struct {
 type Planet struct {
 	ID                  bson.ObjectID         `bson:"_id,omitempty"`
 	SystemID            bson.ObjectID         `bson:"systemId,omitempty"`
+	MapID               bson.ObjectID         `bson:"mapId,omitempty"`
 	Name                string                `bson:"name"`
 	NorthPole           b.Building            `bson:"northPole"`
 	Left                b.Building            `bson:"left"`
