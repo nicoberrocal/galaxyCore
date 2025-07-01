@@ -68,20 +68,109 @@ type System struct {
 // 4. If Planet.SystemID is nil → Planet is unclaimed/orphaned
 // Planet is more economic than systems, it has energy and material buildings, logistic hubs, and a shipyard
 type Planet struct {
-	ID                  bson.ObjectID         `bson:"_id,omitempty"`
-	SystemID            bson.ObjectID         `bson:"systemId,omitempty"`
-	MapID               bson.ObjectID         `bson:"mapId,omitempty"`
-	Name                string                `bson:"name"`
-	NorthPole           b.Building            `bson:"northPole"`
-	Left                b.Building            `bson:"left"`
-	Right               b.Building            `bson:"right"`
-	Back                b.Building            `bson:"back"`
-	Front               b.Building            `bson:"front"`
-	ShipYard            b.ShipYard            `bson:"shipyard"`
-	ParticleAccelerator b.ParticleAccelerator `bson:"particleAccelerator"`
-	FusionReactor       b.FusionReactor       `bson:"fusionReactor"`
-	Metals              int64                 `bson:"metals"`
-	Crystals            int64                 `bson:"crystals"`
-	Hydrogen            int64                 `bson:"hydrogen"`
-	Plasma              int64                 `bson:"plasma"`
+	ID                  bson.ObjectID `bson:"_id,omitempty"`
+	SystemID            bson.ObjectID `bson:"systemId,omitempty"`
+	MapID               bson.ObjectID `bson:"mapId,omitempty"`
+	Name                string        `bson:"name"`
+	NorthPole           bson.M        `bson:"northPole"`
+	Left                bson.M        `bson:"left"`
+	Right               bson.M        `bson:"right"`
+	Back                bson.M        `bson:"back"`
+	Front               bson.M        `bson:"front"`
+	ShipYard            bson.M        `bson:"shipyard"`
+	ParticleAccelerator bson.M        `bson:"particleAccelerator"`
+	FusionReactor       bson.M        `bson:"fusionReactor"`
+	Metals              int64         `bson:"metals"`
+	Crystals            int64         `bson:"crystals"`
+	Hydrogen            int64         `bson:"hydrogen"`
+	Plasma              int64         `bson:"plasma"`
+}
+
+// Helper methods to work with buildings as interfaces
+func (p *Planet) GetNorthPole() (b.Building, error) {
+	if p.NorthPole == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.NorthPole)
+}
+
+func (p *Planet) SetNorthPole(building b.Building) {
+	p.NorthPole = b.BuildingToBSON(building)
+}
+
+func (p *Planet) GetLeft() (b.Building, error) {
+	if p.Left == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.Left)
+}
+
+func (p *Planet) SetLeft(building b.Building) {
+	p.Left = b.BuildingToBSON(building)
+}
+
+func (p *Planet) GetRight() (b.Building, error) {
+	if p.Right == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.Right)
+}
+
+func (p *Planet) SetRight(building b.Building) {
+	p.Right = b.BuildingToBSON(building)
+}
+
+func (p *Planet) GetBack() (b.Building, error) {
+	if p.Back == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.Back)
+}
+
+func (p *Planet) SetBack(building b.Building) {
+	p.Back = b.BuildingToBSON(building)
+}
+
+func (p *Planet) GetFront() (b.Building, error) {
+	if p.Front == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.Front)
+}
+
+func (p *Planet) SetFront(building b.Building) {
+	p.Front = b.BuildingToBSON(building)
+}
+
+func (p *Planet) GetShipYard() (b.Building, error) {
+	if p.ShipYard == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.ShipYard)
+}
+
+func (p *Planet) SetShipYard(building b.Building) {
+	p.ShipYard = b.BuildingToBSON(building)
+}
+
+func (p *Planet) GetParticleAccelerator() (b.Building, error) {
+	if p.ParticleAccelerator == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.ParticleAccelerator)
+}
+
+func (p *Planet) SetParticleAccelerator(building b.Building) {
+	p.ParticleAccelerator = b.BuildingToBSON(building)
+}
+
+func (p *Planet) GetFusionReactor() (b.Building, error) {
+	if p.FusionReactor == nil {
+		return nil, nil
+	}
+	return b.CreateBuildingFromMongoDB(p.FusionReactor)
+}
+
+func (p *Planet) SetFusionReactor(building b.Building) {
+	p.FusionReactor = b.BuildingToBSON(building)
 }

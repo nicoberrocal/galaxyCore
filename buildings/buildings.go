@@ -174,6 +174,16 @@ func CreateBuildingFromMongoDB(data bson.M) (Building, error) {
 	}
 
 	switch buildingType {
+	case "base":
+		var building BaseBuilding
+		dataBytes, err := bson.Marshal(data)
+		if err != nil {
+			return nil, err
+		}
+		if err := bson.Unmarshal(dataBytes, &building); err != nil {
+			return nil, err
+		}
+		return building, nil
 	case "solar_farm":
 		var building SolarFarm
 		dataBytes, err := bson.Marshal(data)
