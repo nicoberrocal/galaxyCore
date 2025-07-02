@@ -51,7 +51,7 @@ type System struct {
 	MapID   bson.ObjectID `bson:"mapId,omitempty"`
 	Name    string        `bson:"name"`
 	Texture string        `bson:"texture"`
-
+	Planet  Planet        `bson:"planet,omitempty"`
 	// System control and defense - uses hybrid approach
 	Colonization   Colonization    `bson:"colonization"`
 	DefendingFleet *DefendingFleet `bson:"defendingFleet,omitempty"` // Embedded fleet when colonized
