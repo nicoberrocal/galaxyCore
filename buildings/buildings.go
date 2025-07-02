@@ -23,9 +23,9 @@ type Building interface {
 type BaseBuilding struct {
 	Name            string    `bson:"name"`
 	Level           int       `bson:"level"`
-	ConstuctionTime time.Time `bson:"constuctionTime"`
-	Queue           []Queue   `bson:"queue"`
-	Upkeep          int       `bson:"upkeep"`
+	ConstuctionTime time.Time `bson:"constuctionTime,omitempty" json:"constuctionTime,omitempty"`
+	Queue           []Queue   `bson:"queue,omitempty" json:"queue,omitempty"`
+	Upkeep          int       `bson:"upkeep,omitempty" json:"upkeep,omitempty"`
 }
 
 // Implement Building interface for BaseBuilding

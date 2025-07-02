@@ -33,8 +33,8 @@ type ShipStack struct {
 	CreatedAt time.Time               `bson:"createdAt"` // tick timestamp
 
 	// Current activity and movement
-	Movement MovementState `bson:"movement"`
-	Battle   BattleState   `bson:"battle"` // Combat state for free space battles
+	Movement *MovementState `bson:"movement,omitempty" json:"movement,omitempty"`
+	Battle   *BattleState   `bson:"battle,omitempty" json:"battle,omitempty"` // Combat state for free space battles
 }
 
 type HPBucket struct {
