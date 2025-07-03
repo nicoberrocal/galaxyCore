@@ -57,8 +57,12 @@ type MovementState struct {
 	State      string        `bson:"state"`                // "traveling", "mining", "idle", "in_combat"
 	TargetID   bson.ObjectID `bson:"targetId,omitempty"`   // Target for movement/mining
 	TargetType string        `bson:"targetType,omitempty"` // "asteroid", "nebula", "coordinate"
+	StartX     float64       `bson:"startX,omitempty"`     // Starting coordinates
+	StartY     float64       `bson:"startY,omitempty"`     // Starting coordinates
+	Speed      int           `bson:"speed,omitempty"`      // Speed of the stack
 	TargetX    float64       `bson:"targetX,omitempty"`    // Target coordinates
-	TargetY    float64       `bson:"targetY,omitempty"`
-	StartedAt  time.Time     `bson:"startedAt,omitempty"` // When current action started
-	Activity   string        `bson:"activity,omitempty"`  // "mining_metal", "mining_crystal", "mining_hydrogen"
+	TargetY    float64       `bson:"targetY,omitempty"`    // Target coordinates
+	StartTime  time.Time     `bson:"startTime,omitempty"`  // When current action started
+	EndTime    time.Time     `bson:"endTime,omitempty"`    // When current action ends
+	Activity   string        `bson:"activity,omitempty"`   // "mining_metal", "mining_crystal", "mining_hydrogen"
 }
