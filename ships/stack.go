@@ -54,15 +54,15 @@ type BattleState struct {
 
 // MovementState tracks what the stack is currently doing in free space or at mining locations
 type MovementState struct {
-	State      string        `bson:"state"`                // "traveling", "mining", "idle", "in_combat"
-	TargetID   bson.ObjectID `bson:"targetId,omitempty"`   // Target for movement/mining
-	TargetType string        `bson:"targetType,omitempty"` // "asteroid", "nebula", "coordinate"
-	StartX     float64       `bson:"startX,omitempty"`     // Starting coordinates
-	StartY     float64       `bson:"startY,omitempty"`     // Starting coordinates
-	Speed      int           `bson:"speed,omitempty"`      // Speed of the stack
-	TargetX    float64       `bson:"targetX,omitempty"`    // Target coordinates
-	TargetY    float64       `bson:"targetY,omitempty"`    // Target coordinates
-	StartTime  time.Time     `bson:"startTime,omitempty"`  // When current action started
-	EndTime    time.Time     `bson:"endTime,omitempty"`    // When current action ends
-	Activity   string        `bson:"activity,omitempty"`   // "mining_metal", "mining_crystal", "mining_hydrogen"
+	State      string        `bson:"state" json:"state,omitempty"`                     // "traveling", "mining", "idle", "in_combat"
+	TargetID   bson.ObjectID `bson:"targetId,omitempty" json:"targetId,omitempty"`     // Target for movement/mining
+	TargetType string        `bson:"targetType,omitempty" json:"targetType,omitempty"` // "asteroid", "nebula", "coordinate"
+	StartX     float64       `bson:"startX,omitempty" json:"startX,omitempty"`         // Starting coordinates
+	StartY     float64       `bson:"startY,omitempty" json:"startY"`                   // Starting coordinates
+	Speed      int           `bson:"speed,omitempty" json:"speed"`                     // Speed of the stack
+	TargetX    float64       `bson:"targetX,omitempty" json:"targetX"`                 // Target coordinates
+	TargetY    float64       `bson:"targetY,omitempty" json:"targetY"`                 // Target coordinates
+	StartTime  time.Time     `bson:"startTime,omitempty" json:"startTime"`             // When current action started
+	EndTime    time.Time     `bson:"endTime,omitempty" json:"endTime"`                 // When current action ends
+	Activity   string        `bson:"activity,omitempty" json:"activity"`               // "mining_metal", "mining_crystal", "mining_hydrogen"
 }
