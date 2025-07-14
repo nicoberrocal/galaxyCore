@@ -16,9 +16,10 @@ type Queue struct {
 	SourceID    bson.ObjectID `bson:"sourceId,omitempty" json:"sourceId,omitempty"` // Source of the action (e.g., ship, building)
 	StartX      float64       `bson:"startX,omitempty" json:"startX,omitempty"`     // Starting coordinates
 	StartY      float64       `bson:"startY,omitempty" json:"startY"`
-	TargetX     float64       `bson:"targetX,omitempty" json:"targetX"`           // Target coordinates
-	TargetY     float64       `bson:"targetY,omitempty" json:"targetY"`           // Target coordinates
-	Finished    time.Time     `bson:"finished" json:"finished"`                   // When the action should be processed
+	TargetX     float64       `bson:"targetX,omitempty" json:"targetX"` // Target coordinates
+	TargetY     float64       `bson:"targetY,omitempty" json:"targetY"`
+	StartTime   time.Time     `bson:"startTime" json:"startTime"`
+	EndTime     time.Time     `bson:"endTime,omitempty" json:"endTime"`
 	CreatedAt   time.Time     `bson:"createdAt" json:"createdAt"`                 // When the action was created
 	ProcessedAt time.Time     `bson:"processedAt,omitempty" json:"processedAt"`   // When the action was processed
 	Version     int64         `bson:"version" json:"version"`                     // For optimistic locking
