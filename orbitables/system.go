@@ -58,6 +58,7 @@ type System struct {
 
 	// Collision detection for system entry
 	CollisionRadius float64 `bson:"collisionRadius" json:"collisionRadius"` // Radius for determining system entry
+	Version         int64   `bson:"version" json:"version"`                 // For optimistic locking
 }
 
 // Planet represents a colonizable planet
@@ -84,6 +85,7 @@ type Planet struct {
 	Crystals            int64         `bson:"crystals" json:"crystals"`
 	Hydrogen            int64         `bson:"hydrogen" json:"hydrogen"`
 	Plasma              int64         `bson:"plasma" json:"plasma"`
+	Version             int64         `bson:"version" json:"version"` // For optimistic locking
 }
 
 // Helper methods to work with buildings as interfaces

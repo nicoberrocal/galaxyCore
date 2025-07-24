@@ -26,6 +26,8 @@ type BaseBuilding struct {
 	ConstuctionTime time.Time `bson:"constuctionTime,omitempty" json:"constuctionTime,omitempty"`
 	Queue           []Queue   `bson:"queue,omitempty" json:"queue,omitempty"`
 	Upkeep          int       `bson:"upkeep,omitempty" json:"upkeep,omitempty"`
+	LastUpdated     time.Time `bson:"lastUpdated,omitempty" json:"lastUpdated,omitempty"`     // Last time this building was updated
+	LastProcessed   time.Time `bson:"lastProcessed,omitempty" json:"lastProcessed,omitempty"` // Last time this building was processed
 }
 
 // Implement Building interface for BaseBuilding
