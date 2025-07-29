@@ -74,22 +74,26 @@ type MovementState struct {
 }
 
 type AbilityState struct {
-	ShipType    ShipType       `bson:"shipType"`                                 // Type of ship using the ability
-	Ability     string         `bson:"ability"`                                  // Ability name (e.g., "cloak", "boost")
-	Bonus       map[string]int `bson:"bonus"`                                    // Bonus type (e.g., "speed", "defense" or "attack") and its value
-	StartTime   time.Time      `bson:"startTime"`                                // When the ability was activated
-	EndTime     time.Time      `bson:"endTime"`                                  // When the ability will end
-	Duration    int64          `bson:"duration"`                                 // Duration of the ability in seconds
-	LastUpdated time.Time      `bson:"lastUpdated"`                              // Last time the ability state was updated
+	IsActive    bool           `bson:"isActive" json:"isActive"`                 // Whether the ability is currently active
+	Description string         `bson:"description" json:"description"`           // Description of the ability
+	Icon        string         `bson:"icon" json:"icon"`                         // Icon representing the ability
+	ShipType    ShipType       `bson:"shipType" json:"shipType"`                 // Type of ship using the ability
+	Ability     string         `bson:"ability" json:"ability"`                   // Ability name (e.g., "cloak", "boost")
+	Bonus       map[string]int `bson:"bonus" json:"bonus"`                       // Bonus type (e.g., "speed", "defense" or "attack") and its value
+	StartTime   time.Time      `bson:"startTime" json:"startTime"`               // When the ability was activated
+	EndTime     time.Time      `bson:"endTime" json:"endTime"`                   // When the ability will end
+	Duration    int64          `bson:"duration" json:"duration"`                 // Duration of the ability in seconds
+	LastUpdated time.Time      `bson:"lastUpdated" json:"lastUpdated"`           // Last time the ability state was updated
 	ProcessedAt time.Time      `bson:"ProcessedAt,omitempty" json:"ProcessedAt"` // Last time this state was processed
 }
 
 type GatheringState struct {
-	TargetID            bson.ObjectID `bson:"targetId"`                                 // ID of the target being gathered from
-	TargetType          string        `bson:"targetType"`                               // Type of target (e.g., "asteroid", "nebula")
-	ResourcePerTimeUnit int64         `bson:"resourcePerTime"`                          // Amount of resource gathered per time unit
-	TimeUnit            int64         `bson:"timeUnit"`                                 // Time unit in seconds for gathering
-	TotalGathered       int64         `bson:"totalGathered"`                            // Total resources gathered
-	StartTime           time.Time     `bson:"startTime"`                                // When gathering started
+	IsMining            bool          `bson:"isMining" json:"isMining"`                 // Whether the stack is currently mining
+	TargetID            bson.ObjectID `bson:"targetId" json:"targetId"`                 // ID of the target being gathered from
+	TargetType          string        `bson:"targetType" json:"targetType"`             // Type of target (e.g., "asteroid", "nebula")
+	ResourcePerTimeUnit int64         `bson:"resourcePerTime" json:"resourcePerTime"`   // Amount of resource gathered per time unit
+	TimeUnit            int64         `bson:"timeUnit" json:"timeUnit"`                 // Time unit in seconds for gathering
+	TotalGathered       int64         `bson:"totalGathered" json:"totalGathered"`       // Total resources gathered
+	StartTime           time.Time     `bson:"startTime" json:"startTime"`               // When gathering started
 	ProcessedAt         time.Time     `bson:"ProcessedAt,omitempty" json:"ProcessedAt"` // Last time this state was processed
 }
