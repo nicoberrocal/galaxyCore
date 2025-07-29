@@ -93,7 +93,8 @@ type GatheringState struct {
 	TargetType          string        `bson:"targetType" json:"targetType"`             // Type of target (e.g., "asteroid", "nebula")
 	ResourcePerTimeUnit int64         `bson:"resourcePerTime" json:"resourcePerTime"`   // Amount of resource gathered per time unit
 	TimeUnit            int64         `bson:"timeUnit" json:"timeUnit"`                 // Time unit in seconds for gathering
-	TotalGathered       int64         `bson:"totalGathered" json:"totalGathered"`       // Total resources gathered
+	MetalsGathered      int64         `bson:"metalsGathered" json:"metalsGathered"`     // Total metals gathered
+	HydrogenGathered    int64         `bson:"hydrogenGathered" json:"hydrogenGathered"` // Total hydrogen gathered
 	StartTime           time.Time     `bson:"startTime" json:"startTime"`               // When gathering started
 	ProcessedAt         time.Time     `bson:"ProcessedAt,omitempty" json:"ProcessedAt"` // Last time this state was processed
 }
