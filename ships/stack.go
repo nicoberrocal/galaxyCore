@@ -95,6 +95,7 @@ type GatheringState struct {
 	TimeUnit            int64         `bson:"timeUnit" json:"timeUnit"`                 // Time unit in seconds for gathering
 	MetalsGathered      int64         `bson:"metalsGathered" json:"metalsGathered"`     // Total metals gathered
 	HydrogenGathered    int64         `bson:"hydrogenGathered" json:"hydrogenGathered"` // Total hydrogen gathered
+	CrystalsGathered    int64         `bson:"crystalsGathered" json:"crystalsGathered"` // Total crystals gathered
 	StartTime           time.Time     `bson:"startTime" json:"startTime"`               // When gathering started
 	ProcessedAt         time.Time     `bson:"ProcessedAt,omitempty" json:"ProcessedAt"` // Last time this state was processed
 }
