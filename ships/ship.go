@@ -117,7 +117,7 @@ var Ships = map[ShipType]Ship{
 		AntimatterShield:  50,
 		Speed:             55,
 		VisibilityRange:   70,
-		AttackRange:       90,
+		AttackRange:       150,
 		HP:                280,
 		AttackDamage:      75,
 		AttackInterval:    1.0,

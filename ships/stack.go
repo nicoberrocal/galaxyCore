@@ -41,7 +41,7 @@ type ShipStack struct {
 }
 
 type HPBucket struct {
-	HP    int `bson:"hp"`    // full HP of that ship
+	HP    int `bson:"hp"`    // current HP of ships in this bucket
 	Count int `bson:"count"` // how many ships at this HP
 }
 
