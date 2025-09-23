@@ -45,13 +45,14 @@ type AlliedFleet struct {
 // 3. If DefendingFleet is nil → System is unclaimed/orphaned
 // System is more militaristic than planets, it has a colonization state and a defending fleet
 type System struct {
-	ID      bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	X       float64       `bson:"x" json:"x"`
-	Y       float64       `bson:"y" json:"y"`
-	MapID   bson.ObjectID `bson:"mapId,omitempty" json:"mapId,omitempty"`
-	Name    string        `bson:"name" json:"name"`
-	Texture string        `bson:"texture" json:"texture"`
-	Planet  *Planet       `bson:"planet,omitempty" json:"planet,omitempty"`
+	ID            bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	X             float64       `bson:"x" json:"x"`
+	Y             float64       `bson:"y" json:"y"`
+	MapID         bson.ObjectID `bson:"mapId,omitempty" json:"mapId,omitempty"`
+	Name          string        `bson:"name" json:"name"`
+	Texture       string        `bson:"texture" json:"texture"`
+	Constellation string        `bson:"constellation,omitempty" json:"constellation,omitempty"`
+	Planet        *Planet       `bson:"planet,omitempty" json:"planet,omitempty"`
 	// System control and defense - uses hybrid approach
 	Colonization   *Colonization   `bson:"colonization,omitempty" json:"colonization,omitempty"`
 	DefendingFleet *DefendingFleet `bson:"defendingFleet,omitempty" json:"defendingFleet,omitempty"` // Embedded fleet when colonized
