@@ -1,5 +1,8 @@
 package ships
 
+// Ship defines a ship TYPE blueprint (not a single unit instance) with its
+// base attributes and static equipment/metadata. Runtime state for stacks,
+// HP buckets, cooldowns, etc. lives in stack-related structures.
 type Ship struct {
 	ShipType         string
 	AttackType       string
@@ -12,9 +15,20 @@ type Ship struct {
 	HP               int
 	AttackDamage     int
 	AttackInterval   float64
-	SpecialAbility   string
-	AbilityCooldown  float64 // in hours
-	AbilityDuration  float64 // in hours
+
+	// Abilities defines this ship type's available tactical/strategic tools.
+	// The full catalog is described in abilities.go. A ship may have up to 3.
+	Abilities        []Ability
+
+	// RoleMode lets a ship type adopt a posture: Tactical/Economic/Recon/Scientific.
+	// This is a soft-reconfiguration with tradeoffs, not a full role swap.
+	// See roles.go for details and ApplyRoleMode() helper to compute modifiers.
+	RoleMode         RoleMode
+
+	// Sockets are gem slots (max 3) inspired by Diablo 2. Gems combine into higher tiers
+	// and unlock powerful GemWords when specific sequences are socketed.
+	// See runes.go for the combination tree and GemWords catalog.
+	Sockets          []Gem
 	// Construction costs
 	MetalCost   int
 	CrystalCost int
@@ -24,131 +38,20 @@ type Ship struct {
 	CanTransport      []string
 }
 
-var Ships = map[ShipType]Ship{
-	Drone: {
-		ShipType:          "Drone",
-		AttackType:        "Laser",
-		LaserShield:       5,
-		NuclearShield:     15,
-		AntimatterShield:  10,
-		Speed:             80,
-		VisibilityRange:   50,
-		AttackRange:       30,
-		HP:                50,
-		AttackDamage:      5,
-		AttackInterval:    1.0, // Uniform across all ships
-		SpecialAbility:    "Mining Overdrive",
-		AbilityCooldown:   12.0, // 12 hours
-		AbilityDuration:   6.0,  // 6 hours of boosted resource gathering
-		MetalCost:         100,
-		CrystalCost:       50,
-		PlasmaCost:        0,
-		TransportCapacity: 0,
-		CanTransport:      []string{},
-	},
-	Fighter: {
-		ShipType:          "Fighter",
-		AttackType:        "Nuclear",
-		LaserShield:       30,
-		NuclearShield:     15,
-		AntimatterShield:  25,
-		Speed:             70,
-		VisibilityRange:   60,
-		AttackRange:       50,
-		HP:                100,
-		AttackDamage:      20,
-		AttackInterval:    1.0,
-		SpecialAbility:    "Stealth Cloak",
-		AbilityCooldown:   8.0, // 8 hours
-		AbilityDuration:   2.0, // 2 hours of invisibility
-		MetalCost:         200,
-		CrystalCost:       100,
-		PlasmaCost:        0,
-		TransportCapacity: 0,
-		CanTransport:      []string{},
-	},
-	Scout: {
-		ShipType:          "Scout",
-		AttackType:        "Laser",
-		LaserShield:       10,
-		NuclearShield:     20,
-		AntimatterShield:  15,
-		Speed:             90,
-		VisibilityRange:   100,
-		AttackRange:       40,
-		HP:                80,
-		AttackDamage:      10,
-		AttackInterval:    1.0,
-		SpecialAbility:    "Deep Scan Pulse",
-		AbilityCooldown:   6.0, // 6 hours
-		AbilityDuration:   4.0, // 4 hours of extended vision range
-		MetalCost:         150,
-		CrystalCost:       75,
-		PlasmaCost:        0,
-		TransportCapacity: 0,
-		CanTransport:      []string{},
-	},
-	Carrier: {
-		ShipType:          "Carrier",
-		AttackType:        "Antimatter",
-		LaserShield:       40,
-		NuclearShield:     35,
-		AntimatterShield:  45,
-		Speed:             40,
-		VisibilityRange:   80,
-		AttackRange:       45,
-		HP:                400,
-		AttackDamage:      20,
-		AttackInterval:    1.0,
-		SpecialAbility:    "FTL Jump",
-		AbilityCooldown:   24.0, // 24 hours
-		AbilityDuration:   0.0,  // Instant ability
-		MetalCost:         800,
-		CrystalCost:       400,
-		PlasmaCost:        200,
-		TransportCapacity: 20,
-		CanTransport:      []string{"Drone", "Fighter", "Scout"},
-	},
-	Bomber: {
-		ShipType:          "Bomber",
-		AttackType:        "Antimatter",
-		LaserShield:       35,
-		NuclearShield:     40,
-		AntimatterShield:  50,
-		Speed:             55,
-		VisibilityRange:   70,
-		AttackRange:       150,
-		HP:                280,
-		AttackDamage:      75,
-		AttackInterval:    1.0,
-		SpecialAbility:    "Siege Mode",
-		AbilityCooldown:   48.0, // 48 hours
-		AbilityDuration:   12.0, // 12 hours of extreme range (interrupted by movement)
-		MetalCost:         600,
-		CrystalCost:       300,
-		PlasmaCost:        150,
-		TransportCapacity: 0,
-		CanTransport:      []string{},
-	},
-	Destroyer: {
-		ShipType:          "Destroyer",
-		AttackType:        "Nuclear",
-		LaserShield:       45,
-		NuclearShield:     55,
-		AntimatterShield:  40,
-		Speed:             50,
-		VisibilityRange:   75,
-		AttackRange:       70,
-		HP:                350,
-		AttackDamage:      120,
-		AttackInterval:    1.0,
-		SpecialAbility:    "Hunter Protocol",
-		AbilityCooldown:   72.0, // 72 hours
-		AbilityDuration:   8.0,  // 8 hours of enhanced damage and speed
-		MetalCost:         1000,
-		CrystalCost:       500,
-		PlasmaCost:        300,
-		TransportCapacity: 0,
-		CanTransport:      []string{},
-	},
+// Ability is a static definition used by ship blueprints and catalogs.
+// Active abilities use CooldownSeconds/DurationSeconds. Passives typically have 0.
+// The concrete runtime state (timers/activation) is tracked separately in AbilityState.
+type Ability struct {
+    // ID is the stable identifier (e.g. "LightSpeed", "AlphaStrike").
+    ID                AbilityID
+    // Name is a human-readable label for UI.
+    Name              string
+    // Kind defines the interaction model (passive/active/toggle/aura/travel/conditional).
+    Kind              AbilityKind
+    // CooldownSeconds is the cooldown after use. 0 for passives or always-on toggles.
+    CooldownSeconds   int
+    // DurationSeconds is the active window for temporary effects. 0 for instant or toggle.
+    DurationSeconds   int
+    // Description documents tactical/strategic intent and effect summary.
+    Description       string
 }
