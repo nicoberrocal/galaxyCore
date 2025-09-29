@@ -25,10 +25,7 @@ type Ship struct {
 	// See roles.go for details and ApplyRoleMode() helper to compute modifiers.
 	RoleMode         RoleMode
 
-	// Sockets are gem slots (max 3) inspired by Diablo 2. Gems combine into higher tiers
-	// and unlock powerful GemWords when specific sequences are socketed.
-	// See runes.go for the combination tree and GemWords catalog.
-	Sockets          []Gem
+	// Sockets are now managed per-ship-type in the stack's ShipLoadout
 	// Construction costs
 	MetalCost   int
 	CrystalCost int

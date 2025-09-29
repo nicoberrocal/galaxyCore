@@ -23,11 +23,11 @@ var EconomicCap = map[ShipType]float64{
 }
 
 // EconomicThroughputMultiplier returns [0..1] relative to a Drone, based on
-// the stack's loadout for this ship type. Returns 0 if not in Economic mode or
+// the stack's role and the ship's loadout. Returns 0 if not in Economic mode or
 // if not anchored.
 func (s *ShipStack) EconomicThroughputMultiplier(t ShipType) float64 {
     load := s.GetOrInitLoadout(t)
-    if load.Role != RoleEconomic {
+    if s.Role != RoleEconomic {
         return 0.0
     }
     if !load.Anchored {

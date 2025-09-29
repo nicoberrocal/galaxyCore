@@ -1,13 +1,13 @@
 package ships
 
 // ComputeLoadout resolves the cumulative StatMods and GemWord-granted abilities
-// for a ship blueprint based on its RoleMode and Sockets. It returns:
+// for a ship blueprint based on the stack's role and the ship's loadout. It returns:
 // - combined StatMods from RoleMode + sockets + GemWords
 // - abilities granted by GemWords (as AbilityIDs)
 // - matched GemWords (for UI/debug)
-func ComputeLoadout(s Ship) (StatMods, []AbilityID, []GemWord) {
-    roleMods := RoleModeMods(s.RoleMode, s.ShipType)
-    socketMods, grants, matched := EvaluateGemSockets(s.Sockets)
+func ComputeLoadout(s Ship, role RoleMode, loadout ShipLoadout) (StatMods, []AbilityID, []GemWord) {
+    roleMods := RoleModeMods(role, s.ShipType)
+    socketMods, grants, matched := EvaluateGemSockets(loadout.Sockets)
     combined := CombineMods(roleMods, socketMods)
     return combined, grants, matched
 }
@@ -36,11 +36,11 @@ func EffectiveAttackInterval(s Ship, mods StatMods) float64 {
     return v
 }
 
-// FilterAbilitiesForMode returns the abilities usable in the ship's current RoleMode.
+// FilterAbilitiesForMode returns the abilities usable in the stack's current RoleMode.
 // It takes the ship's built-in abilities, adds GemWord-granted abilities, then
 // applies Disabled/Enabled lists from RoleModesCatalog.
-func FilterAbilitiesForMode(s Ship, runewordGrants []AbilityID) []Ability {
-    spec, ok := RoleModesCatalog[s.RoleMode]
+func FilterAbilitiesForMode(s Ship, role RoleMode, runewordGrants []AbilityID) []Ability {
+    spec, ok := RoleModesCatalog[role]
     if !ok {
         // Unknown mode, return baseline abilities only
         base := make([]Ability, 0, len(s.Abilities))
