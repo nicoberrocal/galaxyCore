@@ -53,6 +53,11 @@ type StatMods struct {
 	// Recon/detection (boolean capabilities are OR-composed)
 	CloakDetect  bool    // can detect cloaked or mode-switch signals
 	PingRangePct float64 // % change to Ping ability range
+
+	// Formation-specific modifiers (applied in formation combat contexts)
+	EvasionPct          float64 // % flat evasion chance
+	FormationSyncBonus  float64 // % bonus when position requirements are met
+	PositionFlexibility float64 // % reduced penalty for suboptimal positions
 }
 
 // ZeroMods returns a zero-initialized StatMods for convenience.
@@ -96,5 +101,9 @@ func CombineMods(a, b StatMods) StatMods {
 
 	a.CloakDetect = a.CloakDetect || b.CloakDetect
 	a.PingRangePct += b.PingRangePct
+
+	a.EvasionPct += b.EvasionPct
+	a.FormationSyncBonus += b.FormationSyncBonus
+	a.PositionFlexibility += b.PositionFlexibility
 	return a
 }

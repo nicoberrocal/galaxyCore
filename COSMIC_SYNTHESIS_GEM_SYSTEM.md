@@ -257,3 +257,10 @@ output_tier = tier_from_energy(output_energy)
 The Cosmic Synthesis Gem System offers deep customization and progression through its combination of pure upgrades, hybrid synthesis, and powerful Gem Words. By understanding the affinity system and carefully planning your synthesis paths, you can create powerful combinations that complement your playstyle.
 
 Remember to balance risk versus reward, and don't be afraid to experiment with different combinations to discover powerful synergies!
+
+### 9.1 Performance Impact Mitigation
+
+- Batch formation updates per tick
+- Cache formation calculations
+- Limit formation changes per time window
+- Use efficient data structures for bucket operations
