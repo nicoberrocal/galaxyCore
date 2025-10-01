@@ -33,16 +33,16 @@ type ShipStack struct {
 	CreatedAt time.Time               `bson:"createdAt"` // tick timestamp
 
 	// Role represents the tactical intent of the entire stack (tactical/economic/recon/scientific)
-	Role              RoleMode  `bson:"role" json:"role"`
-	ReconfigureUntil  time.Time `bson:"reconfigureUntil,omitempty" json:"reconfigureUntil,omitempty"`
+	Role             RoleMode  `bson:"role" json:"role"`
+	ReconfigureUntil time.Time `bson:"reconfigureUntil,omitempty" json:"reconfigureUntil,omitempty"`
 
 	// Loadouts track per-ship-type socket configurations for this particular stack.
 	// This allows two stacks to field the same ship type with different gem setups.
 	Loadouts map[ShipType]ShipLoadout `bson:"loadouts,omitempty" json:"loadouts,omitempty"`
 
 	// Formation defines the tactical positioning of ships within the stack
-	Formation            *Formation `bson:"formation,omitempty" json:"formation,omitempty"`
-	FormationReconfigUntil time.Time `bson:"formationReconfigUntil,omitempty" json:"formationReconfigUntil,omitempty"`
+	Formation              *Formation `bson:"formation,omitempty" json:"formation,omitempty"`
+	FormationReconfigUntil time.Time  `bson:"formationReconfigUntil,omitempty" json:"formationReconfigUntil,omitempty"`
 
 	// Current activity and movement
 	Movement  []*MovementState `bson:"movement,omitempty" json:"movement,omitempty"`
@@ -206,11 +206,11 @@ func (s *ShipStack) EffectiveShip(t ShipType) (Ship, []Ability) {
 func (s *ShipStack) SetFormation(formationType FormationType, now time.Time) time.Time {
 	formation := AutoAssignFormation(s.Ships, formationType, now)
 	s.Formation = &formation
-	
+
 	// Apply role mode bonus to reconfiguration time
 	reconfigTime := formation.Modifiers.ReconfigureTime
 	reconfigTime = RoleModeFormationBonus(s.Role, reconfigTime)
-	
+
 	s.FormationReconfigUntil = now.Add(time.Duration(reconfigTime) * time.Second)
 	return s.FormationReconfigUntil
 }
@@ -225,13 +225,13 @@ func (s *ShipStack) GetFormationPosition(shipType ShipType, bucketIndex int) For
 	if s.Formation == nil {
 		return PositionFront // default if no formation set
 	}
-	
+
 	for _, assignment := range s.Formation.Assignments {
 		if assignment.ShipType == shipType && assignment.BucketIndex == bucketIndex {
 			return assignment.Position
 		}
 	}
-	
+
 	return PositionFront // default fallback
 }
 
@@ -241,34 +241,34 @@ func (s *ShipStack) EffectiveShipInFormation(t ShipType, bucketIndex int) (Ship,
 	if !ok {
 		return Ship{}, nil
 	}
-	
+
 	loadout := s.GetOrInitLoadout(t)
-	
+
 	// Base mods from role and loadout
 	mods, grants, _ := ComputeLoadout(bp, s.Role, loadout)
-	
+
 	// Add formation position bonuses if formation is set
 	if s.Formation != nil {
 		position := s.GetFormationPosition(t, bucketIndex)
-		
+
 		// Apply formation position bonuses
 		mods = s.Formation.ApplyPositionBonusesToShip(position, mods)
-		
+
 		// Apply role-specific formation enhancements
 		mods = ApplyFormationRoleModifiers(mods, s.Formation, position, s.Role)
-		
+
 		// Apply gem-position synergy bonuses
 		gemPositionMods := ApplyGemPositionEffects(loadout.Sockets, position)
 		mods = CombineMods(mods, gemPositionMods)
 	}
-	
+
 	// Apply composition bonuses
 	compositionMods, _ := EvaluateCompositionBonuses(s.Ships)
 	mods = CombineMods(mods, compositionMods)
-	
+
 	eff := ApplyStatModsToShip(bp, mods)
 	abilities := FilterAbilitiesForMode(eff, s.Role, grants)
-	
+
 	return eff, abilities
 }
 
@@ -282,16 +282,16 @@ func (s *ShipStack) GetEffectiveStackSpeed() int {
 			slowest = bp.Speed
 		}
 	}
-	
+
 	if slowest == 99999 {
 		return 0
 	}
-	
+
 	// Apply formation speed multiplier
 	if s.Formation != nil {
 		return s.Formation.GetEffectiveSpeed(slowest)
 	}
-	
+
 	return slowest
 }
 
@@ -300,11 +300,11 @@ func (s *ShipStack) UpdateFormationAssignments() {
 	if s.Formation == nil {
 		return
 	}
-	
+
 	// Update HP values for each assignment based on current buckets
 	for i := range s.Formation.Assignments {
 		assignment := &s.Formation.Assignments[i]
-		
+
 		if buckets, ok := s.Ships[assignment.ShipType]; ok {
 			if assignment.BucketIndex < len(buckets) {
 				bucket := buckets[assignment.BucketIndex]
@@ -321,7 +321,7 @@ func (s *ShipStack) UpdateFormationAssignments() {
 			assignment.AssignedHP = 0
 		}
 	}
-	
+
 	// Remove dead assignments
 	var activeAssignments []FormationAssignment
 	for _, assignment := range s.Formation.Assignments {

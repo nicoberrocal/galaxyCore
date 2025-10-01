@@ -43,7 +43,7 @@ const (
 // This enables granular control where different ship types can occupy any position.
 type FormationAssignment struct {
 	Position    FormationPosition `bson:"position" json:"position"`
-	Layer       int               `bson:"layer" json:"layer"`           // 0=frontline, 1=mid, 2=backline
+	Layer       int               `bson:"layer" json:"layer"` // 0=frontline, 1=mid, 2=backline
 	ShipType    ShipType          `bson:"shipType" json:"shipType"`
 	BucketIndex int               `bson:"bucketIndex" json:"bucketIndex"` // Index in ship type's HP buckets
 	Count       int               `bson:"count" json:"count"`             // Ships from this bucket
@@ -53,7 +53,7 @@ type FormationAssignment struct {
 // Formation represents the tactical arrangement of a ship stack.
 type Formation struct {
 	Type        FormationType         `bson:"formationType" json:"formationType"`
-	Facing      string                `bson:"facing" json:"facing"`       // "north", "south", "east", "west"
+	Facing      string                `bson:"facing" json:"facing"` // "north", "south", "east", "west"
 	Assignments []FormationAssignment `bson:"assignments" json:"assignments"`
 	Modifiers   FormationMods         `bson:"modifiers" json:"modifiers"`
 	CreatedAt   time.Time             `bson:"createdAt" json:"createdAt"`
@@ -62,10 +62,10 @@ type Formation struct {
 
 // FormationMods contains the modifiers applied by the formation type.
 type FormationMods struct {
-	SpeedMultiplier float64                           `bson:"speedMultiplier" json:"speedMultiplier"`
-	ReconfigureTime int                               `bson:"reconfigureTime" json:"reconfigureTime"` // seconds
-	PositionBonuses map[FormationPosition]StatMods    `bson:"positionBonuses" json:"positionBonuses"`
-	SpecialProperties []string                        `bson:"specialProperties" json:"specialProperties"`
+	SpeedMultiplier   float64                        `bson:"speedMultiplier" json:"speedMultiplier"`
+	ReconfigureTime   int                            `bson:"reconfigureTime" json:"reconfigureTime"` // seconds
+	PositionBonuses   map[FormationPosition]StatMods `bson:"positionBonuses" json:"positionBonuses"`
+	SpecialProperties []string                       `bson:"specialProperties" json:"specialProperties"`
 }
 
 // FormationSpec defines the characteristics and bonuses of a formation type.
@@ -90,7 +90,7 @@ var FormationCatalog = map[FormationType]FormationSpec{
 		PositionBonuses: map[FormationPosition]StatMods{
 			PositionFront: {
 				LaserShieldDelta: 1,
-				Damage:          DamageMods{LaserPct: 0.10, NuclearPct: 0.10, AntimatterPct: 0.10},
+				Damage:           DamageMods{LaserPct: 0.10, NuclearPct: 0.10, AntimatterPct: 0.10},
 			},
 			PositionFlank: {
 				SpeedDelta: 1,
@@ -141,12 +141,12 @@ var FormationCatalog = map[FormationType]FormationSpec{
 		ReconfigureTime: 60,
 		PositionBonuses: map[FormationPosition]StatMods{
 			PositionFront: {
-				Damage:           DamageMods{LaserPct: 0.25, NuclearPct: 0.25, AntimatterPct: 0.25},
+				Damage:             DamageMods{LaserPct: 0.25, NuclearPct: 0.25, AntimatterPct: 0.25},
 				NuclearShieldDelta: 1,
 			},
 			PositionSupport: {
-				BucketHPPct:         -0.20,
-				AbilityCooldownPct:  -0.30,
+				BucketHPPct:        -0.20,
+				AbilityCooldownPct: -0.30,
 			},
 		},
 		SpecialProperties: []string{"fast_reconfig", "aggressive"},
@@ -342,12 +342,12 @@ func GetFormationCounterMultiplier(attacker, defender FormationType) float64 {
 // CalculateDamageDistribution computes how incoming damage is distributed across formation positions.
 func (f *Formation) CalculateDamageDistribution(incomingDamage int, direction AttackDirection) map[FormationPosition]int {
 	distribution := make(map[FormationPosition]int)
-	
+
 	weights, ok := DirectionalDamageWeights[direction]
 	if !ok {
 		weights = DirectionalDamageWeights[DirectionFrontal] // default
 	}
-	
+
 	// Distribute damage to positions based on directional weights
 	for position, weight := range weights {
 		positionDamage := int(float64(incomingDamage) * weight)
@@ -355,7 +355,7 @@ func (f *Formation) CalculateDamageDistribution(incomingDamage int, direction At
 			distribution[position] = positionDamage
 		}
 	}
-	
+
 	return distribution
 }
 
@@ -376,17 +376,17 @@ func CalculateAssignmentDamage(positionDamage int, assignment FormationAssignmen
 	if len(allAssignments) == 0 {
 		return 0
 	}
-	
+
 	// Calculate total HP weight in this position
 	totalWeight := 0
 	for _, a := range allAssignments {
 		totalWeight += a.AssignedHP
 	}
-	
+
 	if totalWeight == 0 {
 		return 0
 	}
-	
+
 	// Distribute proportionally by HP
 	weight := float64(assignment.AssignedHP) / float64(totalWeight)
 	return int(float64(positionDamage) * weight)
@@ -398,11 +398,11 @@ func (f *Formation) ApplyPositionBonusesToShip(position FormationPosition, baseM
 	if !ok {
 		return baseMods
 	}
-	
+
 	if posBonus, ok := spec.PositionBonuses[position]; ok {
 		return CombineMods(baseMods, posBonus)
 	}
-	
+
 	return baseMods
 }
 
@@ -424,7 +424,7 @@ func AutoAssignFormation(ships map[ShipType][]HPBucket, formationType FormationT
 		CreatedAt:   now,
 		Version:     1,
 	}
-	
+
 	spec, ok := FormationCatalog[formationType]
 	if ok {
 		formation.Modifiers = FormationMods{
@@ -434,17 +434,17 @@ func AutoAssignFormation(ships map[ShipType][]HPBucket, formationType FormationT
 			SpecialProperties: spec.SpecialProperties,
 		}
 	}
-	
+
 	// Auto-assignment logic: assign ship types to positions based on their characteristics
 	for shipType, buckets := range ships {
 		for bucketIndex, bucket := range buckets {
 			if bucket.Count == 0 || bucket.HP == 0 {
 				continue
 			}
-			
+
 			position := DetermineOptimalPosition(shipType, formationType)
 			layer := DetermineLayer(position, shipType)
-			
+
 			formation.Assignments = append(formation.Assignments, FormationAssignment{
 				Position:    position,
 				Layer:       layer,
@@ -455,7 +455,7 @@ func AutoAssignFormation(ships map[ShipType][]HPBucket, formationType FormationT
 			})
 		}
 	}
-	
+
 	return formation
 }
 
@@ -465,37 +465,37 @@ func DetermineOptimalPosition(shipType ShipType, formationType FormationType) Fo
 	if !ok {
 		return PositionFront // default
 	}
-	
+
 	// Position assignment based on ship characteristics
 	switch shipType {
 	case Drone:
 		return PositionSupport // Drones are support/economic units
-		
+
 	case Scout:
 		// Scouts are fast and good for flanking/recon
 		if formationType == FormationSkirmish || formationType == FormationSwarm {
 			return PositionFlank
 		}
 		return PositionFlank
-		
+
 	case Fighter:
 		// Fighters are versatile front-line combatants
 		if formationType == FormationVanguard {
 			return PositionFront
 		}
 		return PositionFront
-		
+
 	case Bomber:
 		// Bombers are long-range siege units, belong in back
 		return PositionBack
-		
+
 	case Carrier:
 		// Carriers are tanky support platforms
 		if formationType == FormationBox {
 			return PositionFront // Use their bulk in defensive formations
 		}
 		return PositionSupport
-		
+
 	case Destroyer:
 		// Destroyers are heavy hitters, can be front or flank
 		if formationType == FormationVanguard || formationType == FormationPhalanx {
@@ -507,7 +507,7 @@ func DetermineOptimalPosition(shipType ShipType, formationType FormationType) Fo
 		}
 		return PositionFront
 	}
-	
+
 	return PositionFront // default fallback
 }
 
@@ -551,7 +551,7 @@ func RoleModeFormationBonus(role RoleMode, reconfigTime int) int {
 func ApplyFormationRoleModifiers(baseMods StatMods, formation *Formation, position FormationPosition, role RoleMode) StatMods {
 	// Apply formation position bonus
 	mods := formation.ApplyPositionBonusesToShip(position, baseMods)
-	
+
 	// Apply role-specific enhancements to formation bonuses
 	switch role {
 	case RoleTactical:
@@ -564,27 +564,27 @@ func ApplyFormationRoleModifiers(baseMods StatMods, formation *Formation, positi
 			},
 		}
 		mods = CombineMods(mods, enhancementMods)
-		
+
 	case RoleEconomic:
 		// Defensive position bonuses enhanced when in economic mode
 		if position == PositionSupport || position == PositionBack {
 			defenseMods := StatMods{
-				LaserShieldDelta:      1,
-				NuclearShieldDelta:    1,
+				LaserShieldDelta:   1,
+				NuclearShieldDelta: 1,
 			}
 			mods = CombineMods(mods, defenseMods)
 		}
-		
+
 	case RoleRecon:
 		// Enhanced visibility and detection in all positions
 		reconMods := StatMods{
 			VisibilityDelta: 1,
 		}
 		mods = CombineMods(mods, reconMods)
-		
+
 	case RoleScientific:
 		// No specific formation bonuses in scientific mode
 	}
-	
+
 	return mods
 }
