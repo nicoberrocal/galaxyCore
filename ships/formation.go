@@ -43,7 +43,7 @@ const (
 // This enables granular control where different ship types can occupy any position.
 type FormationAssignment struct {
 	Position    FormationPosition `bson:"position" json:"position"`
-	Layer       int               `bson:"layer" json:"layer"` // 0=frontline, 1=mid, 2=backline
+	Layer       int               `bson:"layer" json:"layer"` // 0=frontline, 1=mid, 2=backline IGNORED!!
 	ShipType    ShipType          `bson:"shipType" json:"shipType"`
 	BucketIndex int               `bson:"bucketIndex" json:"bucketIndex"` // Index in ship type's HP buckets
 	Count       int               `bson:"count" json:"count"`             // Ships from this bucket
@@ -340,6 +340,7 @@ func GetFormationCounterMultiplier(attacker, defender FormationType) float64 {
 }
 
 // CalculateDamageDistribution computes how incoming damage is distributed across formation positions.
+// Damage assigned to empty positions is redistributed to filled positions proportionally.
 func (f *Formation) CalculateDamageDistribution(incomingDamage int, direction AttackDirection) map[FormationPosition]int {
 	distribution := make(map[FormationPosition]int)
 
@@ -348,11 +349,48 @@ func (f *Formation) CalculateDamageDistribution(incomingDamage int, direction At
 		weights = DirectionalDamageWeights[DirectionFrontal] // default
 	}
 
-	// Distribute damage to positions based on directional weights
-	for position, weight := range weights {
-		positionDamage := int(float64(incomingDamage) * weight)
-		if positionDamage > 0 {
-			distribution[position] = positionDamage
+	// Find which positions have assignments
+	filledPositions := make(map[FormationPosition]bool)
+	for _, assignment := range f.Assignments {
+		if assignment.Count > 0 && assignment.AssignedHP > 0 {
+			filledPositions[assignment.Position] = true
+		}
+	}
+
+	// If no positions are filled, return empty distribution
+	if len(filledPositions) == 0 {
+		return distribution
+	}
+
+	// Calculate total weight of filled positions
+	totalFilledWeight := 0.0
+	for position := range filledPositions {
+		if weight, exists := weights[position]; exists {
+			totalFilledWeight += weight
+		}
+	}
+
+	// If no filled positions have weight in this direction, distribute evenly
+	if totalFilledWeight == 0 {
+		evenWeight := 1.0 / float64(len(filledPositions))
+		for position := range filledPositions {
+			positionDamage := int(float64(incomingDamage) * evenWeight)
+			if positionDamage > 0 {
+				distribution[position] = positionDamage
+			}
+		}
+		return distribution
+	}
+
+	// Distribute damage only to filled positions, redistributing proportionally
+	for position := range filledPositions {
+		if weight, exists := weights[position]; exists {
+			// Redistribute proportionally: (position weight / total filled weight) * total damage
+			redistributedWeight := weight / totalFilledWeight
+			positionDamage := int(float64(incomingDamage) * redistributedWeight)
+			if positionDamage > 0 {
+				distribution[position] = positionDamage
+			}
 		}
 	}
 
