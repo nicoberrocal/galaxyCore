@@ -5,6 +5,10 @@ package ships
 // - combined StatMods from RoleMode + sockets + GemWords
 // - abilities granted by GemWords (as AbilityIDs)
 // - matched GemWords (for UI/debug)
+//
+// DEPRECATED: Use ComputeLoadoutV2 or QuickEffectiveShip instead.
+// This function does not track modifier sources and lacks formation/composition bonuses.
+// It will be removed in a future version. See MIGRATION_GUIDE.md for details.
 func ComputeLoadout(s Ship, role RoleMode, loadout ShipLoadout) (StatMods, []AbilityID, []GemWord) {
 	roleMods := RoleModeMods(role, s.ShipType)
 	socketMods, grants, matched := EvaluateGemSockets(loadout.Sockets)
@@ -87,6 +91,9 @@ func FilterAbilitiesForMode(s Ship, role RoleMode, runewordGrants []AbilityID) [
 
 // ApplyStatModsToShip computes a presentational "effective" Ship snapshot by applying StatMods.
 // Note: This does not persist or mutate runtime state; it's for UI calculations.
+//
+// This function is still used by the V2 system and is NOT deprecated.
+// However, prefer using QuickEffectiveShip or ComputeEffectiveShipV2 for complete calculations.
 func ApplyStatModsToShip(base Ship, mods StatMods) Ship {
 	s := base
 	s.Speed += mods.SpeedDelta

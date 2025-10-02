@@ -187,6 +187,9 @@ func (s *ShipStack) GetOrInitLoadout(t ShipType) ShipLoadout {
 // EffectiveShip computes the effective stats and usable abilities for a given
 // ship type in this stack, taking into account the stack's role and the ship's loadout.
 // Returns the effective ship snapshot and its abilities list.
+//
+// DEPRECATED: Use EffectiveShipV2 instead for full modifier transparency.
+// This version lacks formation bonuses, composition bonuses, and modifier tracking.
 func (s *ShipStack) EffectiveShip(t ShipType) (Ship, []Ability) {
 	bp, ok := ShipBlueprints[t]
 	if !ok {
@@ -200,6 +203,21 @@ func (s *ShipStack) EffectiveShip(t ShipType) (Ship, []Ability) {
 	// Filter abilities based on the stack's role
 	abilities := FilterAbilitiesForMode(eff, s.Role, grants)
 	return eff, abilities
+}
+
+// EffectiveShipV2 computes effective stats using the V2 modifier system.
+// This is the recommended method for getting ship stats with full transparency.
+// Returns the effective ship, abilities, and the complete modifier stack for debugging.
+func (s *ShipStack) EffectiveShipV2(t ShipType, bucketIndex int, now time.Time) (Ship, []Ability, *ModifierStack) {
+	ship, abilities, modStack := ComputeEffectiveShipV2(s, t, bucketIndex, now, false, "")
+	return ship, abilities, modStack
+}
+
+// EffectiveShipV2Simple is a simplified version that matches the old EffectiveShip signature.
+// Use this as a drop-in replacement for EffectiveShip.
+func (s *ShipStack) EffectiveShipV2Simple(t ShipType, now time.Time) (Ship, []Ability) {
+	ship, abilities := QuickEffectiveShip(s, t, 0, now)
+	return ship, abilities
 }
 
 // SetFormation changes the stack's formation and applies reconfiguration time.
@@ -236,6 +254,9 @@ func (s *ShipStack) GetFormationPosition(shipType ShipType, bucketIndex int) For
 }
 
 // EffectiveShipInFormation computes effective stats including formation position bonuses.
+//
+// DEPRECATED: Use EffectiveShipInFormationV2 instead.
+// This version manually combines modifiers and lacks source tracking.
 func (s *ShipStack) EffectiveShipInFormation(t ShipType, bucketIndex int) (Ship, []Ability) {
 	bp, ok := ShipBlueprints[t]
 	if !ok {
@@ -270,6 +291,25 @@ func (s *ShipStack) EffectiveShipInFormation(t ShipType, bucketIndex int) (Ship,
 	abilities := FilterAbilitiesForMode(eff, s.Role, grants)
 
 	return eff, abilities
+}
+
+// EffectiveShipInFormationV2 computes effective stats using the V2 system with full formation support.
+// This is the recommended replacement for EffectiveShipInFormation.
+// Returns ship, abilities, and modifier stack for debugging.
+func (s *ShipStack) EffectiveShipInFormationV2(t ShipType, bucketIndex int, now time.Time) (Ship, []Ability, *ModifierStack) {
+	return ComputeEffectiveShipV2(s, t, bucketIndex, now, false, "")
+}
+
+// EffectiveShipInCombat computes effective stats for combat with formation counter bonuses.
+// Use this when calculating damage in battle.
+func (s *ShipStack) EffectiveShipInCombat(t ShipType, bucketIndex int, enemyFormation FormationType, now time.Time) (Ship, []Ability, *ModifierStack) {
+	return ComputeEffectiveShipV2(s, t, bucketIndex, now, true, enemyFormation)
+}
+
+// GetModifierBreakdownForShip returns a detailed breakdown of all modifiers affecting a ship.
+// Useful for debugging and UI display.
+func (s *ShipStack) GetModifierBreakdownForShip(t ShipType, bucketIndex int, now time.Time, inCombat bool) []ModifierSummary {
+	return GetModifierBreakdown(s, t, bucketIndex, now, inCombat, "")
 }
 
 // GetEffectiveStackSpeed returns the stack's movement speed considering formation.
