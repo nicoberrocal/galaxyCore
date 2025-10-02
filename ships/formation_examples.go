@@ -33,7 +33,7 @@ func ExampleBasicFormationSetup() {
 	fmt.Println(GetFormationInfo(stack.Formation))
 }
 
-// ExampleFormationCombat demonstrates combat with formations.
+// ExampleFormationCombat demonstrates combat with formations using V2 compute system.
 func ExampleFormationCombat() {
 	// Attacker with Vanguard formation
 	attacker := &ShipStack{
@@ -43,7 +43,8 @@ func ExampleFormationCombat() {
 		},
 		Role: RoleTactical,
 	}
-	attacker.SetFormation(FormationVanguard, time.Now())
+	now := time.Now()
+	attacker.SetFormation(FormationVanguard, now)
 	
 	// Defender with Box formation
 	defender := &ShipStack{
@@ -53,16 +54,41 @@ func ExampleFormationCombat() {
 		},
 		Role: RoleTactical,
 	}
-	defender.SetFormation(FormationBox, time.Now())
+	defender.SetFormation(FormationBox, now)
 	
-	// Execute battle round
-	result := ExecuteFormationBattleRound(attacker, defender)
+	// Setup combat context
+	combatCtx := NewCombatContext(attacker, defender)
+	fmt.Printf("Formation Counter: %.2fx (Vanguard vs Box)\n", combatCtx.FormationCounter)
+	fmt.Printf("Attack Direction: %s\n", combatCtx.AttackDirection)
 	
-	fmt.Printf("Formation Counter: %.2fx (Vanguard vs Box)\n", result.FormationAdvantage)
-	fmt.Printf("Attacker dealt: %d damage\n", result.AttackerDamageDealt)
-	fmt.Printf("Defender dealt: %d damage\n", result.DefenderDamageDealt)
-	fmt.Printf("Attacker ships lost: %v\n", result.AttackerShipsLost)
-	fmt.Printf("Defender ships lost: %v\n", result.DefenderShipsLost)
+	// Calculate effective combat stats using V2
+	attackerFighter, _, _ := ComputeEffectiveShipV2(
+		attacker, Fighter, 0, now, true, defender.Formation.Type)
+	attackerDestroyer, _, _ := ComputeEffectiveShipV2(
+		attacker, Destroyer, 0, now, true, defender.Formation.Type)
+	
+	defenderFighter, _, _ := ComputeEffectiveShipV2(
+		defender, Fighter, 0, now, true, attacker.Formation.Type)
+	defenderCarrier, _, _ := ComputeEffectiveShipV2(
+		defender, Carrier, 0, now, true, attacker.Formation.Type)
+	
+	fmt.Printf("\nAttacker effective stats (in combat vs %s):\n", defender.Formation.Type)
+	fmt.Printf("  Fighter: %d damage, %d HP\n", attackerFighter.AttackDamage, attackerFighter.HP)
+	fmt.Printf("  Destroyer: %d damage, %d HP\n", attackerDestroyer.AttackDamage, attackerDestroyer.HP)
+	
+	fmt.Printf("\nDefender effective stats (in combat vs %s):\n", attacker.Formation.Type)
+	fmt.Printf("  Fighter: %d damage, %d HP\n", defenderFighter.AttackDamage, defenderFighter.HP)
+	fmt.Printf("  Carrier: %d damage, %d HP\n", defenderCarrier.AttackDamage, defenderCarrier.HP)
+	
+	// Demonstrate damage distribution
+	totalAttackerDamage := int(float64(attackerFighter.AttackDamage*15+attackerDestroyer.AttackDamage*5) * combatCtx.FormationCounter)
+	damageDistribution := defender.Formation.CalculateDamageDistribution(totalAttackerDamage, combatCtx.AttackDirection)
+	
+	fmt.Printf("\nDamage distribution to defender (%d total):\n", totalAttackerDamage)
+	for position, damage := range damageDistribution {
+		percentage := float64(damage) / float64(totalAttackerDamage) * 100
+		fmt.Printf("  %s: %d damage (%.1f%%)\n", position, damage, percentage)
+	}
 }
 
 // ExampleFormationCounters demonstrates formation rock-paper-scissors.
@@ -80,7 +106,7 @@ func ExampleFormationCounters() {
 	fmt.Println(analysis)
 }
 
-// ExampleGemPositionSynergy demonstrates gem-position bonuses.
+// ExampleGemPositionSynergy demonstrates gem-position bonuses using V2 compute system.
 func ExampleGemPositionSynergy() {
 	// Create a stack with gems
 	stack := &ShipStack{
@@ -107,20 +133,36 @@ func ExampleGemPositionSynergy() {
 	
 	// Set formation (Fighters go to Front, Bombers to Back)
 	stack.SetFormation(FormationLine, time.Now())
+	now := time.Now()
 	
-	// Get effective stats for Fighter in front position
-	fighterStats, _ := stack.EffectiveShipInFormation(Fighter, 0)
-	fmt.Printf("Fighter in Front position:\n")
+	// Get effective stats for Fighter in front position using V2
+	fighterStats, fighterAbilities, fighterModStack := ComputeEffectiveShipV2(
+		stack, Fighter, 0, now, false, "")
+	fmt.Printf("Fighter in Front position (V2):\n")
 	fmt.Printf("  Attack Damage: %d\n", fighterStats.AttackDamage)
 	fmt.Printf("  Laser Shield: %d\n", fighterStats.LaserShield)
 	fmt.Printf("  HP: %d\n", fighterStats.HP)
+	fmt.Printf("  Active Abilities: %d\n", len(fighterAbilities))
 	
-	// Get effective stats for Bomber in back position
-	bomberStats, _ := stack.EffectiveShipInFormation(Bomber, 0)
-	fmt.Printf("Bomber in Back position:\n")
+	// Show modifier breakdown for Fighter
+	fighterBreakdown := GetModifierBreakdown(stack, Fighter, 0, now, false, "")
+	fmt.Printf("  Modifier layers: %d\n", len(fighterBreakdown))
+	for _, mod := range fighterBreakdown {
+		if mod.IsActive {
+			fmt.Printf("    - %s: %s\n", mod.Source, mod.Description)
+		}
+	}
+	
+	// Get effective stats for Bomber in back position using V2
+	bomberStats, bomberAbilities, _ := ComputeEffectiveShipV2(
+		stack, Bomber, 0, now, false, "")
+	fmt.Printf("\nBomber in Back position (V2):\n")
 	fmt.Printf("  Attack Damage: %d\n", bomberStats.AttackDamage)
 	fmt.Printf("  Attack Range: %d\n", bomberStats.AttackRange)
 	fmt.Printf("  Visibility: %d\n", bomberStats.VisibilityRange)
+	fmt.Printf("  Active Abilities: %d\n", len(bomberAbilities))
+	
+	_ = fighterModStack // Available for further analysis if needed
 }
 
 // ExampleCompositionBonuses demonstrates fleet composition bonuses.
@@ -232,7 +274,7 @@ func ExampleFormationAnalysis() {
 	}
 }
 
-// ExampleRoleModeFormationSynergy demonstrates role-formation interactions.
+// ExampleRoleModeFormationSynergy demonstrates role-formation interactions using V2 compute system.
 func ExampleRoleModeFormationSynergy() {
 	stack := &ShipStack{
 		Ships: map[ShipType][]HPBucket{
@@ -241,24 +283,41 @@ func ExampleRoleModeFormationSynergy() {
 		},
 		Role: RoleTactical,
 	}
+	now := time.Now()
 	
 	// Tactical mode gets -30% reconfiguration time
-	stack.SetFormation(FormationVanguard, time.Now())
+	stack.SetFormation(FormationVanguard, now)
 	fmt.Printf("Tactical mode reconfiguration: %d seconds\n", 
 		RoleModeFormationBonus(RoleTactical, FormationCatalog[FormationVanguard].ReconfigureTime))
 	
+	// Get stats with Tactical+Vanguard using V2
+	fighterTactical, _, tacticalModStack := ComputeEffectiveShipV2(
+		stack, Fighter, 0, now, false, "")
+	fmt.Printf("\nFighter stats with Tactical+Vanguard (V2):\n")
+	fmt.Printf("  Attack Damage: %d\n", fighterTactical.AttackDamage)
+	fmt.Printf("  Shields: L%d N%d A%d\n", 
+		fighterTactical.LaserShield, fighterTactical.NuclearShield, fighterTactical.AntimatterShield)
+	
 	// Switch to Economic mode
 	stack.Role = RoleEconomic
-	stack.SetFormation(FormationBox, time.Now())
-	fmt.Printf("Economic mode reconfiguration: %d seconds\n",
+	stack.SetFormation(FormationBox, now)
+	fmt.Printf("\nEconomic mode reconfiguration: %d seconds\n",
 		RoleModeFormationBonus(RoleEconomic, FormationCatalog[FormationBox].ReconfigureTime))
 	
-	// Get effective stats with role+formation bonuses
-	fighterStats, _ := stack.EffectiveShipInFormation(Fighter, 0)
-	fmt.Printf("\nFighter stats with Economic+Box:\n")
-	fmt.Printf("  Attack Damage: %d\n", fighterStats.AttackDamage)
+	// Get stats with Economic+Box using V2
+	fighterEconomic, _, economicModStack := ComputeEffectiveShipV2(
+		stack, Fighter, 0, now, false, "")
+	fmt.Printf("\nFighter stats with Economic+Box (V2):\n")
+	fmt.Printf("  Attack Damage: %d\n", fighterEconomic.AttackDamage)
 	fmt.Printf("  Shields: L%d N%d A%d\n", 
-		fighterStats.LaserShield, fighterStats.NuclearShield, fighterStats.AntimatterShield)
+		fighterEconomic.LaserShield, fighterEconomic.NuclearShield, fighterEconomic.AntimatterShield)
+	
+	// Compare the two configurations
+	diff := DiffModifierStacks(tacticalModStack, economicModStack)
+	fmt.Printf("\nConfiguration differences:\n")
+	fmt.Printf("  Added modifiers: %d\n", len(diff.Added))
+	fmt.Printf("  Removed modifiers: %d\n", len(diff.Removed))
+	fmt.Printf("  Changed modifiers: %d\n", len(diff.Changed))
 }
 
 // ExampleTemplateCreation demonstrates creating custom formation templates.
@@ -371,4 +430,158 @@ func ExampleFormationCloning() {
 		original.Facing, original.Assignments[0].Count)
 	fmt.Printf("Clone facing: %s, Front count: %d\n", 
 		clone.Facing, clone.Assignments[0].Count)
+}
+
+// ExampleV2ComputeWorkflow demonstrates the complete V2 compute workflow.
+func ExampleV2ComputeWorkflow() {
+	// Create a complex stack with gems, role, and formation
+	stack := &ShipStack{
+		Ships: map[ShipType][]HPBucket{
+			Fighter:   {{HP: 200, Count: 12}},
+			Destroyer: {{HP: 600, Count: 4}},
+			Bomber:    {{HP: 500, Count: 3}},
+		},
+		Role: RoleTactical,
+		Loadouts: map[ShipType]ShipLoadout{
+			Fighter: {
+				Sockets: []Gem{
+					GemCatalog["laser-3"],
+					GemCatalog["kinetic-2"],
+				},
+				Anchored: false,
+			},
+			Destroyer: {
+				Sockets: []Gem{
+					GemCatalog["nuclear-3"],
+					GemCatalog["armor-2"],
+				},
+				Anchored: false,
+			},
+		},
+	}
+	
+	now := time.Now()
+	stack.SetFormation(FormationVanguard, now)
+	
+	fmt.Printf("=== V2 Compute Workflow Example ===\n")
+	
+	// 1. Get baseline stats (no formation, no combat)
+	baselineFighter, _, _ := ComputeEffectiveShipV2(stack, Fighter, 0, now, false, "")
+	fmt.Printf("\n1. Baseline Fighter (gems + role only):\n")
+	fmt.Printf("   Damage: %d, HP: %d, Shields: L%d N%d A%d\n",
+		baselineFighter.AttackDamage, baselineFighter.HP,
+		baselineFighter.LaserShield, baselineFighter.NuclearShield, baselineFighter.AntimatterShield)
+	
+	// 2. Add formation bonuses (out of combat)
+	formationFighter, _, formationModStack := ComputeEffectiveShipV2(stack, Fighter, 0, now, false, "")
+	fmt.Printf("\n2. With Vanguard Formation (out of combat):\n")
+	fmt.Printf("   Damage: %d, HP: %d, Shields: L%d N%d A%d\n",
+		formationFighter.AttackDamage, formationFighter.HP,
+		formationFighter.LaserShield, formationFighter.NuclearShield, formationFighter.AntimatterShield)
+	
+	// 3. In combat against enemy formation
+	combatFighter, _, combatModStack := ComputeEffectiveShipV2(stack, Fighter, 0, now, true, FormationBox)
+	fmt.Printf("\n3. In Combat vs Box Formation:\n")
+	fmt.Printf("   Damage: %d, HP: %d, Shields: L%d N%d A%d\n",
+		combatFighter.AttackDamage, combatFighter.HP,
+		combatFighter.LaserShield, combatFighter.NuclearShield, combatFighter.AntimatterShield)
+	
+	// 4. Show modifier breakdown
+	breakdown := GetModifierBreakdown(stack, Fighter, 0, now, true, FormationBox)
+	fmt.Printf("\n4. Active Modifier Layers (%d total):\n", len(breakdown))
+	for i, mod := range breakdown {
+		if mod.IsActive {
+			status := "Active"
+			if mod.ExpiresIn != nil {
+				status = fmt.Sprintf("Expires in %.1fs", *mod.ExpiresIn)
+			}
+			fmt.Printf("   %d. %s: %s [%s]\n", i+1, mod.Source, mod.Description, status)
+		}
+	}
+	
+	// 5. Compare different scenarios
+	diff := DiffModifierStacks(formationModStack, combatModStack)
+	fmt.Printf("\n5. Formation vs Combat Differences:\n")
+	fmt.Printf("   Added in combat: %d modifiers\n", len(diff.Added))
+	fmt.Printf("   Removed in combat: %d modifiers\n", len(diff.Removed))
+	fmt.Printf("   Changed in combat: %d modifiers\n", len(diff.Changed))
+	
+	// Show specific changes
+	for _, added := range diff.Added {
+		fmt.Printf("   + %s: %s\n", added.Source, added.Description)
+	}
+	
+	// 6. Demonstrate manual modifier building
+	fmt.Printf("\n6. Manual Modifier Building:\n")
+	builder := NewModifierBuilder(now)
+	builder.AddRoleMode(RoleTactical)
+	builder.AddFormationPosition(stack.Formation, PositionFront)
+	builder.AddFormationCounter(FormationVanguard, FormationBox, true)
+	
+	manualStack := builder.Build()
+	ctx := ResolveContext{
+		Now:             now,
+		InCombat:        true,
+		HasFormation:    true,
+		FormationType:   FormationVanguard,
+		EnemyFormation:  FormationBox,
+	}
+	manualMods := manualStack.Resolve(ctx)
+	
+	fmt.Printf("   Manual stack layers: %d\n", len(manualStack.Layers))
+	fmt.Printf("   Final damage bonus: %.1f%%\n", manualMods.Damage.LaserPct*100)
+}
+
+// ExampleAdvancedModifierManagement demonstrates advanced modifier stack operations.
+func ExampleAdvancedModifierManagement() {
+	now := time.Now()
+	stack := NewModifierStack()
+	
+	fmt.Printf("=== Advanced Modifier Management ===\n")
+	
+	// 1. Add various types of modifiers
+	stack.AddPermanent(SourceGem, "laser-gem", "Laser Gem Tier 3",
+		StatMods{Damage: DamageMods{LaserPct: 0.15}}, PriorityGem, now)
+	
+	stack.AddTemporary(SourceAbility, "shield-boost", "Shield Boost Ability",
+		StatMods{LaserShieldDelta: 3}, PriorityAbility, now, 30*time.Second)
+	
+	combatOnly := true
+	stack.AddConditional(SourceFormationCounter, "vanguard-vs-box", "Formation Advantage",
+		StatMods{Damage: DamageMods{LaserPct: 0.30}}, PrioritySynergy, now, &combatOnly, nil)
+	
+	fmt.Printf("1. Initial stack: %d layers\n", len(stack.Layers))
+	
+	// 2. Resolve in different contexts
+	oocCtx := ResolveContext{Now: now, InCombat: false, HasFormation: true}
+	combatCtx := ResolveContext{Now: now, InCombat: true, HasFormation: true}
+	
+	oocMods := stack.Resolve(oocCtx)
+	combatMods := stack.Resolve(combatCtx)
+	
+	fmt.Printf("2. Out of combat damage bonus: %.1f%%\n", oocMods.Damage.LaserPct*100)
+	fmt.Printf("   In combat damage bonus: %.1f%%\n", combatMods.Damage.LaserPct*100)
+	
+	// 3. Remove expired modifiers
+	futureTime := now.Add(45 * time.Second)
+	stack.RemoveExpired(futureTime)
+	fmt.Printf("3. After 45s, remaining layers: %d\n", len(stack.Layers))
+	
+	// 4. Remove by source
+	stack.RemoveBySource(SourceGem)
+	fmt.Printf("4. After removing gems: %d layers\n", len(stack.Layers))
+	
+	// 5. Get summary for UI
+	summary := stack.GetSummary(combatCtx)
+	fmt.Printf("5. Summary for UI:\n")
+	for _, mod := range summary {
+		status := "Inactive"
+		if mod.IsActive {
+			status = "Active"
+			if mod.ExpiresIn != nil {
+				status = fmt.Sprintf("Active (%.1fs left)", *mod.ExpiresIn)
+			}
+		}
+		fmt.Printf("   %s: %s [%s]\n", mod.Source, mod.Description, status)
+	}
 }
