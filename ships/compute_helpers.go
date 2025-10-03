@@ -62,8 +62,8 @@ func QuickEffectiveShipInCombat(
 		shipType,
 		bucketIndex,
 		now,
-		true,            // in combat
-		enemyFormation,  // for counter bonuses
+		true,           // in combat
+		enemyFormation, // for counter bonuses
 	)
 	return ship, abilities
 }
@@ -100,14 +100,14 @@ func CompareLoadoutChange(
 		false, // out of combat for comparison
 		"",
 	)
-	
+
 	// Temporarily swap loadout
 	originalLoadout := stack.GetOrInitLoadout(shipType)
 	if stack.Loadouts == nil {
 		stack.Loadouts = make(map[ShipType]ShipLoadout)
 	}
 	stack.Loadouts[shipType] = newLoadout
-	
+
 	// After: new loadout
 	afterStack, afterMods := ComputeStackModifiers(
 		stack,
@@ -117,10 +117,10 @@ func CompareLoadoutChange(
 		false,
 		"",
 	)
-	
+
 	// Restore original
 	stack.Loadouts[shipType] = originalLoadout
-	
+
 	diff = DiffModifierStacks(beforeStack, afterStack)
 	return beforeMods, afterMods, diff
 }
@@ -143,12 +143,12 @@ func CompareFormationChange(
 		false,
 		"",
 	)
-	
+
 	// Temporarily swap formation
 	originalFormation := stack.Formation
 	newFormation := AutoAssignFormation(stack.Ships, newFormationType, now)
 	stack.Formation = &newFormation
-	
+
 	// After: new formation
 	afterStack, afterMods := ComputeStackModifiers(
 		stack,
@@ -158,10 +158,10 @@ func CompareFormationChange(
 		false,
 		"",
 	)
-	
+
 	// Restore original
 	stack.Formation = originalFormation
-	
+
 	diff = DiffModifierStacks(beforeStack, afterStack)
 	return beforeMods, afterMods, diff
 }
@@ -176,14 +176,14 @@ func GetActiveModifierSources(
 	inCombat bool,
 ) map[ModifierSource][]ModifierSummary {
 	breakdown := GetModifierBreakdown(stack, shipType, bucketIndex, now, inCombat, "")
-	
+
 	grouped := make(map[ModifierSource][]ModifierSummary)
 	for _, summary := range breakdown {
 		if summary.IsActive {
 			grouped[summary.Source] = append(grouped[summary.Source], summary)
 		}
 	}
-	
+
 	return grouped
 }
 
@@ -196,7 +196,7 @@ func BatchComputeEffectiveShips(
 	enemyFormation FormationType,
 ) map[ShipType]Ship {
 	result := make(map[ShipType]Ship)
-	
+
 	for shipType := range stack.Ships {
 		ship, _, _ := ComputeEffectiveShipV2(
 			stack,
@@ -208,7 +208,7 @@ func BatchComputeEffectiveShips(
 		)
 		result[shipType] = ship
 	}
-	
+
 	return result
 }
 
@@ -230,7 +230,7 @@ func RecommendFormation(
 ) (recommended FormationType, score float64) {
 	bestScore := 0.0
 	bestFormation := FormationLine // default
-	
+
 	// Try each formation type
 	for formationType := range FormationCatalog {
 		mult := GetFormationCounterMultiplier(formationType, enemyFormation)
@@ -239,7 +239,7 @@ func RecommendFormation(
 			bestFormation = formationType
 		}
 	}
-	
+
 	return bestFormation, bestScore
 }
 
@@ -259,26 +259,26 @@ func SimulateCombatModifiers(
 // This is a simplified heuristic combining ship count, HP, and modifiers.
 func GetStackPowerRating(stack *ShipStack, now time.Time) float64 {
 	rating := 0.0
-	
+
 	for shipType, buckets := range stack.Ships {
 		for bucketIndex, bucket := range buckets {
 			if bucket.Count == 0 {
 				continue
 			}
-			
+
 			// Get effective ship stats
 			effectiveShip, _ := QuickEffectiveShip(stack, shipType, bucketIndex, now)
-			
+
 			// Simple power formula: (HP * Count * AttackDamage) / AttackInterval
 			shipPower := float64(effectiveShip.HP * bucket.Count * effectiveShip.AttackDamage)
 			if effectiveShip.AttackInterval > 0 {
 				shipPower /= effectiveShip.AttackInterval
 			}
-			
+
 			rating += shipPower
 		}
 	}
-	
+
 	return rating
 }
 
@@ -289,7 +289,7 @@ func ValidateLoadout(loadout ShipLoadout, shipType ShipType) string {
 	if len(loadout.Sockets) > 3 {
 		return "maximum 3 sockets allowed"
 	}
-	
+
 	// Check for duplicate gems (same ID)
 	seen := make(map[GemID]bool)
 	for _, gem := range loadout.Sockets {
@@ -298,12 +298,12 @@ func ValidateLoadout(loadout ShipLoadout, shipType ShipType) string {
 		}
 		seen[gem.ID] = true
 	}
-	
+
 	// Could add more validation here:
 	// - Ship type restrictions
 	// - Gem tier requirements
 	// - etc.
-	
+
 	return "" // valid
 }
 
@@ -311,18 +311,4 @@ func ValidateLoadout(loadout ShipLoadout, shipType ShipType) string {
 // This should be called periodically to prevent memory bloat.
 func CleanupExpiredModifiers(modStack *ModifierStack, now time.Time) {
 	modStack.RemoveExpired(now)
-}
-
-// MergeStacksModifiers computes combined modifiers for a merged fleet.
-// Useful when multiple stacks combine or for fleet-wide bonuses.
-func MergeStacksModifiers(stacks []*ShipStack, now time.Time) StatMods {
-	combined := ZeroMods()
-	
-	for _, stack := range stacks {
-		// Get composition bonuses (these stack across merged fleets)
-		compositionMods, _ := EvaluateCompositionBonuses(stack.Ships)
-		combined = CombineMods(combined, compositionMods)
-	}
-	
-	return combined
 }

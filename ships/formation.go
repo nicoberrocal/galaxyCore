@@ -79,6 +79,22 @@ type FormationSpec struct {
 	SpecialProperties []string
 }
 
+// FormationTemplate defines a pre-configured formation setup with conditions.
+type FormationTemplate struct {
+	Name        string                         `bson:"name" json:"name"`
+	Description string                         `bson:"description" json:"description"`
+	Formation   FormationType                  `bson:"formation" json:"formation"`
+	Assignments map[ShipType]FormationPosition `bson:"assignments" json:"assignments"`
+	Conditions  []TemplateCondition            `bson:"conditions" json:"conditions"`
+}
+
+// TemplateCondition defines requirements for using a formation template.
+type TemplateCondition struct {
+	MinShips map[ShipType]int `bson:"minShips" json:"minShips"`
+	RoleMode RoleMode         `bson:"roleMode,omitempty" json:"roleMode,omitempty"`
+	Against  FormationType    `bson:"against,omitempty" json:"against,omitempty"` // Counter-formation
+}
+
 // FormationCatalog contains all formation type definitions.
 var FormationCatalog = map[FormationType]FormationSpec{
 	FormationLine: {
