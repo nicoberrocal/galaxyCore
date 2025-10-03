@@ -334,7 +334,7 @@ func (ts *FormationTreeState) GetUnlockedNodesInTree(formation FormationType) []
 // ===================
 
 // NewFormationTreeState creates a new state for a player.
-func NewFormationTreeState(playerID string, now time.Time) *FormationTreeState {
+func NewFormationTreeState(playerID bson.ObjectID, now time.Time) *FormationTreeState {
 	return &FormationTreeState{
 		PlayerID:       playerID,
 		TotalXP:        1,
