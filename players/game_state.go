@@ -3,6 +3,7 @@ package players
 import (
 	"time"
 
+	"github.com/nicoberrocal/galaxyCore/ships"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -22,9 +23,10 @@ type PlayerGameState struct {
 	// - ColonizedSystems: Systems where player has embedded defending fleet
 	// - ActiveStacks: Stacks in free movement (space, mining, traveling)
 	// - MiningOperations: Asteroid/Nebula IDs where player has mining stacks
-	ColonizedSystems []bson.ObjectID `bson:"colonizedSystems"` // System IDs where player has DefendingFleet
-	ActiveStacks     []bson.ObjectID `bson:"activeStacks"`     // Stack IDs in free movement/mining (NOT in systems)
-	MiningOperations []bson.ObjectID `bson:"miningOperations"` // Asteroid/Nebula IDs being mined by player's stacks
+	ColonizedSystems []bson.ObjectID           `bson:"colonizedSystems"` // System IDs where player has DefendingFleet
+	ActiveStacks     []bson.ObjectID           `bson:"activeStacks"`     // Stack IDs in free movement/mining (NOT in systems)
+	MiningOperations []bson.ObjectID           `bson:"miningOperations"` // Asteroid/Nebula IDs being mined by player's stacks
+	FormationTree    *ships.FormationTreeState `bson:"formationTree"`
 
 	// Game metadata
 	IsAlive    bool      `bson:"isAlive"`
