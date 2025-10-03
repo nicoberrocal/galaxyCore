@@ -92,30 +92,28 @@ func ComputeLoadoutV2WithTree(
 ) (*ModifierStack, StatMods, []AbilityID) {
 	builder := NewModifierBuilder(now)
 	
-	// 1. Add gem modifiers
+	// 1. Gems: provide their own StatMods
 	builder.AddGemsFromLoadout(loadout)
 	
-	// 2. Add role mode modifiers
+	// 2. Role Mode: provides its own StatMods
 	builder.AddRoleMode(role)
 	
-	// 3. Add formation tree nodes (NEW!)
+	// 3. Formation Tree: provides StatMods from unlocked nodes
 	if formation != nil && treeState != nil {
 		builder.AddFormationTreeNodes(treeState, formation.Type)
 	}
 	
-	// 4. Add formation position bonuses
+	// 4. Formation: provides StatMods from FormationCatalog position bonuses
 	if formation != nil {
 		builder.AddFormationPosition(formation, position)
-		builder.AddFormationRoleSynergy(formation, position, role)
-		builder.AddGemPositionSynergy(loadout.Sockets, position)
 	}
 	
-	// 5. Add composition bonuses
+	// 5. Composition: provides StatMods from fleet makeup
 	if ships != nil {
 		builder.AddCompositionBonus(ships)
 	}
 	
-	// 6. Add anchored penalty
+	// 6. Anchored state: provides penalty mods
 	builder.AddAnchoredPenalty(loadout.Anchored)
 	
 	// Build and resolve

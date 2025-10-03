@@ -196,18 +196,8 @@ func (s *ShipStack) GetOrInitLoadout(t ShipType) ShipLoadout {
 // DEPRECATED: Use EffectiveShipV2 instead for full modifier transparency.
 // This version lacks formation bonuses, composition bonuses, and modifier tracking.
 func (s *ShipStack) EffectiveShip(t ShipType) (Ship, []Ability) {
-	bp, ok := ShipBlueprints[t]
-	if !ok {
-		return Ship{}, nil
-	}
-	loadout := s.GetOrInitLoadout(t)
-	// Compute mods using the stack's role and the ship's loadout
-	mods, grants, _ := ComputeLoadout(bp, s.Role, loadout)
-	eff := ApplyStatModsToShip(bp, mods)
-
-	// Filter abilities based on the stack's role
-	abilities := FilterAbilitiesForMode(eff, s.Role, grants)
-	return eff, abilities
+	// DEPRECATED: Use EffectiveShipV2Simple instead
+	return s.EffectiveShipV2Simple(t, time.Now())
 }
 
 // EffectiveShipV2 computes effective stats using the V2 modifier system.
@@ -263,39 +253,8 @@ func (s *ShipStack) GetFormationPosition(shipType ShipType, bucketIndex int) For
 // DEPRECATED: Use EffectiveShipInFormationV2 instead.
 // This version manually combines modifiers and lacks source tracking.
 func (s *ShipStack) EffectiveShipInFormation(t ShipType, bucketIndex int) (Ship, []Ability) {
-	bp, ok := ShipBlueprints[t]
-	if !ok {
-		return Ship{}, nil
-	}
-
-	loadout := s.GetOrInitLoadout(t)
-
-	// Base mods from role and loadout
-	mods, grants, _ := ComputeLoadout(bp, s.Role, loadout)
-
-	// Add formation position bonuses if formation is set
-	if s.Formation != nil {
-		position := s.GetFormationPosition(t, bucketIndex)
-
-		// Apply formation position bonuses
-		mods = s.Formation.ApplyPositionBonusesToShip(position, mods)
-
-		// Apply role-specific formation enhancements
-		mods = ApplyFormationRoleModifiers(mods, s.Formation, position, s.Role)
-
-		// Apply gem-position synergy bonuses
-		gemPositionMods := ApplyGemPositionEffects(loadout.Sockets, position)
-		mods = CombineMods(mods, gemPositionMods)
-	}
-
-	// Apply composition bonuses
-	compositionMods, _ := EvaluateCompositionBonuses(s.Ships)
-	mods = CombineMods(mods, compositionMods)
-
-	eff := ApplyStatModsToShip(bp, mods)
-	abilities := FilterAbilitiesForMode(eff, s.Role, grants)
-
-	return eff, abilities
+	// DEPRECATED: Use EffectiveShipV2 instead
+	return s.EffectiveShipV2Simple(t, time.Now())
 }
 
 // EffectiveShipInFormationV2 computes effective stats using the V2 system with full formation support.

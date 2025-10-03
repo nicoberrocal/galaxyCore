@@ -202,26 +202,24 @@ func SuggestFormationChanges(stack *ShipStack, enemyFormation FormationType) []s
 }
 
 // GetOptimalPositionForAbility returns the best formation position to use an ability.
+// This is a heuristic based on ability type.
 func GetOptimalPositionForAbility(abilityID AbilityID) FormationPosition {
-	for _, mod := range AbilityFormationModsCatalog {
-		if mod.AbilityID == abilityID {
-			return mod.Position
-		}
-	}
-	return PositionFront // default
-}
-
-// GetAbilitiesForPosition returns all abilities that benefit from a specific position.
-func GetAbilitiesForPosition(position FormationPosition) []AbilityID {
-	var abilities []AbilityID
-	
-	for _, mod := range AbilityFormationModsCatalog {
-		if mod.Position == position {
-			abilities = append(abilities, mod.AbilityID)
-		}
+	_, ok := AbilitiesCatalog[abilityID]
+	if !ok {
+		return PositionFront
 	}
 	
-	return abilities
+	// Heuristic based on ability kind and purpose
+	switch abilityID {
+	case AbilityLongRangeSensors, AbilityPing, AbilityStandoffPattern, AbilitySiegePayload:
+		return PositionBack
+	case AbilityEvasiveManeuvers, AbilityInterdictorPulse, AbilityActiveCamo, AbilityBackstab:
+		return PositionFlank
+	case AbilityPointDefenseScreen, AbilityTargetingUplink, AbilitySelfRepair, AbilityRepairDrones:
+		return PositionSupport
+	default:
+		return PositionFront
+	}
 }
 
 // GetGemFamiliesForPosition returns gem families that synergize with a position.

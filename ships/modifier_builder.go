@@ -148,31 +148,12 @@ func (mb *ModifierBuilder) AddFormationPosition(formation *Formation, position F
 	return mb
 }
 
-// AddFormationRoleSynergy adds modifiers from role+formation synergy.
+// AddFormationRoleSynergy is DEPRECATED - removed for clean system separation.
+// Formation bonuses come from FormationCatalog + tree nodes only.
+// Role bonuses come from RoleMode only.
 func (mb *ModifierBuilder) AddFormationRoleSynergy(formation *Formation, position FormationPosition, role RoleMode) *ModifierBuilder {
-	if formation == nil {
-		return mb
-	}
-	
-	// Calculate the synergy bonus
-	baseMods := ZeroMods()
-	synergyMods := ApplyFormationRoleModifiers(baseMods, formation, position, role)
-	
-	// Only add if there's an actual bonus
-	if !isZeroMods(synergyMods) {
-		requiresFormation := true
-		mb.stack.AddConditional(
-			SourceFormationRole,
-			fmt.Sprintf("%s_%s_%s", formation.Type, position, role),
-			fmt.Sprintf("%s + %s Synergy", formation.Type, role),
-			synergyMods,
-			PrioritySynergy,
-			mb.now,
-			nil,
-			&requiresFormation,
-		)
-	}
-	
+	// This method is deprecated and does nothing.
+	// Kept for backward compatibility during transition.
 	return mb
 }
 
@@ -227,24 +208,12 @@ func (mb *ModifierBuilder) AddCompositionBonus(ships map[ShipType][]HPBucket) *M
 	return mb
 }
 
-// AddGemPositionSynergy adds modifiers from gem+position synergies.
+// AddGemPositionSynergy is DEPRECATED - removed for clean system separation.
+// Gems provide their own StatMods only.
+// Formation provides its own StatMods only.
 func (mb *ModifierBuilder) AddGemPositionSynergy(gems []Gem, position FormationPosition) *ModifierBuilder {
-	synergyMods := ApplyGemPositionEffects(gems, position)
-	
-	if !isZeroMods(synergyMods) {
-		requiresFormation := true
-		mb.stack.AddConditional(
-			SourceGemPosition,
-			fmt.Sprintf("gems_%s", position),
-			fmt.Sprintf("Gem-Position Synergy (%s)", position),
-			synergyMods,
-			PrioritySynergy,
-			mb.now,
-			nil,
-			&requiresFormation,
-		)
-	}
-	
+	// This method is deprecated and does nothing.
+	// Kept for backward compatibility during transition.
 	return mb
 }
 

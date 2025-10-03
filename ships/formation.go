@@ -585,44 +585,11 @@ func RoleModeFormationBonus(role RoleMode, reconfigTime int) int {
 	}
 }
 
-// ApplyFormationRoleModifiers combines formation position bonuses with role mode bonuses.
+// ApplyFormationRoleModifiers is DEPRECATED - removed for clean system separation.
+// Formation bonuses come from FormationCatalog + tree nodes only.
+// Role bonuses come from RoleMode only.
+// This function is kept for backward compatibility but should not be used.
 func ApplyFormationRoleModifiers(baseMods StatMods, formation *Formation, position FormationPosition, role RoleMode) StatMods {
-	// Apply formation position bonus
-	mods := formation.ApplyPositionBonusesToShip(position, baseMods)
-
-	// Apply role-specific enhancements to formation bonuses
-	switch role {
-	case RoleTactical:
-		// +10% effectiveness to position bonuses
-		enhancementMods := StatMods{
-			Damage: DamageMods{
-				LaserPct:      mods.Damage.LaserPct * 0.10,
-				NuclearPct:    mods.Damage.NuclearPct * 0.10,
-				AntimatterPct: mods.Damage.AntimatterPct * 0.10,
-			},
-		}
-		mods = CombineMods(mods, enhancementMods)
-
-	case RoleEconomic:
-		// Defensive position bonuses enhanced when in economic mode
-		if position == PositionSupport || position == PositionBack {
-			defenseMods := StatMods{
-				LaserShieldDelta:   1,
-				NuclearShieldDelta: 1,
-			}
-			mods = CombineMods(mods, defenseMods)
-		}
-
-	case RoleRecon:
-		// Enhanced visibility and detection in all positions
-		reconMods := StatMods{
-			VisibilityDelta: 1,
-		}
-		mods = CombineMods(mods, reconMods)
-
-	case RoleScientific:
-		// No specific formation bonuses in scientific mode
-	}
-
-	return mods
+	// DEPRECATED: Just return formation position bonuses without role synergy
+	return formation.ApplyPositionBonusesToShip(position, baseMods)
 }
