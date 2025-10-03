@@ -2,6 +2,8 @@ package ships
 
 import (
 	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // FormationTreeNode represents a single node in a formation mastery tree.
@@ -60,7 +62,7 @@ type NodeEffects struct {
 
 // FormationTreeState tracks a player's progress in the formation mastery system.
 type FormationTreeState struct {
-	PlayerID string `bson:"playerId" json:"playerId"`
+	PlayerID bson.ObjectID `bson:"playerId" json:"playerId"`
 	// Experience tracking
 	TotalXP     int `bson:"totalXP" json:"totalXP"`         // Lifetime earned
 	SpentXP     int `bson:"spentXP" json:"spentXP"`         // Used for nodes
@@ -335,9 +337,9 @@ func (ts *FormationTreeState) GetUnlockedNodesInTree(formation FormationType) []
 func NewFormationTreeState(playerID string, now time.Time) *FormationTreeState {
 	return &FormationTreeState{
 		PlayerID:       playerID,
-		TotalXP:        0,
+		TotalXP:        1,
 		SpentXP:        0,
-		AvailableXP:    0,
+		AvailableXP:    1,
 		UnlockedNodes:  []string{},
 		FreeResetsLeft: 1, // Start with 1 free reset
 		TotalResets:    0,
