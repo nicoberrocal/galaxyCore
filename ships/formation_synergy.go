@@ -16,16 +16,16 @@ var AbilityFormationModsCatalog = []AbilityFormationMod{
 		AbilityID: AbilityFocusFire,
 		Position:  PositionFront,
 		Modifications: map[string]float64{
-			"CooldownSeconds":  -0.5,  // 50% faster cooldown
-			"DamageMultiplier": 1.2,   // +20% damage
+			"CooldownSeconds":  -0.5, // 50% faster cooldown
+			"DamageMultiplier": 1.2,  // +20% damage
 		},
 	},
 	{
 		AbilityID: AbilityCloakWhileAnchored,
 		Position:  PositionFlank,
 		Modifications: map[string]float64{
-			"DurationSeconds":      2.0, // +2x duration
-			"DetectionResistance":  0.3, // +30% harder to detect
+			"DurationSeconds":     2.0, // +2x duration
+			"DetectionResistance": 0.3, // +30% harder to detect
 		},
 	},
 	{
@@ -40,7 +40,7 @@ var AbilityFormationModsCatalog = []AbilityFormationMod{
 		AbilityID: AbilityEvasiveManeuvers,
 		Position:  PositionFlank,
 		Modifications: map[string]float64{
-			"EvasionBonus":   0.25, // +25% evasion
+			"EvasionBonus":    0.25, // +25% evasion
 			"DurationSeconds": 1.5,  // +50% duration multiplier
 		},
 	},
@@ -64,15 +64,15 @@ var AbilityFormationModsCatalog = []AbilityFormationMod{
 		AbilityID: AbilityTargetingUplink,
 		Position:  PositionSupport,
 		Modifications: map[string]float64{
-			"AccuracyBonus":    0.15, // +15% accuracy
-			"DurationSeconds":  1.3,  // +30% duration multiplier
+			"AccuracyBonus":   0.15, // +15% accuracy
+			"DurationSeconds": 1.3,  // +30% duration multiplier
 		},
 	},
 	{
 		AbilityID: AbilityPointDefenseScreen,
 		Position:  PositionSupport,
 		Modifications: map[string]float64{
-			"ProtectionRadius": 1.5, // +50% radius multiplier
+			"ProtectionRadius": 1.5,  // +50% radius multiplier
 			"MitigationBonus":  0.20, // +20% damage mitigation
 		},
 	},
@@ -80,7 +80,7 @@ var AbilityFormationModsCatalog = []AbilityFormationMod{
 		AbilityID: AbilityOverload,
 		Position:  PositionFront,
 		Modifications: map[string]float64{
-			"DamageMultiplier": 1.25, // +25% damage
+			"DamageMultiplier": 1.25,  // +25% damage
 			"ShieldPenalty":    -0.10, // -10% less shield penalty
 		},
 	},
@@ -126,9 +126,9 @@ var AbilityFormationModsCatalog = []AbilityFormationMod{
 
 // GemPositionEffect defines bonus effects when a gem type is socketed in a ship at a specific formation position.
 type GemPositionEffect struct {
-	GemFamily GemFamily          `bson:"gemFamily" json:"gemFamily"`
-	Position  FormationPosition  `bson:"position" json:"position"`
-	Bonus     StatMods           `bson:"bonus" json:"bonus"`
+	GemFamily GemFamily         `bson:"gemFamily" json:"gemFamily"`
+	Position  FormationPosition `bson:"position" json:"position"`
+	Bonus     StatMods          `bson:"bonus" json:"bonus"`
 }
 
 // GemPositionEffectsCatalog contains synergies between gem families and formation positions.
@@ -161,9 +161,9 @@ var GemPositionEffectsCatalog = []GemPositionEffect{
 		GemFamily: GemKinetic,
 		Position:  PositionFront,
 		Bonus: StatMods{
-			BucketHPPct:           0.15,
-			LaserShieldDelta:      1,
-			NuclearShieldDelta:    1,
+			BucketHPPct:        0.15,
+			LaserShieldDelta:   1,
+			NuclearShieldDelta: 1,
 		},
 	},
 	{
@@ -220,7 +220,7 @@ var GemPositionEffectsCatalog = []GemPositionEffect{
 		GemFamily: GemAntimatter,
 		Position:  PositionBack,
 		Bonus: StatMods{
-			Damage:         DamageMods{AntimatterPct: 0.12},
+			Damage:          DamageMods{AntimatterPct: 0.12},
 			ShieldPiercePct: 0.08,
 		},
 	},
@@ -235,19 +235,19 @@ var GemPositionEffectsCatalog = []GemPositionEffect{
 }
 
 // GetAbilityFormationMods returns the modifications for an ability when used from a specific position.
-func GetAbilityFormationMods(abilityID AbilityID, position FormationPosition) map[string]float64 {
-	for _, mod := range AbilityFormationModsCatalog {
-		if mod.AbilityID == abilityID && mod.Position == position {
-			return mod.Modifications
-		}
-	}
-	return nil
-}
+// func GetAbilityFormationMods(abilityID AbilityID, position FormationPosition) map[string]float64 {
+// 	for _, mod := range AbilityFormationModsCatalog {
+// 		if mod.AbilityID == abilityID && mod.Position == position {
+// 			return mod.Modifications
+// 		}
+// 	}
+// 	return nil
+// }
 
 // ApplyGemPositionEffects computes bonus stat mods from gem-position synergies.
 func ApplyGemPositionEffects(gems []Gem, position FormationPosition) StatMods {
 	mods := ZeroMods()
-	
+
 	for _, gem := range gems {
 		for _, effect := range GemPositionEffectsCatalog {
 			if effect.GemFamily == gem.Family && effect.Position == position {
@@ -255,7 +255,7 @@ func ApplyGemPositionEffects(gems []Gem, position FormationPosition) StatMods {
 			}
 		}
 	}
-	
+
 	return mods
 }
 
@@ -374,13 +374,108 @@ var CompositionBonusesCatalog = []CompositionBonus{
 			InterdictionResistPct: 0.15,
 		},
 	},
+	{
+		Type:        "Tank Division",
+		Description: "Heavy armor formation with Cruisers and Carriers.",
+		Requirement: map[ShipType]int{
+			Cruiser: 2,
+			Carrier: 1,
+		},
+		Bonus: StatMods{
+			LaserShieldDelta:      1,
+			NuclearShieldDelta:    1,
+			AntimatterShieldDelta: 1,
+			BucketHPPct:           0.20,
+		},
+	},
+	{
+		Type:        "Scout Hunter Pack",
+		Description: "Corvette-focused fleet for countering fast ships.",
+		Requirement: map[ShipType]int{
+			Corvette: 2,
+		},
+		Bonus: StatMods{
+			SpeedDelta:  2,
+			AccuracyPct: 0.20,
+			Damage:      DamageMods{AntimatterPct: 0.15},
+		},
+	},
+	{
+		Type:        "Artillery Battery",
+		Description: "AoE-focused fleet with Artillery and support.",
+		Requirement: map[ShipType]int{
+			Artillery: 1,
+			Bomber:    1,
+		},
+		Bonus: StatMods{
+			AttackRangeDelta:   2,
+			SplashRadiusDelta:  1,
+			StructureDamagePct: 0.20,
+		},
+	},
+	{
+		Type:        "Shadow Ops",
+		Description: "Stealth-focused fleet for assassination missions.",
+		Requirement: map[ShipType]int{
+			StealthFrigate: 2,
+			Scout:          1,
+		},
+		Bonus: StatMods{
+			CritPct:         0.20,
+			FirstVolleyPct:  0.25,
+			VisibilityDelta: 2,
+		},
+	},
+	{
+		Type:        "Electronic Warfare Wing",
+		Description: "Debuff-stacking fleet with Support Frigates.",
+		Requirement: map[ShipType]int{
+			Frigate: 2,
+		},
+		Bonus: StatMods{
+			AbilityCooldownPct: -0.15,
+			AccuracyPct:        0.15,
+			VisibilityDelta:    1,
+		},
+	},
+	{
+		Type:        "Antimatter Supremacy",
+		Description: "Antimatter-focused fleet for shield penetration.",
+		Requirement: map[ShipType]int{
+			Destroyer: 1,
+			Corvette:  2,
+		},
+		Bonus: StatMods{
+			Damage:          DamageMods{AntimatterPct: 0.20},
+			ShieldPiercePct: 0.15,
+			FirstVolleyPct:  0.15,
+		},
+	},
+	{
+		Type:        "Combined Arms",
+		Description: "Diverse fleet with all new ship types.",
+		Requirement: map[ShipType]int{
+			Cruiser:        1,
+			Corvette:       1,
+			Artillery:      1,
+			StealthFrigate: 1,
+			Frigate:        1,
+		},
+		Bonus: StatMods{
+			Damage:                DamageMods{LaserPct: 0.10, NuclearPct: 0.10, AntimatterPct: 0.10},
+			LaserShieldDelta:      1,
+			NuclearShieldDelta:    1,
+			AntimatterShieldDelta: 1,
+			SpeedDelta:            1,
+		},
+	},
 }
 
 // EvaluateCompositionBonuses checks which composition bonuses are active for the given fleet.
 func EvaluateCompositionBonuses(ships map[ShipType][]HPBucket) (StatMods, []CompositionBonus) {
 	mods := ZeroMods()
 	var activeBonuses []CompositionBonus
-	
+
 	// Count total ships per type
 	counts := make(map[ShipType]int)
 	for shipType, buckets := range ships {
@@ -390,7 +485,7 @@ func EvaluateCompositionBonuses(ships map[ShipType][]HPBucket) (StatMods, []Comp
 		}
 		counts[shipType] = total
 	}
-	
+
 	// Check each composition bonus
 	for _, bonus := range CompositionBonusesCatalog {
 		requirementsMet := true
@@ -400,13 +495,13 @@ func EvaluateCompositionBonuses(ships map[ShipType][]HPBucket) (StatMods, []Comp
 				break
 			}
 		}
-		
+
 		if requirementsMet {
 			mods = CombineMods(mods, bonus.Bonus)
 			activeBonuses = append(activeBonuses, bonus)
 		}
 	}
-	
+
 	return mods, activeBonuses
 }
 
@@ -532,6 +627,93 @@ var FormationTemplatesCatalog = []FormationTemplate{
 			},
 		},
 	},
+	{
+		Name:        "Tank Wall",
+		Description: "Heavy frontline formation with Cruisers and Carriers.",
+		Formation:   FormationBox,
+		Assignments: map[ShipType]FormationPosition{
+			Cruiser:   PositionFront,
+			Carrier:   PositionSupport,
+			Frigate:   PositionSupport,
+			Artillery: PositionBack,
+			Fighter:   PositionFront,
+		},
+		Conditions: []TemplateCondition{
+			{
+				MinShips: map[ShipType]int{Cruiser: 2, Carrier: 1},
+				RoleMode: RoleTactical,
+			},
+		},
+	},
+	{
+		Name:        "Scout Hunter",
+		Description: "Corvette-focused formation for countering fast ships.",
+		Formation:   FormationSkirmish,
+		Assignments: map[ShipType]FormationPosition{
+			Corvette:  PositionFlank,
+			Destroyer: PositionFront,
+			Frigate:   PositionSupport,
+			Fighter:   PositionFlank,
+		},
+		Conditions: []TemplateCondition{
+			{
+				MinShips: map[ShipType]int{Corvette: 2},
+				RoleMode: RoleTactical,
+			},
+		},
+	},
+	{
+		Name:        "Artillery Barrage",
+		Description: "Long-range AoE formation with Artillery and Bombers.",
+		Formation:   FormationLine,
+		Assignments: map[ShipType]FormationPosition{
+			Artillery: PositionBack,
+			Bomber:    PositionBack,
+			Cruiser:   PositionFront,
+			Frigate:   PositionSupport,
+			Fighter:   PositionFront,
+		},
+		Conditions: []TemplateCondition{
+			{
+				MinShips: map[ShipType]int{Artillery: 1, Bomber: 1},
+				RoleMode: RoleTactical,
+			},
+		},
+	},
+	{
+		Name:        "Stealth Strike",
+		Description: "Assassination formation with Stealth Frigates.",
+		Formation:   FormationSkirmish,
+		Assignments: map[ShipType]FormationPosition{
+			StealthFrigate: PositionFlank,
+			Scout:          PositionFlank,
+			Corvette:       PositionFlank,
+			Fighter:        PositionFront,
+		},
+		Conditions: []TemplateCondition{
+			{
+				MinShips: map[ShipType]int{StealthFrigate: 2},
+				RoleMode: RoleTactical,
+			},
+		},
+	},
+	{
+		Name:        "Debuff Stack",
+		Description: "Electronic warfare formation with multiple Support Frigates.",
+		Formation:   FormationLine,
+		Assignments: map[ShipType]FormationPosition{
+			Frigate: PositionSupport,
+			Cruiser: PositionFront,
+			Carrier: PositionSupport,
+			Fighter: PositionFront,
+		},
+		Conditions: []TemplateCondition{
+			{
+				MinShips: map[ShipType]int{Frigate: 2},
+				RoleMode: RoleTactical,
+			},
+		},
+	},
 }
 
 // FindBestTemplate selects the most appropriate formation template for the given conditions.
@@ -545,15 +727,15 @@ func FindBestTemplate(ships map[ShipType][]HPBucket, role RoleMode, enemyFormati
 		}
 		counts[shipType] = total
 	}
-	
+
 	// Score each template
 	var bestTemplate *FormationTemplate
 	bestScore := 0
-	
+
 	for i := range FormationTemplatesCatalog {
 		template := &FormationTemplatesCatalog[i]
 		score := 0
-		
+
 		for _, condition := range template.Conditions {
 			// Check ship requirements
 			requirementsMet := true
@@ -566,20 +748,20 @@ func FindBestTemplate(ships map[ShipType][]HPBucket, role RoleMode, enemyFormati
 			if !requirementsMet {
 				continue
 			}
-			
+
 			score += 10
-			
+
 			// Bonus for matching role
 			if condition.RoleMode != "" && condition.RoleMode == role {
 				score += 5
 			}
-			
+
 			// Bonus for countering enemy formation
 			if condition.Against != "" && condition.Against == enemyFormation {
 				score += 8
 			}
 		}
-		
+
 		// Check formation counter advantage
 		if enemyFormation != "" {
 			counterMult := GetFormationCounterMultiplier(template.Formation, enemyFormation)
@@ -587,12 +769,12 @@ func FindBestTemplate(ships map[ShipType][]HPBucket, role RoleMode, enemyFormati
 				score += int((counterMult - 1.0) * 20) // +20 score per 1.0 advantage
 			}
 		}
-		
+
 		if score > bestScore {
 			bestScore = score
 			bestTemplate = template
 		}
 	}
-	
+
 	return bestTemplate
 }

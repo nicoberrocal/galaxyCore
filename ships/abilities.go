@@ -61,6 +61,23 @@ const (
     AbilityPhaseLance      AbilityID = "PhaseLance"      // Active: opener with partial shield ignore
     AbilityWideAreaPing    AbilityID = "WideAreaPing"    // Active: reveal large area; very long cooldown
     AbilityRapidRedeploy   AbilityID = "RapidRedeploy"   // Active: reduce post-attack cooldown or warp charge for a short window
+
+    // New ship abilities for balance and combos
+    AbilityShieldOvercharge   AbilityID = "ShieldOvercharge"   // Active: +50% all shields temporarily
+    AbilityRammingSpeed       AbilityID = "RammingSpeed"       // Active: charge forward dealing contact damage
+    AbilityRepairDrones       AbilityID = "RepairDrones"       // Passive: slow HP regen in combat
+    AbilityPursuitProtocol    AbilityID = "PursuitProtocol"    // Passive: +speed vs faster targets
+    AbilityAntimatterBurst    AbilityID = "AntimatterBurst"    // Active: 3x damage single shot
+    AbilityTargetLock         AbilityID = "TargetLock"         // Active: prevents target from warping
+    AbilityClusterMunitions   AbilityID = "ClusterMunitions"   // Passive: all attacks have AoE splash
+    AbilityBarrageMode        AbilityID = "BarrageMode"        // Toggle: +range, +splash, -ROF
+    AbilitySuppressiveFire    AbilityID = "SuppressiveFire"    // Active: area denial zone
+    AbilityActiveCamo         AbilityID = "ActiveCamo"         // Toggle: invisible, -50% speed while cloaked
+    AbilityBackstab           AbilityID = "Backstab"           // Passive: +100% damage vs Back/Support positions
+    AbilitySmokeScreen        AbilityID = "SmokeScreen"        // Active: AoE cloak for allies
+    AbilitySensorJamming      AbilityID = "SensorJamming"      // Active: -50% enemy accuracy in area
+    AbilityAbilityDisruptor   AbilityID = "AbilityDisruptor"   // Active: +50% enemy ability cooldowns
+    AbilityEnergyDrain        AbilityID = "EnergyDrain"        // Passive: nearby enemies -10% damage
 )
 
 // AbilitiesCatalog provides default configuration for abilities.
@@ -258,5 +275,126 @@ var AbilitiesCatalog = map[AbilityID]Ability{
         CooldownSeconds: 420,
         DurationSeconds: 60,
         Description:     "Temporarily reduces warp charge time and/or post-attack cooldown for warp-capable ships.",
+    },
+    // New abilities for Cruiser, Corvette, Artillery, Stealth Frigate, Support Frigate
+    AbilityShieldOvercharge: {
+        ID:              AbilityShieldOvercharge,
+        Name:            "Shield Overcharge",
+        Kind:            AbilityActive,
+        CooldownSeconds: 120,
+        DurationSeconds: 15,
+        Description:     "Boosts all shield types by 50% for a short duration. Combos with defensive formations.",
+    },
+    AbilityRammingSpeed: {
+        ID:              AbilityRammingSpeed,
+        Name:            "Ramming Speed",
+        Kind:            AbilityActive,
+        CooldownSeconds: 180,
+        DurationSeconds: 8,
+        Description:     "Charges forward at high speed, dealing contact damage. Combos with Vanguard formation.",
+    },
+    AbilityRepairDrones: {
+        ID:              AbilityRepairDrones,
+        Name:            "Repair Drones",
+        Kind:            AbilityPassive,
+        CooldownSeconds: 0,
+        DurationSeconds: 0,
+        Description:     "Deploys repair drones that slowly restore HP even during combat. Synergizes with tank roles.",
+    },
+    AbilityPursuitProtocol: {
+        ID:              AbilityPursuitProtocol,
+        Name:            "Pursuit Protocol",
+        Kind:            AbilityPassive,
+        CooldownSeconds: 0,
+        DurationSeconds: 0,
+        Description:     "Gains +2 speed when targeting enemies faster than itself. Hard-counters Scout swarms.",
+    },
+    AbilityAntimatterBurst: {
+        ID:              AbilityAntimatterBurst,
+        Name:            "Antimatter Burst",
+        Kind:            AbilityActive,
+        CooldownSeconds: 180,
+        DurationSeconds: 0,
+        Description:     "Fires a devastating single shot dealing 3x damage. Combos with Alpha Strike and Ping.",
+    },
+    AbilityTargetLock: {
+        ID:              AbilityTargetLock,
+        Name:            "Target Lock",
+        Kind:            AbilityActive,
+        CooldownSeconds: 90,
+        DurationSeconds: 30,
+        Description:     "Locks onto a target, preventing warp travel. Counters hit-and-run tactics.",
+    },
+    AbilityClusterMunitions: {
+        ID:              AbilityClusterMunitions,
+        Name:            "Cluster Munitions",
+        Kind:            AbilityPassive,
+        CooldownSeconds: 0,
+        DurationSeconds: 0,
+        Description:     "All attacks deal splash damage in a 2-tile radius. Devastating vs tight formations.",
+    },
+    AbilityBarrageMode: {
+        ID:              AbilityBarrageMode,
+        Name:            "Barrage Mode",
+        Kind:            AbilityToggle,
+        CooldownSeconds: 0,
+        DurationSeconds: 0,
+        Description:     "+1 range, +50% splash radius, -30% rate of fire. Combos with Standoff Pattern.",
+    },
+    AbilitySuppressiveFire: {
+        ID:              AbilitySuppressiveFire,
+        Name:            "Suppressive Fire",
+        Kind:            AbilityActive,
+        CooldownSeconds: 240,
+        DurationSeconds: 45,
+        Description:     "Creates an area denial zone that damages and slows enemies. Combos with siege tactics.",
+    },
+    AbilityActiveCamo: {
+        ID:              AbilityActiveCamo,
+        Name:            "Active Camouflage",
+        Kind:            AbilityToggle,
+        CooldownSeconds: 0,
+        DurationSeconds: 0,
+        Description:     "Renders ship invisible at the cost of -50% speed. Breaks on attack. Combos with Backstab.",
+    },
+    AbilityBackstab: {
+        ID:              AbilityBackstab,
+        Name:            "Backstab",
+        Kind:            AbilityPassive,
+        CooldownSeconds: 0,
+        DurationSeconds: 0,
+        Description:     "Deals +100% damage to ships in Back or Support formation positions. Assassin specialty.",
+    },
+    AbilitySmokeScreen: {
+        ID:              AbilitySmokeScreen,
+        Name:            "Smoke Screen",
+        Kind:            AbilityActive,
+        CooldownSeconds: 300,
+        DurationSeconds: 20,
+        Description:     "Deploys smoke that cloaks all allied ships in area. Combos with stealth tactics.",
+    },
+    AbilitySensorJamming: {
+        ID:              AbilitySensorJamming,
+        Name:            "Sensor Jamming",
+        Kind:            AbilityActive,
+        CooldownSeconds: 120,
+        DurationSeconds: 30,
+        Description:     "Reduces enemy accuracy by 50% in area. Combos with evasion and defensive formations.",
+    },
+    AbilityAbilityDisruptor: {
+        ID:              AbilityAbilityDisruptor,
+        Name:            "Ability Disruptor",
+        Kind:            AbilityActive,
+        CooldownSeconds: 180,
+        DurationSeconds: 45,
+        Description:     "Increases enemy ability cooldowns by 50%. Shuts down ability-dependent strategies.",
+    },
+    AbilityEnergyDrain: {
+        ID:              AbilityEnergyDrain,
+        Name:            "Energy Drain",
+        Kind:            AbilityPassive,
+        CooldownSeconds: 0,
+        DurationSeconds: 0,
+        Description:     "Nearby enemies suffer -10% damage output. Stacks with multiple Support Frigates.",
     },
 }
