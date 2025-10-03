@@ -3,6 +3,7 @@ package maps
 import (
 	"time"
 
+	"github.com/nicoberrocal/galaxyCore/ships"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -29,13 +30,14 @@ type Set struct {
 }
 
 type PlayerGameState struct {
-	PlayerID         bson.ObjectID   `bson:"playerId"`         // References players collection
-	MapID            bson.ObjectID   `bson:"mapId"`            // References maps collection
-	ColonizedSystems []bson.ObjectID `bson:"colonizedSystems"` // References systems the player owns
-	StackIDs         []bson.ObjectID `bson:"stackIds"`         // References all stacks owned by player
-	Energy           int64           `bson:"energy"`
-	EnergyProduction int64           `bson:"energyProduction"`
-	LastUpdated      time.Time       `bson:"lastUpdate"` // Timestamp of last update
+	PlayerID         bson.ObjectID             `bson:"playerId"`         // References players collection
+	MapID            bson.ObjectID             `bson:"mapId"`            // References maps collection
+	ColonizedSystems []bson.ObjectID           `bson:"colonizedSystems"` // References systems the player owns
+	StackIDs         []bson.ObjectID           `bson:"stackIds"`         // References all stacks owned by player
+	Energy           int64                     `bson:"energy"`
+	FormationTree    *ships.FormationTreeState `bson:"formationTree"`
+	EnergyProduction int64                     `bson:"energyProduction"`
+	LastUpdated      time.Time                 `bson:"lastUpdate"` // Timestamp of last update
 }
 
 type ShipVisibility struct {
