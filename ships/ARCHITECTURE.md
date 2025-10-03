@@ -106,22 +106,7 @@ builder.AddAbility(abilityID, mods, duration)
 
 ---
 
-### 5. **Composition System** (`formation_composition.go`)
-**Provides:** StatMods from fleet makeup
-
-- Bonuses activate when ship type requirements are met
-- Example: "Strike Force" requires 3 Fighters + 1 Destroyer
-- Multiple bonuses can stack
-
-```go
-// Composition provides bonuses based on fleet
-mods, bonuses := ComputeCompositionBonuses(ships)
-builder.AddCompositionBonus(ships)
-```
-
----
-
-### 6. **Environmental/State Systems**
+### 5. **Environmental/State Systems**
 **Provides:** StatMods from game state
 
 - **Anchored state**: penalty when mining
@@ -159,10 +144,7 @@ if formation != nil {
     builder.AddFormationPosition(formation, position)
 }
 
-// 5. Composition
-builder.AddCompositionBonus(ships)
-
-// 6. Abilities (active only)
+// 5. Abilities (active only)
 for _, ability := range activeAbilities {
     mods := GetAbilityMods(ability.ID)
     builder.AddAbility(ability.ID, mods, duration)
@@ -213,22 +195,33 @@ Modifiers are applied in priority order:
 The following systems have been **deprecated** for clean separation:
 
 ### ❌ Gem-Position Synergy
+
 - **Old:** Gems gave extra bonuses based on formation position
 - **Problem:** Mixed gem and formation concepts
 - **Solution:** Gems provide fixed mods, formations provide fixed mods
 
-### ❌ Formation-Role Synergy  
+### ❌ Formation-Role Synergy
+
 - **Old:** Role modes enhanced formation bonuses
 - **Problem:** Made it unclear what each system contributed
 - **Solution:** Each system provides independent bonuses
 
+### ❌ Fleet Composition Bonuses
+
+- **Old:** Bonuses activated when fleet had specific ship type combinations
+- **Problem:** Created implicit synergies between ship types
+- **Solution:** Each ship contributes independently, no "combo" bonuses
+
 ### Backward Compatibility
 
 Deprecated functions are kept but do nothing:
+
 - `AddFormationRoleSynergy()` → no-op
 - `AddGemPositionSynergy()` → no-op
+- `AddCompositionBonus()` → no-op
 - `ApplyFormationRoleModifiers()` → returns only formation mods
 - `ApplyGemPositionEffects()` → returns zero mods
+- `EvaluateCompositionBonuses()` → returns zero mods
 
 ---
 
@@ -319,17 +312,21 @@ if HasAbility(AlphaStrike) && HasAbility(TargetingUplink) {
 If you have code using deprecated synergies:
 
 ### Before
+
 ```go
 builder.AddFormationRoleSynergy(formation, position, role)
 builder.AddGemPositionSynergy(gems, position)
+builder.AddCompositionBonus(ships)
 ```
 
 ### After
+
 ```go
 // Just remove these calls - bonuses now come from:
 // - Formation tree nodes (if you want formation-specific bonuses)
 // - Role mode BaseMods (for role bonuses)
 // - Gem Mods (for gem bonuses)
+// - Each ship contributes independently (no composition combos)
 ```
 
 ### Adding Formation-Specific Bonuses

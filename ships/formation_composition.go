@@ -123,7 +123,9 @@ func ApplyGemPositionEffects(gems []Gem, position FormationPosition) StatMods {
 	return ZeroMods()
 }
 
-// CompositionBonus represents a fleet composition bonus that activates when requirements are met.
+// CompositionBonus is DEPRECATED - removed for clean system separation.
+// Fleet composition bonuses create implicit synergies between ship types.
+// Each ship should contribute independently.
 type CompositionBonus struct {
 	Type        string           `bson:"type" json:"type"`
 	Description string           `bson:"description" json:"description"`
@@ -131,7 +133,8 @@ type CompositionBonus struct {
 	Bonus       StatMods         `bson:"bonus" json:"bonus"`
 }
 
-// CompositionBonusesCatalog defines synergies based on fleet composition.
+// CompositionBonusesCatalog is DEPRECATED - removed for clean system separation.
+// Kept for backward compatibility but should not be used.
 var CompositionBonusesCatalog = []CompositionBonus{
 	{
 		Type:        "Balanced Fleet",
@@ -335,30 +338,18 @@ var CompositionBonusesCatalog = []CompositionBonus{
 	},
 }
 
-// EvaluateCompositionBonuses checks which composition bonuses are active for the given fleet.
-// DEPRECATED: Use ComputeCompositionBonuses instead for better separation of concerns.
+// EvaluateCompositionBonuses is DEPRECATED - removed for clean system separation.
+// Fleet composition bonuses create implicit synergies between ship types.
+// This function is kept for backward compatibility but returns zero mods.
 func EvaluateCompositionBonuses(ships map[ShipType][]HPBucket) (StatMods, []CompositionBonus) {
-	return ComputeCompositionBonuses(ships)
+	return ZeroMods(), []CompositionBonus{}
 }
 
-// ComputeCompositionBonuses generates StatMods from fleet composition.
-// Returns the combined mods and the list of active bonuses.
+// ComputeCompositionBonuses is DEPRECATED - removed for clean system separation.
+// Fleet composition bonuses create implicit synergies between ship types.
+// This function is kept for backward compatibility but returns zero mods.
 func ComputeCompositionBonuses(ships map[ShipType][]HPBucket) (StatMods, []CompositionBonus) {
-	mods := ZeroMods()
-	var activeBonuses []CompositionBonus
-
-	// Count total ships per type
-	counts := countShipsByType(ships)
-
-	// Check each composition bonus
-	for _, bonus := range CompositionBonusesCatalog {
-		if meetsRequirements(counts, bonus.Requirement) {
-			mods = CombineMods(mods, bonus.Bonus)
-			activeBonuses = append(activeBonuses, bonus)
-		}
-	}
-
-	return mods, activeBonuses
+	return ZeroMods(), []CompositionBonus{}
 }
 
 // countShipsByType counts the total number of ships per type in the fleet.

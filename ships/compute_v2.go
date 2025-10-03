@@ -30,12 +30,7 @@ func ComputeLoadoutV2(
 		builder.AddFormationPosition(formation, position)
 	}
 	
-	// 4. Composition: provides StatMods from fleet makeup
-	if ships != nil {
-		builder.AddCompositionBonus(ships)
-	}
-	
-	// 5. Anchored state: provides penalty mods
+	// 4. Anchored state: provides penalty mods
 	builder.AddAnchoredPenalty(loadout.Anchored)
 	
 	// Build the stack
@@ -90,13 +85,10 @@ func ComputeStackModifiers(
 		}
 	}
 	
-	// 4. Composition: provides StatMods from fleet makeup
-	builder.AddCompositionBonus(stack.Ships)
-	
-	// 5. Anchored state: provides penalty mods
+	// 4. Anchored state: provides penalty mods
 	builder.AddAnchoredPenalty(loadout.Anchored)
 	
-	// 6. Abilities: provide their own StatMods when active
+	// 5. Abilities: provide their own StatMods when active
 	if stack.Ability != nil {
 		for _, abilityState := range *stack.Ability {
 			if abilityState.IsActive && abilityState.ShipType == shipType {

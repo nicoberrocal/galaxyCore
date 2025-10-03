@@ -108,12 +108,7 @@ func ComputeLoadoutV2WithTree(
 		builder.AddFormationPosition(formation, position)
 	}
 	
-	// 5. Composition: provides StatMods from fleet makeup
-	if ships != nil {
-		builder.AddCompositionBonus(ships)
-	}
-	
-	// 6. Anchored state: provides penalty mods
+	// 5. Anchored state: provides penalty mods
 	builder.AddAnchoredPenalty(loadout.Anchored)
 	
 	// Build and resolve

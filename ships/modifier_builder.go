@@ -189,22 +189,12 @@ func (mb *ModifierBuilder) AddFormationCounter(attackerFormation, defenderFormat
 	return mb
 }
 
-// AddCompositionBonus adds modifiers from fleet composition bonuses.
+// AddCompositionBonus is DEPRECATED - removed for clean system separation.
+// Fleet composition bonuses create implicit synergies between ship types.
+// Each ship should contribute independently.
 func (mb *ModifierBuilder) AddCompositionBonus(ships map[ShipType][]HPBucket) *ModifierBuilder {
-	mods, bonuses := EvaluateCompositionBonuses(ships)
-	
-	for _, bonus := range bonuses {
-		mb.stack.AddPermanent(
-			SourceComposition,
-			bonus.Type,
-			fmt.Sprintf("Composition: %s", bonus.Type),
-			bonus.Bonus,
-			PriorityComposition,
-			mb.now,
-		)
-	}
-	
-	_ = mods // Already accounted for in individual bonuses
+	// This method is deprecated and does nothing.
+	// Kept for backward compatibility during transition.
 	return mb
 }
 
