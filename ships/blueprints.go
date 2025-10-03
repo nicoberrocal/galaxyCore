@@ -214,8 +214,8 @@ var ShipBlueprints = map[ShipType]Ship{
 	// Combos: Cluster Munitions + Barrage Mode = massive AoE coverage
 	//         Suppressive Fire + Standoff Pattern = area lockdown
 	//         Cluster + Swarm formation counter = anti-cluster defense
-	Artillery: {
-		ShipType:         string(Artillery),
+	Ballista: {
+		ShipType:         string(Ballista),
 		AttackType:       "Nuclear",
 		LaserShield:      2,
 		NuclearShield:    4,
@@ -241,8 +241,8 @@ var ShipBlueprints = map[ShipType]Ship{
 	// Combos: Active Camo + Backstab = devastating backline attacks
 	//         Smoke Screen + Active Camo = team stealth
 	//         Backstab + Flank position = position-based assassination
-	StealthFrigate: {
-		ShipType:         string(StealthFrigate),
+	Ghost: {
+		ShipType:         string(Ghost),
 		AttackType:       "Laser",
 		LaserShield:      2,
 		NuclearShield:    0,

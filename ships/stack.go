@@ -9,17 +9,17 @@ import (
 type ShipType string
 
 const (
-	Drone          ShipType = "drone"
-	Scout          ShipType = "scout"
-	Fighter        ShipType = "fighter"
-	Bomber         ShipType = "bomber"
-	Carrier        ShipType = "carrier"
-	Destroyer      ShipType = "destroyer"
-	Cruiser        ShipType = "cruiser"
-	Corvette       ShipType = "corvette"
-	Artillery      ShipType = "artillery"
-	StealthFrigate ShipType = "stealthfrigate"
-	Frigate        ShipType = "frigate"
+	Drone     ShipType = "drone"
+	Scout     ShipType = "scout"
+	Fighter   ShipType = "fighter"
+	Bomber    ShipType = "bomber"
+	Carrier   ShipType = "carrier"
+	Destroyer ShipType = "destroyer"
+	Cruiser   ShipType = "cruiser"
+	Corvette  ShipType = "corvette"
+	Ballista  ShipType = "ballista"
+	Ghost     ShipType = "ghost"
+	Frigate   ShipType = "frigate"
 )
 
 // ShipStack represents a fleet that is NOT currently defending a system
