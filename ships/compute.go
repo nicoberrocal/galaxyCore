@@ -1,14 +1,10 @@
 package ships
 
-// ComputeLoadout resolves the cumulative StatMods and GemWord-granted abilities
-// for a ship blueprint based on the stack's role and the ship's loadout. It returns:
-// - combined StatMods from RoleMode + sockets + GemWords
-// - abilities granted by GemWords (as AbilityIDs)
-// - matched GemWords (for UI/debug)
-//
-// DEPRECATED: Use ComputeLoadoutV2 or QuickEffectiveShip instead.
-// This function does not track modifier sources and lacks formation/composition bonuses.
-// It will be removed in a future version. See MIGRATION_GUIDE.md for details.
+// DEPRECATED: This file has been replaced by compute_v2.go with formation tree support.
+// See compute_v2.go and formation_tree_compute.go for the modern compute system.
+// This file is kept only for package compilation and will be removed in future cleanup.
+
+// ComputeLoadout is deprecated. Use ComputeLoadoutV2WithTree instead.
 func ComputeLoadout(s Ship, role RoleMode, loadout ShipLoadout) (StatMods, []AbilityID, []GemWord) {
 	roleMods := RoleModeMods(role, s.ShipType)
 	socketMods, grants, matched := EvaluateGemSockets(loadout.Sockets)
