@@ -4,11 +4,21 @@ import (
 	"time"
 
 	"github.com/nicoberrocal/galaxyCore/ships"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 /////////////////////
 // Biology (BioTree)
 /////////////////////
+
+type BioTreeType string
+
+const (
+	Aquatica BioTreeType = "aquatica"
+	Flora    BioTreeType = "flora"
+	Fauna    BioTreeType = "fauna"
+	Mycelia  BioTreeType = "mycelia"
+)
 
 // AoETarget defines area of effect targeting for abilities
 // This allows effects to target multiple stacks within a radius
@@ -91,7 +101,6 @@ const (
 	SpawnFearEffect SpawnType = "fear_effect"
 )
 
-
 // ComplexEffect represents effects that go beyond simple stat modifications
 // This includes conditional logic, delayed effects, and multi-stage effects
 type ComplexEffect struct {
@@ -132,35 +141,34 @@ type Condition struct {
 type ConditionType string
 
 const (
-	ConditionHPPercent          ConditionType = "hp_percent"
-	ConditionDistance           ConditionType = "distance"
-	ConditionStackCount         ConditionType = "stack_count"
-	ConditionAllyCount          ConditionType = "ally_count"
-	ConditionEnemyCount         ConditionType = "enemy_count"
-	ConditionResourceNear       ConditionType = "resource_near"
-	ConditionTerrainNear        ConditionType = "terrain_near"
-	ConditionFormationType      ConditionType = "formation_type"
-	ConditionAttackType         ConditionType = "attack_type"
-	ConditionHasStatus          ConditionType = "has_status"
-	ConditionCombatState        ConditionType = "combat_state"
-	ConditionTickCount          ConditionType = "tick_count"
-	ConditionAbilityUsed        ConditionType = "ability_used"
-	ConditionDamageReceived     ConditionType = "damage_received"
-	ConditionKillCount          ConditionType = "kill_count"
-	ConditionMovementState      ConditionType = "movement_state"
-	ConditionAttackFromBehind   ConditionType = "attack_from_behind"
-	ConditionCriticalHit        ConditionType = "critical_hit"
-	ConditionConsecutiveAttacks ConditionType = "consecutive_attacks"
-	ConditionSystemLost         ConditionType = "system_lost"
-	ConditionAllyNearby         ConditionType = "ally_nearby"
-	ConditionIsAttacked         ConditionType = "is_attacked"
-	ConditionStationary         ConditionType = "stationary"
-	ConditionTargetInfected     ConditionType = "target_infected"
-	ConditionBuildingInfected   ConditionType = "building_infected"
-	ConditionAllyInNetwork      ConditionType = "ally_in_network"
+	ConditionHPPercent             ConditionType = "hp_percent"
+	ConditionDistance              ConditionType = "distance"
+	ConditionStackCount            ConditionType = "stack_count"
+	ConditionAllyCount             ConditionType = "ally_count"
+	ConditionEnemyCount            ConditionType = "enemy_count"
+	ConditionResourceNear          ConditionType = "resource_near"
+	ConditionTerrainNear           ConditionType = "terrain_near"
+	ConditionFormationType         ConditionType = "formation_type"
+	ConditionAttackType            ConditionType = "attack_type"
+	ConditionHasStatus             ConditionType = "has_status"
+	ConditionCombatState           ConditionType = "combat_state"
+	ConditionTickCount             ConditionType = "tick_count"
+	ConditionAbilityUsed           ConditionType = "ability_used"
+	ConditionDamageReceived        ConditionType = "damage_received"
+	ConditionKillCount             ConditionType = "kill_count"
+	ConditionMovementState         ConditionType = "movement_state"
+	ConditionAttackFromBehind      ConditionType = "attack_from_behind"
+	ConditionCriticalHit           ConditionType = "critical_hit"
+	ConditionConsecutiveAttacks    ConditionType = "consecutive_attacks"
+	ConditionSystemLost            ConditionType = "system_lost"
+	ConditionAllyNearby            ConditionType = "ally_nearby"
+	ConditionIsAttacked            ConditionType = "is_attacked"
+	ConditionStationary            ConditionType = "stationary"
+	ConditionTargetInfected        ConditionType = "target_infected"
+	ConditionBuildingInfected      ConditionType = "building_infected"
+	ConditionAllyInNetwork         ConditionType = "ally_in_network"
 	ConditionTargetIsAttackingAlly ConditionType = "target_is_attacking_ally"
 )
-
 
 type ComparisonOp string
 
@@ -259,6 +267,23 @@ type BioTree struct {
 	// Tiers is an ordered list of tiers; each tier is a set of nodes where some are
 	// mutually exclusive. We model tiers as slices of nodes (choices happen in-game).
 	Tiers [][]*BioNode
+}
+
+type BioTreeState struct {
+	PlayerID    bson.ObjectID `bson:"playerId" json:"playerId"`
+	BioTreeType BioTreeType   `bson:"bioTreeType" json:"bioTreeType"`
+	// Experience tracking
+	TotalXP     int `bson:"totalXP" json:"totalXP"`         // Lifetime earned
+	SpentXP     int `bson:"spentXP" json:"spentXP"`         // Used for nodes
+	AvailableXP int `bson:"availableXP" json:"availableXP"` // Ready to spend
+
+	// Active nodes
+	UnlockedNodes []string `bson:"unlockedNodes" json:"unlockedNodes"` // Node IDs
+
+	// Meta info
+	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
+	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
+	Version   int       `bson:"version" json:"version"` // For optimistic locking
 }
 
 /////////////////////////

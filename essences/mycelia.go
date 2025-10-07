@@ -4,7 +4,7 @@ import "github.com/nicoberrocal/galaxyCore/ships"
 
 func BuildMycelia() *BioTree {
 	tree := &BioTree{
-		Name:        "Mycelia",
+		Name:        string(Mycelia),
 		Description: "Mycelia biology tree focusing on infection, symbiosis, and area denial",
 		Tiers:       make([][]*BioNode, 3),
 	}

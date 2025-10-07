@@ -5,7 +5,7 @@ import "github.com/nicoberrocal/galaxyCore/ships"
 // BuildFauna builds the Fauna tree and uses Path-based essence mutation (applies to each node in chosen path).
 func BuildFauna() *BioTree {
 	tree := &BioTree{
-		Name:        "Fauna",
+		Name:        string(Fauna),
 		Description: "Fauna biology tree focusing on aggressive hunting, pack tactics, and scavenging",
 		Tiers:       make([][]*BioNode, 3),
 	}
@@ -24,9 +24,9 @@ func BuildFauna() *BioTree {
 					Conditions: []Condition{
 						{ConditionType: ConditionEnemyCount, CompareOp: CompareGreater, Value: 0},
 					},
-					PrimaryEffect:   &ships.StatMods{CritPct: 0.1, VisibilityDelta: 15},
-					Duration:        5, // ticks
-					MaxActivations:  1,
+					PrimaryEffect:  &ships.StatMods{CritPct: 0.1, VisibilityDelta: 15},
+					Duration:       5, // ticks
+					MaxActivations: 1,
 				},
 			},
 		},

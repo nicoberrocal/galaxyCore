@@ -5,7 +5,7 @@ import "github.com/nicoberrocal/galaxyCore/ships"
 // BuildFlora: node-level mutations per earlier design.
 func BuildFlora() *BioTree {
 	tree := &BioTree{
-		Name:        "Flora",
+		Name:        string(Flora),
 		Description: "Flora biology tree focusing on area control, resilience, and support",
 		Tiers:       make([][]*BioNode, 3),
 	}

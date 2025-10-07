@@ -6,7 +6,7 @@ import "github.com/nicoberrocal/galaxyCore/ships"
 // the principle that essences mutate chosen nodes (Tidal Surge, Thermocline Reflex, Leviathan/TotalCirculation).
 func BuildAquatica() *BioTree {
 	tree := &BioTree{
-		Name:        "Aquatica",
+		Name:        string(Aquatica),
 		Description: "Aquatic biology tree focusing on fluid adaptation, camouflage, and pack coordination",
 		Tiers:       make([][]*BioNode, 3),
 	}
