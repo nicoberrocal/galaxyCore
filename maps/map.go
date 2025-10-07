@@ -37,7 +37,7 @@ type PlayerGameState struct {
 	StackIDs         []bson.ObjectID           `bson:"stackIds"`         // References all stacks owned by player
 	Energy           int64                     `bson:"energy"`
 	FormationTree    *ships.FormationTreeState `bson:"formationTree"`
-	Essence          *essences.Essence         `bson:"essence"`
+	Essence          *essences.EssenceType     `bson:"essence"`
 	BioTreeState     *essences.BioTreeState    `bson:"bioTreeState"`
 	EnergyProduction int64                     `bson:"energyProduction"`
 	LastUpdated      time.Time                 `bson:"lastUpdate"` // Timestamp of last update
