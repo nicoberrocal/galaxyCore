@@ -29,6 +29,7 @@ type StatMods struct {
 
 	BucketHPPct         float64 // % change to per-bucket HP (affects survivability)
 	OutOfCombatRegenPct float64 // % change to out-of-combat HP regen
+	AtCombatRegenPct    float64 // % change to at-combat HP regen
 	AbilityCooldownPct  float64 // % change to ability cooldowns (negative reduces CD)
 
 	TransportCapacityPct float64 // % change to TransportCapacity
@@ -58,6 +59,10 @@ type StatMods struct {
 	EvasionPct          float64 // % flat evasion chance
 	FormationSyncBonus  float64 // % bonus when position requirements are met
 	PositionFlexibility float64 // % reduced penalty for suboptimal positions
+
+	// Generic mods
+	GlobalDefensePct float64 // % global damage reduction
+	HPPct            float64 // % change to current HP
 }
 
 // ZeroMods returns a zero-initialized StatMods for convenience.
@@ -81,6 +86,7 @@ func CombineMods(a, b StatMods) StatMods {
 
 	a.BucketHPPct += b.BucketHPPct
 	a.OutOfCombatRegenPct += b.OutOfCombatRegenPct
+	a.AtCombatRegenPct += b.AtCombatRegenPct
 	a.AbilityCooldownPct += b.AbilityCooldownPct
 
 	a.TransportCapacityPct += b.TransportCapacityPct
@@ -105,5 +111,8 @@ func CombineMods(a, b StatMods) StatMods {
 	a.EvasionPct += b.EvasionPct
 	a.FormationSyncBonus += b.FormationSyncBonus
 	a.PositionFlexibility += b.PositionFlexibility
+
+	a.GlobalDefensePct += b.GlobalDefensePct
+	a.HPPct += b.HPPct
 	return a
 }

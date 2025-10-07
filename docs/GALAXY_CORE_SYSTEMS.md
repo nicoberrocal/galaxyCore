@@ -63,6 +63,93 @@
   - Interdictor Pulse: Block enemy warp
   - Heavy weapons platform
 
+### Ballista (formerly Artillery)
+- **Role**: Long-range artillery
+- **Attack Type**: Nuclear
+- **Shields**: Laser(2), Nuclear(4), Antimatter(1)
+- **Speed**: 3
+- **Visibility Range**: 7
+- **Attack Range**: 7
+- **HP**: 350
+- **Attack Damage**: 50
+- **Attack Interval**: 3.5s
+- **Abilities**:
+  - Light-Speed: Enable warp travel
+  - Cluster Munitions: Area damage to multiple targets
+  - Barrage Mode: Increased rate of fire
+- **Combos**:
+  - Cluster Munitions + Barrage Mode = Massive AoE coverage
+  - Suppressive Fire + Standoff Pattern = Area lockdown
+  - Cluster + Swarm formation = Anti-cluster defense
+
+### Ghost (formerly Stealth Frigate)
+- **Role**: Stealth assassin
+- **Attack Type**: Laser
+- **Shields**: Laser(2), Nuclear(0), Antimatter(2)
+- **Speed**: 7
+- **Visibility Range**: 5
+- **Attack Range**: 3
+- **HP**: 180
+- **Attack Damage**: 35
+- **Attack Interval**: 1.5s
+- **Abilities**:
+  - Active Camo: Temporary stealth
+  - Backstab: Bonus damage from behind
+  - Smoke Screen: Area stealth field
+- **Combos**:
+  - Active Camo + Backstab = Devastating backline attacks
+  - Smoke Screen + Active Camo = Team stealth
+  - Backstab + Flank position = Position-based assassination
+
+### Cruiser
+- **Role**: Versatile combatant
+- **Attack Type**: Laser
+- **Shields**: Laser(3), Nuclear(2), Antimatter(2)
+- **Speed**: 4
+- **Visibility Range**: 6
+- **Attack Range**: 4
+- **HP**: 450
+- **Attack Damage**: 40
+- **Attack Interval**: 2.0s
+- **Abilities**:
+  - Light-Speed: Enable warp travel
+  - Point Defense: Intercept incoming projectiles
+  - Tactical Maneuvering: Temporary speed and evasion boost
+
+### Corvette
+- **Role**: Fast attack
+- **Attack Type**: Laser
+- **Shields**: Laser(2), Nuclear(1), Antimatter(1)
+- **Speed**: 6
+- **Visibility Range**: 5
+- **Attack Range**: 3
+- **HP**: 200
+- **Attack Damage**: 25
+- **Attack Interval**: 1.2s
+- **Abilities**:
+  - Light-Speed: Enable warp travel
+  - Hit and Run: Bonus damage on first strike
+  - Evasive Pattern: Increased dodge chance
+
+### Ghost
+- **Role**: Stealth assassin
+- **Attack Type**: Laser
+- **Shields**: Laser(2), Nuclear(0), Antimatter(2)
+- **Speed**: 7
+- **Visibility Range**: 5
+- **Attack Range**: 3
+- **HP**: 180
+- **Attack Damage**: 35
+- **Attack Interval**: 1.5s
+- **Abilities**:
+  - Active Camo: Temporary stealth
+  - Backstab: Bonus damage from behind
+  - Smoke Screen: Area stealth field
+- **Combos**:
+  - Active Camo + Backstab: Devastating backline attacks
+  - Smoke Screen + Active Camo: Team stealth
+  - Backstab + Flank position: Position-based assassination
+
 ## Formations
 
 ### Line Formation

@@ -1,0 +1,97 @@
+AQUATIC
+
+	Cephalopod
+	1. Elastic Burst: Can move while changing formation at 50% movement speed. Others cant move at all or very slowly.
+	2. Ink Sac Propulsion: Gain 20% evasion for 5 ticks after activating an ability. Effect can be active only once.
+	3. Decoy Drones: When attack from behind, deploy a decoy drone that draws fire and slows enemy upon being destructed.
+	4. Neurotoxin Coating: Your attacks apply a stack of toxin on critical hits. At 3 stacks the target is stunned for 1 tick.
+	5. Mimetic Genome: Mimics the signature of the targeted stack, changing attack type to its weakest shield after engaging it during 3 ticks for the rest of the battle. Returns to normal at disengage.
+
+	Chondrichthyan 
+	1. Electroreceptive sense: You have 50% increased ping range and can detect cloaked wounded ships (<100%HP). Can detect globally when ships are below 20%.
+	2. Ram ventilation: Gain a 2% stackable bonus to Speed and Damage for every tick sprinting towards an enemy with an active ability
+	3. Spiral Intestine: Gain 50% speed for 5 ticks after destroying a stack
+	4. Looming Presence: The fourth consecutive attack on a target has 25% crit chance
+	5. Frenzy Scent: Your damage is increased globally by 25% after losing a system. Lasts 10 ticks.
+	
+	Cetacean
+	1. Echolocative Sonar: You and all allies within 200u gain +5% accuracy and cannot have their accuracy reduced below 75%
+	2. Pod Synchronization: Each allied stack attacking the same target reduces its shields by 2%, stacking up to 10%
+	3. Bio Acoustic field: All ally moving stacks within 500u running the same formation gain +20% speed bonus
+	4. Communal Lungs: Shares 15% of healing and 10% of energy regen to the lowest HP ally within 250u
+	5. Large Migration: While 800u+ from any friendly system, gain +25% shields if at least one ally is nearby
+
+
+FLORA
+
+	Carnivora
+	1. Thigmonastic Triggers: First strike attack gains 20% critical damage chance and roots the target in place for 1 tick.
+	2. Digestive enzymes: Your attacks inflict a damage over time effect, dealing a small amount of stacking acid damage every tick for 5 ticks.
+	3. Irresistible aroma: When a ship enters into your range view, blinds it of every stack except this one for 5 ticks.
+	4. Rapid Strike Tendrils: Formation countering bonuses are increased by 20%.	
+ 	5. Adaptive Apex: After destroying a stack, gain 3% resistance vs. that stack’s attack type (not biotree). Stacks up to 5×.	
+	
+	Arbor
+	1. Iron Chads: Within 500u of asteroids, gain +1% HP and +1% to all shields stacking bonus for every percentage point of full deposits
+	2. Deep root system: You are immune to pull, push and slow effects from every stack that isn't your current target	
+	3. Root Coordination: Every 3rd tick fighting within 200u of the same allied ship, you have double damage.	
+	4. Spectrum Defiance: Within 500u of a star, you gain a 5% stacking max HP increase for every target attacking you
+	5. Seismic Root: When finished changing to a Box formation, release 200u shockwave that deals significant damage and stuns enemies for 3 ticks	
+	
+	Verdant Bloom
+	1. Deep Rooted vitality: Your base HP regen is increased by 100% in aggressive formation and 200% in defensive formations
+	2. Photosynthetic Reactor: Your base energy regeneration is increased by 30% while within 500u of a star, you and all nearby allies gain 1% ability cooldown recovery	
+	3. Sap Flow: When within 200u of an ally below 40% HP, 30% of overhealing you receive becomes a temporary damage shield. Attacks on damage dont trigger crits nor attack-based-healing.
+	4. Pollen Cloud: All allied ships around a 250u aura gain a 25% HP and Energy Regen increase of 25% your base regeneration rate after using an ability. 1 application max.
+	5. Blossom through extinction: At death, restore 25% of max HP and Energy to allied ships in 250u radius.
+
+
+
+MYCELIA
+	
+	Sporeform
+	1. Dormant Spores: When stationary for 3+ ticks, gain a stacking +2% defense and +2% hull regen per tick (max 20%). Loses stacks instantly when moving.
+	2. Hyphal Invasion: Each successful hit infects the target for 5 ticks. Infected enemies lose -5% accuracy and spread infection to nearby enemies within 100u if they die. Attack orders towards infected targets have 10% speed increase.
+	3. Digestive Mycelium: Damaging infected targets restores 2% hull per tick. Killing an infected target grants +10% damage for 3 ticks.
+	4. Necrosporic Bloom: Upon your destruction, releases a 300u spore cloud that infects all ships inside. Enemies take 5% HP damage over 3 ticks; allies gain +5% regen.
+	5. Mycelial Persistence: When your stack is destroyed, 25% of your population reforms as a new micro-stack at your nearest controlled system after 10 ticks. “Fungi never truly die.”
+
+	Cordyceps
+	1. Neural Spores: Critical hits apply a “confusion” stack. At 3 stacks, target ships attack random nearby units for 1 tick.
+	2. Symbiotic Override: When engaging an enemy system, you can infect one building. For 5 ticks it doesn't operate.	
+	3. Spore Zombie: When an infected stack dies within 200u, spawn a temporary “Spore Husk” (20% of original HP, 50% damage) that lasts 3 ticks and fights for you.
+	4. Myco-Resonance: For every infected target within 300u, gain +2% evasion and +2% cooldown reduction.
+	5. Parasitic Singularity: Activate to merge with all infected enemies within 400u, dealing massive AoE true damage and healing 50% of your max HP per infection consumed. 20 tick cooldown.
+
+	Mycorrhiza
+	1. Networked Roots: All allied stacks within 300u are “linked.” Linked ships share 10% of hull regen, gain +5% resistance to status effects and 10% movement speed.
+	2. Spore Relay: Abilities you cast propagate through the fungal network, applying 50% of their secondary effects (but not damage) to linked allies.
+	3. Nutrient Exchange: When an ally in the network destroys a stack or extracts a resource, all linked units regain 5% energy and 3% HP.
+	4. Fungal Overgrowth: When 3+ allies are within 300u, create an Overgrowth field for 5 ticks: +20% defense, -20% speed, and immunity to toxins.
+	5. Synaptic Bloom: Active ability — pulse through the network to instantly reset all allied ability cooldowns by 20% and cleanse one debuff. Costs 30% of your current HP.
+
+
+FAUNA
+	
+	Apex
+	1. Kill Focus: When detecting a new enemy, gain +10% crit chance for 5 ticks and +15% increased visibility range. Max: 1 instances.
+	2. Predators Pounce: First strike attacks deal 30% bonus damage
+	3. Alpha Dominance: When defensively formed ally gets attacked within 200u, you steal 25% of your ally's damage and apply it to target ignoring shields for 1 tick. Cooldown: 10 ticks.
+	4. Panicked Herd: Killing a target spreads fear among nearby enemies (-25% damage for 2 ticks)
+	5. Apex Threat: Crit attacks heal you for 25% of attack value and reduces 5% cooldown of your abilities. 3 Ticks cooldown
+
+	Pack Hunter
+	1. Pack Mentality: For each other allied ship within 150u gain +2% damage and +1% evasion
+	2. Flanking Instincts: You deal +15% damage to enemies that are being attacked by another ally at rear or flank
+	3. Communal Defense: When an enemy attack will kill an allied stack, the highest allied HP stack in 300u receives the damage instead. The stack that received the attack is cleansed of all debuffs. Cooldown 15 ticks, shared by all allied ships in the radius.
+	4. Hunting Cry: Upon entering combat, grant all  allies a +10% speed globally and 20% chance to crit damage in 200u and grants +5% ability cooldown recovery to allies under Pack Mentality
+	5. Feeding Frenzy: Killing an enemy ship applies a +5% damage stack. Max 5 stacks.
+
+	Scavengers
+ 	1(cycled out). Scavengers Resilience: Gain +15% HP. HP regen scales up from +50% → +300% as your HP falls from 100% to 10%. 
+	1. Cannibal Regrowth: Each nearby death (enemy or ally within 200u) restores 5% of your max HP
+	2. Necrotic Bite: Your attacks inflict a stacking debuff that reduces the targets shield by 2%, HP regen and healing received by 15% per stack up to 5 stacks
+	3. Carcass Plunder(cycled out): When a ship is killed in a 500u area around you, steal 50% of killers plunder
+	3. Spoil Extractor: Upon ship death within 500u, gain a 2% stacking bonus to regen and cooldown recovery (max 5 stacks, lasts 10 ticks).
+	4. Parasitic Latches: When you damage an enemy ship, you siphon a small amount of energy from them, reducing ability cooldown recovery and granting it to you. Drains diminish by 25% per tick
+	5. Winged Brother: You have +10× visibility range and detect destroyed structures and derelict ships globally
