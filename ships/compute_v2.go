@@ -18,24 +18,24 @@ func ComputeLoadoutV2(
 	inCombat bool,
 ) (*ModifierStack, StatMods, []AbilityID) {
 	builder := NewModifierBuilder(now)
-	
+
 	// 1. Gems: provide their own StatMods from gem properties
 	builder.AddGemsFromLoadout(loadout)
-	
+
 	// 2. Role Mode: provides its own StatMods
 	builder.AddRoleMode(role)
-	
+
 	// 3. Formation: provides StatMods from FormationCatalog position bonuses only
 	if formation != nil {
 		builder.AddFormationPosition(formation, position)
 	}
-	
+
 	// 4. Anchored state: provides penalty mods
 	builder.AddAnchoredPenalty(loadout.Anchored)
-	
+
 	// Build the stack
 	stack := builder.Build()
-	
+
 	// Resolve to final mods
 	ctx := ResolveContext{
 		Now:          now,
@@ -45,12 +45,12 @@ func ComputeLoadoutV2(
 	if formation != nil {
 		ctx.FormationType = formation.Type
 	}
-	
+
 	finalMods := stack.Resolve(ctx)
-	
+
 	// Collect granted abilities
 	_, grants, _ := EvaluateGemSockets(loadout.Sockets)
-	
+
 	return stack, finalMods, grants
 }
 
@@ -66,28 +66,29 @@ func ComputeStackModifiers(
 ) (*ModifierStack, StatMods) {
 	loadout := stack.GetOrInitLoadout(shipType)
 	position := stack.GetFormationPosition(shipType, bucketIndex)
-	
+
 	builder := NewModifierBuilder(now)
-	
+
 	// 1. Gems: provide their own StatMods
 	builder.AddGemsFromLoadout(loadout)
-	
+
 	// 2. Role Mode: provides its own StatMods
 	builder.AddRoleMode(stack.Role)
-	
+
 	// 3. Formation: provides StatMods from FormationCatalog + tree nodes
 	if stack.Formation != nil {
-		builder.AddFormationPosition(stack.Formation, position)
-		
+		formation := stack.Formation.ToFormation()
+		builder.AddFormationPosition(&formation, position)
+
 		// Formation counter (only in combat)
 		if inCombat && enemyFormation != "" {
 			builder.AddFormationCounter(stack.Formation.Type, enemyFormation, inCombat)
 		}
 	}
-	
+
 	// 4. Anchored state: provides penalty mods
 	builder.AddAnchoredPenalty(loadout.Anchored)
-	
+
 	// 5. Abilities: provide their own StatMods when active
 	if stack.Ability != nil {
 		for _, abilityState := range *stack.Ability {
@@ -101,9 +102,9 @@ func ComputeStackModifiers(
 			}
 		}
 	}
-	
+
 	modStack := builder.Build()
-	
+
 	// Resolve context
 	ctx := ResolveContext{
 		Now:          now,
@@ -114,9 +115,9 @@ func ComputeStackModifiers(
 		ctx.FormationType = stack.Formation.Type
 		ctx.EnemyFormation = enemyFormation
 	}
-	
+
 	finalMods := modStack.Resolve(ctx)
-	
+
 	return modStack, finalMods
 }
 
@@ -134,18 +135,18 @@ func ComputeEffectiveShipV2(
 	if !ok {
 		return Ship{}, nil, NewModifierStack()
 	}
-	
+
 	// Get modifier stack and final mods
 	modStack, finalMods := ComputeStackModifiers(stack, shipType, bucketIndex, now, inCombat, enemyFormation)
-	
+
 	// Apply mods to ship
 	effectiveShip := ApplyStatModsToShip(blueprint, finalMods)
-	
+
 	// Get abilities
 	loadout := stack.GetOrInitLoadout(shipType)
 	_, grants, _ := EvaluateGemSockets(loadout.Sockets)
 	abilities := FilterAbilitiesForMode(effectiveShip, stack.Role, grants)
-	
+
 	return effectiveShip, abilities, modStack
 }
 
@@ -159,7 +160,7 @@ func GetModifierBreakdown(
 	enemyFormation FormationType,
 ) []ModifierSummary {
 	modStack, _ := ComputeStackModifiers(stack, shipType, bucketIndex, now, inCombat, enemyFormation)
-	
+
 	ctx := ResolveContext{
 		Now:          now,
 		InCombat:     inCombat,
@@ -169,7 +170,7 @@ func GetModifierBreakdown(
 		ctx.FormationType = stack.Formation.Type
 		ctx.EnemyFormation = enemyFormation
 	}
-	
+
 	return modStack.GetSummary(ctx)
 }
 
@@ -177,10 +178,10 @@ func GetModifierBreakdown(
 // This is a helper to bridge the existing AbilityState.Bonus format.
 func abilityBonusToStatMods(bonus map[string]int) StatMods {
 	mods := ZeroMods()
-	
+
 	for key, value := range bonus {
 		floatVal := float64(value) / 100.0 // Assuming bonus is in percentage points
-		
+
 		switch key {
 		case "speed":
 			mods.SpeedDelta = value
@@ -200,7 +201,7 @@ func abilityBonusToStatMods(bonus map[string]int) StatMods {
 			mods.EvasionPct = floatVal
 		}
 	}
-	
+
 	return mods
 }
 
@@ -210,7 +211,7 @@ func UpdateStackModifiers(stack *ShipStack, now time.Time) {
 	// Remove expired temporary modifiers
 	// In the future, you might store the modifier stack on the ShipStack itself
 	// For now, this is a placeholder for when you integrate it into the data model
-	
+
 	// This function would be expanded when you add a ModifierStack field to ShipStack
 }
 
@@ -229,21 +230,21 @@ func DiffModifierStacks(before, after *ModifierStack) ModifierDiff {
 		Removed: []ModifierLayer{},
 		Changed: []ModifierLayer{},
 	}
-	
+
 	// Build maps for comparison
 	beforeMap := make(map[string]ModifierLayer)
 	afterMap := make(map[string]ModifierLayer)
-	
+
 	for _, layer := range before.Layers {
 		key := string(layer.Source) + ":" + layer.SourceID
 		beforeMap[key] = layer
 	}
-	
+
 	for _, layer := range after.Layers {
 		key := string(layer.Source) + ":" + layer.SourceID
 		afterMap[key] = layer
 	}
-	
+
 	// Find added and changed
 	for key, afterLayer := range afterMap {
 		if beforeLayer, exists := beforeMap[key]; exists {
@@ -255,14 +256,14 @@ func DiffModifierStacks(before, after *ModifierStack) ModifierDiff {
 			diff.Added = append(diff.Added, afterLayer)
 		}
 	}
-	
+
 	// Find removed
 	for key, beforeLayer := range beforeMap {
 		if _, exists := afterMap[key]; !exists {
 			diff.Removed = append(diff.Removed, beforeLayer)
 		}
 	}
-	
+
 	return diff
 }
 

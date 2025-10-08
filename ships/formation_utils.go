@@ -185,9 +185,9 @@ func SuggestFormationChanges(stack *ShipStack, enemyFormation FormationType) []s
 	if stack.Role == RoleEconomic && currentType == FormationVanguard {
 		suggestions = append(suggestions, "Vanguard is aggressive - consider Box for Economic mode defense")
 	}
-
+	formation := stack.Formation.ToFormation()
 	// Validate current formation
-	errors := ValidateFormation(stack.Formation)
+	errors := ValidateFormation(&formation)
 	if len(errors) > 0 {
 		suggestions = append(suggestions, fmt.Sprintf("Formation errors: %v", errors))
 	}
@@ -223,8 +223,9 @@ func AnalyzePositionEffectiveness(stack *ShipStack) map[FormationPosition]float6
 	if stack.Formation == nil {
 		return effectiveness
 	}
+	formation := stack.Formation.ToFormation()
 
-	for _, assignment := range stack.Formation.Assignments {
+	for _, assignment := range formation.Assignments {
 		optimal := DetermineOptimalPosition(assignment.ShipType, stack.Formation.Type)
 
 		// Calculate effectiveness score
@@ -245,8 +246,9 @@ func AnalyzePositionEffectiveness(stack *ShipStack) map[FormationPosition]float6
 	}
 
 	// Normalize by position
+
 	positionCounts := make(map[FormationPosition]float64)
-	for _, assignment := range stack.Formation.Assignments {
+	for _, assignment := range formation.Assignments {
 		positionCounts[assignment.Position] += float64(assignment.Count)
 	}
 
@@ -330,12 +332,13 @@ func ExportFormationTemplate(stack *ShipStack, name, description string) Formati
 		Assignments: make(map[ShipType]FormationPosition),
 		Conditions:  []TemplateCondition{},
 	}
+	formation := stack.Formation.ToFormation()
 
 	if stack.Formation != nil {
-		template.Formation = stack.Formation.Type
+		template.Formation = formation.Type
 
 		// Record ship type assignments
-		for _, assignment := range stack.Formation.Assignments {
+		for _, assignment := range formation.Assignments {
 			template.Assignments[assignment.ShipType] = assignment.Position
 		}
 	}

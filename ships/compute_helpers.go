@@ -147,7 +147,8 @@ func CompareFormationChange(
 	// Temporarily swap formation
 	originalFormation := stack.Formation
 	newFormation := AutoAssignFormation(stack.Ships, newFormationType, now)
-	stack.Formation = &newFormation
+	newFormationWithSlots := FromFormation(newFormation)
+	stack.Formation = &newFormationWithSlots
 
 	// After: new formation
 	afterStack, afterMods := ComputeStackModifiers(
