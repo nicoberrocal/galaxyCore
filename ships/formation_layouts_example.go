@@ -70,7 +70,8 @@ func ExampleFormationLayoutUsage() {
 // ExampleFormationComparison shows how different formations arrange ships differently.
 func ExampleFormationComparison() {
 	fmt.Println("=== Formation Visual Comparison ===")
-	fmt.Println("Showing front position with 5 ships for each formation type:\n")
+	fmt.Println("Showing front position with 5 ships for each formation type:")
+	fmt.Println()
 
 	formations := []FormationType{
 		FormationLine,
@@ -86,9 +87,11 @@ func ExampleFormationComparison() {
 		fmt.Printf("%s:\n", formation)
 		slots := GetAllSlotsForPosition(formation, PositionFront, 5)
 		for i, slot := range slots {
-			fmt.Printf("  Ship %d: (X: %6.2f, Y: %6.2f)\n", i, slot.X, slot.Y)
+			fmt.Printf("  Slot %d: (%.2f, %.2f)\n", i+1, slot.X, slot.Y)
 		}
-		fmt.Println("")
+		fmt.Println()
+		fmt.Println("---")
+		fmt.Println()
 	}
 }
 
@@ -123,7 +126,8 @@ func ExampleFormationGrowth() {
 // ExampleSwarmHexPattern demonstrates the hexagonal dispersion pattern of Swarm formation.
 func ExampleSwarmHexPattern() {
 	fmt.Println("=== Swarm Hexagonal Pattern ===")
-	fmt.Println("Swarm formation uses hexagonal rings for anti-AoE dispersion:\n")
+	fmt.Println("Swarm formation uses hexagonal rings for anti-AoE dispersion:")
+	fmt.Println()
 
 	// Show first 18 ships (3 complete hexagonal rings)
 	slots := GetAllSlotsForPosition(FormationSwarm, PositionFront, 18)

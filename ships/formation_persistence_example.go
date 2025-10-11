@@ -8,7 +8,8 @@ import (
 
 // ExampleFormationPersistence demonstrates how to save and load formations with visual layouts.
 func ExampleFormationPersistence() {
-	fmt.Println("=== Formation Persistence Example ===\n")
+	fmt.Println("=== Formation Persistence Example ===")
+	fmt.Println()
 
 	// Step 1: Create a standard formation (from combat system)
 	now := time.Now()
@@ -79,7 +80,9 @@ func ExampleFormationPersistence() {
 
 // ExampleFormationUserArrangement shows how users can rearrange ships visually.
 func ExampleFormationUserArrangement() {
-	fmt.Println("\n=== User Arrangement Example ===\n")
+	fmt.Println()
+	fmt.Println("=== User Arrangement Example ===")
+	fmt.Println()
 
 	// Start with a formation
 	formation := Formation{
@@ -121,7 +124,9 @@ func ExampleFormationUserArrangement() {
 
 // ExampleFormationSplitting shows how to split HP buckets across visual slots.
 func ExampleFormationSplitting() {
-	fmt.Println("\n=== HP Bucket Splitting Example ===\n")
+	fmt.Println()
+	fmt.Println("=== HP Bucket Splitting Example ===")
+	fmt.Println()
 
 	// Formation with a large fighter group
 	formation := Formation{
@@ -174,7 +179,9 @@ func ExampleFormationSplitting() {
 
 // ExampleFormationRoundTrip shows saving to MongoDB and loading back.
 func ExampleFormationRoundTrip() {
-	fmt.Println("\n=== MongoDB Round Trip Example ===\n")
+	fmt.Println()
+	fmt.Println("=== MongoDB Round Trip Example ===")
+	fmt.Println()
 
 	// Create formation with user arrangement
 	formation := Formation{

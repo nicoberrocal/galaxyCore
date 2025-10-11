@@ -13,6 +13,7 @@ Quick visual guide showing how each formation arranges ships. Each diagram shows
 ## LINE Formation
 **Tactical**: Balanced front-back, strong vs frontal, weak to flanking
 **Speed**: 1.0x | **Reconfig**: 120s
+**Slot Limits**: Front=15, Flank=10, Back=15, Support=8 (Total: 48)
 
 ```text
         F
@@ -29,6 +30,7 @@ Quick visual guide showing how each formation arranges ships. Each diagram shows
 ## BOX Formation
 **Tactical**: Defensive all-around, even distribution, siege resistant
 **Speed**: 0.75x | **Reconfig**: 150s
+**Slot Limits**: Front=12, Flank=10, Back=12, Support=10 (Total: 44)
 
 ```text
     F-------F
@@ -47,6 +49,7 @@ Quick visual guide showing how each formation arranges ships. Each diagram shows
 ## VANGUARD Formation
 **Tactical**: Aggressive spearhead, fast reconfig, high front damage
 **Speed**: 1.1x | **Reconfig**: 60s
+**Slot Limits**: Front=20, Flank=8, Back=10, Support=6 (Total: 44)
 
 ```text
         F
@@ -64,6 +67,7 @@ Quick visual guide showing how each formation arranges ships. Each diagram shows
 ## SKIRMISH Formation
 **Tactical**: Mobile flanking, hit-and-run, very wide
 **Speed**: 1.2x | **Reconfig**: 90s
+**Slot Limits**: Front=8, Flank=20, Back=12, Support=8 (Total: 48)
 
 ```text
 L-----------L
@@ -81,6 +85,7 @@ L-----------L
 ## ECHELON Formation
 **Tactical**: Diagonal staggered, asymmetric, concentrated defense
 **Speed**: 0.95x | **Reconfig**: 120s
+**Slot Limits**: Front=10, Flank=12, Back=10, Support=8 (Total: 40)
 
 ```text
             F
@@ -102,6 +107,7 @@ L-----------L
 ## PHALANX Formation
 **Tactical**: Heavy frontal concentration, extreme flank weakness
 **Speed**: 0.8x | **Reconfig**: 180s
+**Slot Limits**: Front=25, Flank=6, Back=8, Support=10 (Total: 49)
 
 ```text
     F---F---F
@@ -120,6 +126,7 @@ L---+-------+---L
 ## SWARM Formation
 **Tactical**: Dispersed anti-AoE, splash resistant
 **Speed**: 1.05x | **Reconfig**: 100s
+**Slot Limits**: Front=12, Flank=12, Back=12, Support=12 (Total: 48)
 
 ```text
         F
@@ -146,6 +153,317 @@ L---+-------+---L
          |
          -Y (Back/Rear)
 ```
+
+---
+
+## Position Slot Limits
+
+Each formation has maximum slot limits per position to maintain:
+
+- **Visual clarity**: Formations remain recognizable and readable
+- **Performance**: Frontend can efficiently render ~40-50 total slots
+- **Tactical meaning**: Position assignments remain strategically significant
+
+### Limits by Formation
+
+| Formation | Front | Flank | Back | Support | Total |
+|-----------|-------|-------|------|---------|-------|
+| **Line**     | 15    | 10    | 15   | 8       | 48    |
+| **Box**      | 12    | 10    | 12   | 10      | 44    |
+| **Vanguard** | 20    | 8     | 10   | 6       | 44    |
+| **Skirmish** | 8     | 20    | 12   | 8       | 48    |
+| **Echelon**  | 10    | 12    | 10   | 8       | 40    |
+| **Phalanx**  | 25    | 6     | 8    | 10      | 49    |
+| **Swarm**    | 12    | 12    | 12   | 12      | 48    |
+
+**Note**: Limits reflect tactical focus (e.g., Phalanx emphasizes front with 25 slots, Skirmish emphasizes flanks with 20 slots).
+
+### API Behavior
+
+- `GetNextSlotCoordinate()` returns `false` when position is full
+- `GetAllSlotsForPosition()` automatically caps at position limit
+- `IsPositionFull()` checks if a position has reached capacity
+- `GetMaxSlotsForPosition()` returns the limit for a specific position
+
+---
+
+## Expansion Examples: From Minimal to Full Fleet
+
+### Example 1: LINE Formation Growth
+
+**Stage 1: Minimal (4 ships)**
+
+```text
+        F₁
+        |
+    L₁--S₁--L₂
+        |
+        B₁
+```
+
+**Stage 2: Small Fleet (8 ships)**
+
+```text
+        F₂
+        |
+        F₁
+        |
+    L₁--S₁--L₂
+        |
+        B₁
+        |
+        B₂
+```
+
+**Stage 3: Medium Fleet (12 ships)**
+
+```text
+        F₃
+        |
+        F₂
+        |
+        F₁
+        |
+L₃--L₁--S₁--L₂--L₄
+        |
+        B₁
+        |
+        B₂
+        |
+        B₃
+```
+
+**Stage 4: Large Fleet (16 ships)**
+
+```text
+        F₄
+        |
+        F₃
+        |
+        F₂
+        |
+        F₁
+        |
+L₃--L₁--S₁--L₂--L₄
+        |
+        B₁
+        |
+        B₂
+        |
+        B₃
+        |
+        B₄
+```
+
+**Pattern**: Front/Back extend vertically in columns, Flanks alternate left-right outward, Support stays central.
+
+---
+
+### Example 2: VANGUARD Formation Growth
+
+**Stage 1: Minimal (4 ships)**
+
+```text
+        F₁
+       / \
+      /   \
+     L₁   L₂
+    /       \
+   B₁   S₁   B₂
+```
+
+**Stage 2: Small Fleet (8 ships)**
+
+```text
+        F₂
+        |
+        F₁
+       / \
+      /   \
+     L₁   L₂
+    /       \
+   B₁   S₁   B₂
+   |         |
+   B₃        B₄
+```
+
+**Stage 3: Medium Fleet (12 ships)**
+
+```text
+        F₃
+        |
+        F₂
+        |
+        F₁
+       / \
+      /   \
+     L₃   L₄
+    /       \
+   L₁       L₂
+  /           \
+ B₁   S₁ S₂   B₂
+ |             |
+ B₃            B₄
+```
+
+**Stage 4: Large Fleet (16 ships)**
+
+```text
+        F₄
+        |
+        F₃
+        |
+        F₂
+        |
+        F₁
+       / \
+      /   \
+     L₃   L₄
+    /       \
+   L₁       L₂
+  /           \
+ B₅           B₆
+ |             |
+ B₃   S₁ S₂   B₄
+ |             |
+ B₁            B₂
+```
+
+**Pattern**: Front stacks vertically at tip, Flanks widen the V-shape, Back extends along outer edges, Support fills center rear.
+
+---
+
+### Example 3: BOX Formation Growth
+
+**Stage 1: Minimal (4 ships)**
+
+```text
+    F₁------F₂
+    |       |
+    |       |
+    L₁  S₁  L₂
+    |       |
+    |       |
+    B₁------B₂
+```
+
+**Stage 2: Small Fleet (8 ships)**
+
+```text
+    F₂------F₃
+    |       |
+    F₁      F₄
+    |       |
+    L₁  S₁  L₂
+    |       |
+    B₁      B₃
+    |       |
+    B₂------B₄
+```
+
+**Stage 3: Medium Fleet (12 ships)**
+
+```text
+    F₃------F₅
+    |       |
+    F₂      F₆
+    |       |
+    F₁      F₄
+    |       |
+    L₁  S₁  L₂
+    |   S₂  |
+    B₁      B₄
+    |       |
+    B₂      B₅
+    |       |
+    B₃------B₆
+```
+
+**Stage 4: Large Fleet (16 ships)**
+
+```text
+    F₄------F₇
+    |       |
+    F₃      F₈
+    |       |
+    F₂      F₆
+    |       |
+    F₁      F₅
+    |       |
+    L₁  S₁  L₂
+    |   S₂  |
+    B₁      B₅
+    |       |
+    B₂      B₆
+    |       |
+    B₃      B₇
+    |       |
+    B₄------B₈
+```
+
+**Pattern**: Perimeter expands outward maintaining rectangular shape, Support fills center grid, corners remain anchored.
+
+---
+
+### Example 4: SKIRMISH Formation Growth
+
+**Stage 1: Minimal (4 ships)**
+
+```text
+L₁-----------L₂
+ \           /
+  \         /
+   F₁  S₁  F₂
+       |
+       B₁
+```
+
+**Stage 2: Small Fleet (8 ships)**
+
+```text
+L₁---------------L₂
+ \               /
+  \             /
+   F₁  S₁ S₂  F₂
+       |   |
+       B₁  B₂
+```
+
+**Stage 3: Medium Fleet (12 ships)**
+
+```text
+L₃---L₁-----------L₂---L₄
+     \             /
+      \           /
+       F₁  S₁   F₂
+       |   S₂   |
+       F₃       F₄
+           |
+           B₁
+           |
+           B₂
+```
+
+**Stage 4: Large Fleet (16 ships)**
+
+```text
+L₅---L₃---L₁-----------L₂---L₄---L₆
+          \             /
+           \           /
+            F₁  S₁   F₂
+            |   S₂   |
+            F₃       F₄
+                |
+                B₁
+                |
+                B₂
+                |
+                B₃
+                |
+                B₄
+```
+
+**Pattern**: Flanks extend extremely wide horizontally, Front positions spread along forward arc, Back stacks vertically behind Support.
 
 ---
 

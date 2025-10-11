@@ -372,7 +372,16 @@ func GetInitialSlots(formationType FormationType, position FormationPosition) []
 // GetNextSlotCoordinate returns the coordinate for the next slot in a formation position.
 // existingSlotCount is the number of slots currently occupied (including initial layout).
 // For example, if initial layout has 2 slots and you want to add a 3rd, pass existingSlotCount=2.
+// Returns false if the position has reached its maximum slot limit.
 func GetNextSlotCoordinate(formationType FormationType, position FormationPosition, existingSlotCount int) (SlotCoordinate, bool) {
+	// Check if we've reached the slot limit for this position
+	if limits, ok := FormationSlotLimits[formationType]; ok {
+		maxSlots := GetPositionLimit(limits, position)
+		if existingSlotCount >= maxSlots {
+			return SlotCoordinate{}, false // Position is full
+		}
+	}
+
 	// Get the initial slot count for this position
 	initialSlots := GetInitialSlots(formationType, position)
 	initialCount := len(initialSlots)
@@ -397,9 +406,18 @@ func GetNextSlotCoordinate(formationType FormationType, position FormationPositi
 
 // GetAllSlotsForPosition returns all slot coordinates for a position up to the specified count.
 // This includes both initial slots and expanded slots.
+// The count is automatically capped at the formation's position limit.
 func GetAllSlotsForPosition(formationType FormationType, position FormationPosition, totalSlotCount int) []SlotCoordinate {
 	if totalSlotCount <= 0 {
 		return []SlotCoordinate{}
+	}
+
+	// Cap at the position limit
+	if limits, ok := FormationSlotLimits[formationType]; ok {
+		maxSlots := GetPositionLimit(limits, position)
+		if totalSlotCount > maxSlots {
+			totalSlotCount = maxSlots
+		}
 	}
 
 	slots := make([]SlotCoordinate, 0, totalSlotCount)
@@ -480,8 +498,47 @@ type LayoutBounds struct {
 	MaxY float64 `json:"maxY"`
 }
 
+// GetPositionLimit returns the maximum slot count for a specific position.
+func GetPositionLimit(limits PositionSlotLimits, position FormationPosition) int {
+	switch position {
+	case PositionFront:
+		return limits.Front
+	case PositionFlank:
+		return limits.Flank
+	case PositionBack:
+		return limits.Back
+	case PositionSupport:
+		return limits.Support
+	default:
+		return 0
+	}
+}
+
+// GetMaxSlotsForPosition returns the maximum number of slots allowed for a position in a formation.
+func GetMaxSlotsForPosition(formationType FormationType, position FormationPosition) int {
+	if limits, ok := FormationSlotLimits[formationType]; ok {
+		return GetPositionLimit(limits, position)
+	}
+	return 0
+}
+
+// IsPositionFull checks if a position has reached its maximum slot capacity.
+func IsPositionFull(formationType FormationType, position FormationPosition, currentSlotCount int) bool {
+	maxSlots := GetMaxSlotsForPosition(formationType, position)
+	return currentSlotCount >= maxSlots
+}
+
+// GetTotalMaxSlots returns the total maximum slots across all positions for a formation.
+func GetTotalMaxSlots(formationType FormationType) int {
+	if limits, ok := FormationSlotLimits[formationType]; ok {
+		return limits.Front + limits.Flank + limits.Back + limits.Support
+	}
+	return 0
+}
+
 // GenerateFormationLayoutSnapshot creates a complete snapshot of a formation's visual layout.
 // This is the recommended function to use when sending formation data to the frontend.
+// Slot counts are automatically capped at position limits.
 func GenerateFormationLayoutSnapshot(formationType FormationType, slotCounts map[FormationPosition]int) FormationLayoutSnapshot {
 	snapshot := FormationLayoutSnapshot{
 		FormationType: formationType,
@@ -494,6 +551,12 @@ func GenerateFormationLayoutSnapshot(formationType FormationType, slotCounts map
 			continue
 		}
 
+		// Cap count at position limit
+		maxSlots := GetMaxSlotsForPosition(formationType, position)
+		if count > maxSlots && maxSlots > 0 {
+			count = maxSlots
+		}
+
 		initialSlots := GetInitialSlots(formationType, position)
 		initialCount := len(initialSlots)
 		slotPositions := make([]SlotPosition, 0, count)
@@ -501,8 +564,8 @@ func GenerateFormationLayoutSnapshot(formationType FormationType, slotCounts map
 		for i := 0; i < count; i++ {
 			coord, ok := GetNextSlotCoordinate(formationType, position, i)
 			if !ok {
-				// Fallback: if no expansion rule, just stack at origin
-				coord = SlotCoordinate{X: 0, Y: 0}
+				// Position is full, stop adding slots
+				break
 			}
 
 			slotPositions = append(slotPositions, SlotPosition{

@@ -29,6 +29,67 @@ const (
 	PositionSupport FormationPosition = "support" // Utility/healer positions
 )
 
+// PositionSlotLimits defines the maximum number of slots allowed per position in each formation.
+// These limits maintain visual clarity and tactical meaning while allowing meaningful fleet composition.
+// Limits include both initial slots and expansion slots.
+type PositionSlotLimits struct {
+	Front   int
+	Flank   int
+	Back    int
+	Support int
+}
+
+// FormationSlotLimits defines the maximum slots per position for each formation type.
+// These limits are designed to:
+// - Reflect each formation's tactical focus (e.g., Phalanx has more front slots)
+// - Maintain visual clarity and recognizable formation shapes
+// - Keep frontend rendering performant (~50-60 total slots per formation)
+// - Preserve tactical meaningfulness of position assignments
+var FormationSlotLimits = map[FormationType]PositionSlotLimits{
+	FormationLine: {
+		Front:   15, // Balanced front-back line
+		Flank:   10,
+		Back:    15,
+		Support: 8,
+	},
+	FormationBox: {
+		Front:   12, // Even distribution
+		Flank:   10,
+		Back:    12,
+		Support: 10,
+	},
+	FormationVanguard: {
+		Front:   20, // Concentrated spearhead
+		Flank:   8,
+		Back:    10,
+		Support: 6,
+	},
+	FormationSkirmish: {
+		Front:   8,  // Wide flanking focus
+		Flank:   20, // Emphasis on mobility
+		Back:    12,
+		Support: 8,
+	},
+	FormationEchelon: {
+		Front:   10, // Diagonal stagger
+		Flank:   12,
+		Back:    10,
+		Support: 8,
+	},
+	FormationPhalanx: {
+		Front:   25, // Massive front line
+		Flank:   6,  // Minimal flanks
+		Back:    8,
+		Support: 10,
+	},
+	FormationSwarm: {
+		Front:   12, // Dispersed hexagonal
+		Flank:   12,
+		Back:    12,
+		Support: 12,
+	},
+}
+
 // AttackDirection defines the angle of attack in battle.
 type AttackDirection string
 
