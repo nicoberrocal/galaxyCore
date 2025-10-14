@@ -178,13 +178,6 @@ func SuggestFormationChanges(stack *ShipStack, enemyFormation FormationType) []s
 		}
 	}
 
-	// Check role mode synergy
-	if stack.Role == RoleTactical && currentType == FormationBox {
-		suggestions = append(suggestions, "Box formation is defensive - consider Vanguard or Line for Tactical mode")
-	}
-	if stack.Role == RoleEconomic && currentType == FormationVanguard {
-		suggestions = append(suggestions, "Vanguard is aggressive - consider Box for Economic mode defense")
-	}
 	formation := stack.Formation.ToFormation()
 	// Validate current formation
 	errors := ValidateFormation(&formation)
@@ -357,7 +350,6 @@ func ExportFormationTemplate(stack *ShipStack, name, description string) Formati
 
 	template.Conditions = append(template.Conditions, TemplateCondition{
 		MinShips: minShips,
-		RoleMode: stack.Role,
 	})
 
 	return template

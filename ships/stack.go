@@ -1,6 +1,7 @@
 package ships
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -38,16 +39,17 @@ type ShipStack struct {
 	CreatedAt time.Time               `bson:"createdAt"` // tick timestamp
 
 	// Role represents the tactical intent of the entire stack (tactical/economic/recon/scientific)
-	Role             RoleMode  `bson:"role" json:"role"`
-	ReconfigureUntil time.Time `bson:"reconfigureUntil,omitempty" json:"reconfigureUntil,omitempty"`
+	// Role             RoleMode  `bson:"role" json:"role"`
+	// ReconfigureUntil time.Time `bson:"reconfigureUntil,omitempty" json:"reconfigureUntil,omitempty"`
 
 	// Loadouts track per-ship-type socket configurations for this particular stack.
 	// This allows two stacks to field the same ship type with different gem setups.
 	Loadouts map[ShipType]ShipLoadout `bson:"loadouts,omitempty" json:"loadouts,omitempty"`
 
 	// Formation defines the tactical positioning of ships within the stack
-	Formation              *FormationWithSlots `bson:"formation,omitempty" json:"formation,omitempty"`
-	FormationReconfigUntil time.Time           `bson:"formationReconfigUntil,omitempty" json:"formationReconfigUntil,omitempty"`
+	Formation              *FormationWithSlots                  `bson:"formation,omitempty" json:"formation,omitempty"`
+	FormationReconfigUntil time.Time                            `bson:"formationReconfigUntil,omitempty" json:"formationReconfigUntil,omitempty"`
+	SavedFormations        map[FormationType]FormationWithSlots `bson:"savedFormations,omitempty" json:"savedFormations,omitempty"`
 
 	// Current activity and movement
 	Movement  []*MovementState `bson:"movement,omitempty" json:"movement,omitempty"`
@@ -65,14 +67,8 @@ func (s *ShipStack) StartModeSwitch(newRole RoleMode, now time.Time) time.Time {
 	if ok && spec.ReconfigureSeconds > 0 {
 		reconfig = spec.ReconfigureSeconds
 	}
-	s.Role = newRole
-	s.ReconfigureUntil = now.Add(time.Duration(reconfig) * time.Second)
-	return s.ReconfigureUntil
-}
-
-// IsReconfiguring reports whether the stack is still switching modes at the given time.
-func (s *ShipStack) IsReconfiguring(now time.Time) bool {
-	return now.Before(s.ReconfigureUntil)
+	reconf := now.Add(time.Duration(reconfig) * time.Second)
+	return reconf
 }
 
 // SetAnchored updates the anchored state for this ship type on the stack.
@@ -83,20 +79,6 @@ func (s *ShipStack) SetAnchored(t ShipType, anchored bool) {
 		s.Loadouts = make(map[ShipType]ShipLoadout)
 	}
 	s.Loadouts[t] = load
-}
-
-// CanWarp checks RoleMode rules and anchoring to determine if warping is allowed.
-func (s *ShipStack) CanWarp(t ShipType) bool {
-	load := s.GetOrInitLoadout(t)
-	spec, ok := RoleModesCatalog[s.Role]
-	if !ok {
-		return !load.Anchored
-	}
-	// Economic mode can be allowed to warp when not anchored; anchoring always disables warp.
-	if load.Anchored {
-		return false
-	}
-	return spec.WarpAllowed
 }
 
 type HPBucket struct {
@@ -217,16 +199,43 @@ func (s *ShipStack) EffectiveShipV2Simple(t ShipType, now time.Time) (Ship, []Ab
 
 // SetFormation changes the stack's formation and applies reconfiguration time.
 func (s *ShipStack) SetFormation(formationType FormationType, now time.Time) time.Time {
-	formation := AutoAssignFormation(s.Ships, formationType, now)
-	formationWithSlots := FromFormation(formation)
-	s.Formation = &formationWithSlots
+	if s.SavedFormations == nil {
+		s.SavedFormations = make(map[FormationType]FormationWithSlots)
+	}
 
-	// Apply role mode bonus to reconfiguration time
-	reconfigTime := formation.Modifiers.ReconfigureTime
-	reconfigTime = RoleModeFormationBonus(s.Role, reconfigTime)
+	fws, ok := s.SavedFormations[formationType]
+	if !ok {
+		fws = s.BuildAndSaveFormationLayout(formationType, now)
+	}
+	// ensure latest buckets are reflected before activating
+	s.updateFormationAssignmentsFor(&fws)
+	s.SavedFormations[formationType] = fws
+	s.Formation = &fws
 
+	reconfigTime := fws.Modifiers.ReconfigureTime
 	s.FormationReconfigUntil = now.Add(time.Duration(reconfigTime) * time.Second)
 	return s.FormationReconfigUntil
+}
+
+func (s *ShipStack) EnsureFormationInitialized(now time.Time) {
+	if s.SavedFormations == nil {
+		s.SavedFormations = make(map[FormationType]FormationWithSlots)
+	}
+	if s.Formation == nil {
+		fws := s.BuildAndSaveFormationLayout(FormationLine, now)
+		s.Formation = &fws
+		s.FormationReconfigUntil = now
+	}
+}
+
+func (s *ShipStack) BuildAndSaveFormationLayout(formationType FormationType, now time.Time) FormationWithSlots {
+	formation := AutoAssignFormation(s.Ships, formationType, now)
+	fws := FromFormation(formation)
+	if s.SavedFormations == nil {
+		s.SavedFormations = make(map[FormationType]FormationWithSlots)
+	}
+	s.SavedFormations[formationType] = fws
+	return fws
 }
 
 // IsFormationReconfiguring reports whether the stack is still changing formations.
@@ -302,40 +311,182 @@ func (s *ShipStack) GetEffectiveStackSpeed() int {
 }
 
 // UpdateFormationAssignments refreshes formation assignments after combat or bucket changes.
-func (s *ShipStack) UpdateFormationAssignments() {
-	if s.Formation == nil {
-		return
-	}
-	formation := s.Formation.ToFormation()
-	// Update HP values for each assignment based on current buckets
-	for i := range formation.Assignments {
-		assignment := &formation.Assignments[i]
+func (s *ShipStack) updateFormationAssignmentsFor(fws *FormationWithSlots) {
+	var refreshed []FormationSlotAssignment
+	for _, a := range fws.SlotAssignments {
+		buckets, ok := s.Ships[a.ShipType]
+		if !ok || len(buckets) == 0 {
+			continue // drop assignments for missing ship types
+		}
 
-		if buckets, ok := s.Ships[assignment.ShipType]; ok {
-			if assignment.BucketIndex < len(buckets) {
-				bucket := buckets[assignment.BucketIndex]
-				assignment.Count = bucket.Count
-				assignment.AssignedHP = bucket.HP * bucket.Count
-			} else {
-				// Bucket no longer exists, mark for removal
-				assignment.Count = 0
-				assignment.AssignedHP = 0
+		// Rebind if BucketIndex is invalid
+		if a.BucketIndex < 0 || a.BucketIndex >= len(buckets) {
+			// approximate per-ship HP from previous data (may be zero)
+			hpPer := 0
+			if a.Count > 0 {
+				hpPer = a.AssignedHP / a.Count
 			}
-		} else {
-			// Ship type no longer in stack
-			assignment.Count = 0
-			assignment.AssignedHP = 0
+			// choose closest HP bucket
+			bestIdx := 0
+			bestDiff := 1<<31 - 1
+			for idx, b := range buckets {
+				d := intAbs(b.HP - hpPer)
+				if d < bestDiff {
+					bestDiff = d
+					bestIdx = idx
+				}
+			}
+			a.BucketIndex = bestIdx
 		}
+
+		// Refresh to bucket-wide values
+		b := buckets[a.BucketIndex]
+		if b.Count <= 0 || b.HP <= 0 {
+			continue // drop empty buckets
+		}
+		a.Count = b.Count
+		a.AssignedHP = b.HP * b.Count
+		refreshed = append(refreshed, a)
 	}
 
-	// Remove dead assignments
-	var activeAssignments []FormationAssignment
-	for _, assignment := range formation.Assignments {
-		if assignment.Count > 0 && assignment.AssignedHP > 0 {
-			activeAssignments = append(activeAssignments, assignment)
+	// 2) Enforce uniqueness: one assignment per (ShipType, BucketIndex)
+	unique := make([]FormationSlotAssignment, 0, len(refreshed))
+	seen := make(map[ShipType]map[int]bool)
+	for _, a := range refreshed {
+		m, ok := seen[a.ShipType]
+		if !ok {
+			m = make(map[int]bool)
+			seen[a.ShipType] = m
+		}
+		if m[a.BucketIndex] {
+			// duplicate for the same bucket; skip (bucket-wide)
+			continue
+		}
+		m[a.BucketIndex] = true
+		unique = append(unique, a)
+	}
+
+	fws.SlotAssignments = unique
+
+	// 3) Add missing buckets: any canonical bucket without an assignment should be placed using overflow policy
+	// Build assigned set
+	assigned := make(map[ShipType]map[int]bool)
+	for _, a := range fws.SlotAssignments {
+		m, ok := assigned[a.ShipType]
+		if !ok {
+			m = make(map[int]bool)
+			assigned[a.ShipType] = m
+		}
+		m[a.BucketIndex] = true
+	}
+
+	// Build a temporary Formation and positionCounts to reuse overflow selector
+	tempFormation := Formation{Type: fws.Type}
+	for _, a := range fws.SlotAssignments {
+		tempFormation.Assignments = append(tempFormation.Assignments, a.FormationAssignment)
+	}
+	posCounts := findPositionCounts(fws)
+
+	for st, buckets := range s.Ships {
+		for idx, b := range buckets {
+			if b.Count <= 0 || b.HP <= 0 {
+				continue
+			}
+			if m := assigned[st]; m != nil && m[idx] {
+				continue // already assigned
+			}
+
+			// Select position: optimal or overflow fallback
+			pos := DetermineOptimalPosition(st, fws.Type)
+			cap := GetMaxSlotsForPosition(fws.Type, pos)
+			if cap > 0 && posCounts[pos] >= cap {
+				if alt, ok := chooseOverflowPosition(&tempFormation, s.Ships, st, idx, posCounts); ok {
+					pos = alt
+				} else {
+					continue // nowhere to place
+				}
+			}
+
+			// Find free slot index
+			slotIdx, ok := findFreeSlotIndex(fws, pos)
+			if !ok {
+				continue
+			}
+
+			layer := DetermineLayer(pos, st)
+			newA := FormationSlotAssignment{
+				FormationAssignment: FormationAssignment{
+					Position:    pos,
+					Layer:       layer,
+					ShipType:    st,
+					BucketIndex: idx,
+					Count:       b.Count,
+					AssignedHP:  b.HP * b.Count,
+				},
+				SlotIndex: slotIdx,
+				SlotKey: func() string {
+					if coord, ok := GetNextSlotCoordinate(fws.Type, pos, slotIdx); ok {
+						return fmt.Sprintf("%.6f:%.6f", coord.X, coord.Y)
+					}
+					return ""
+				}(),
+				IsManuallyPlaced: false,
+			}
+			fws.SlotAssignments = append(fws.SlotAssignments, newA)
+			// Update helpers
+			tempFormation.Assignments = append(tempFormation.Assignments, newA.FormationAssignment)
+			posCounts[pos]++
 		}
 	}
-	formation.Assignments = activeAssignments
-	formationWithSlots := FromFormation(formation)
-	s.Formation = &formationWithSlots
+}
+
+func (s *ShipStack) UpdateFormationAssignments() {
+	if s.Formation != nil {
+		s.updateFormationAssignmentsFor(s.Formation)
+	}
+	if s.SavedFormations != nil {
+		for ft, f := range s.SavedFormations {
+			s.updateFormationAssignmentsFor(&f)
+			s.SavedFormations[ft] = f
+		}
+	}
+}
+
+// intAbs returns the absolute value of an int without importing math.
+func intAbs(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+
+// findPositionCounts returns the current slot usage per position.
+func findPositionCounts(fws *FormationWithSlots) map[FormationPosition]int {
+	counts := make(map[FormationPosition]int)
+	for _, a := range fws.SlotAssignments {
+		if a.Count > 0 && a.AssignedHP > 0 {
+			counts[a.Position]++
+		}
+	}
+	return counts
+}
+
+// findFreeSlotIndex finds the smallest free SlotIndex for a position under capacity.
+func findFreeSlotIndex(fws *FormationWithSlots, pos FormationPosition) (int, bool) {
+	max := GetMaxSlotsForPosition(fws.Type, pos)
+	if max <= 0 {
+		return -1, false
+	}
+	used := make(map[int]bool)
+	for _, a := range fws.SlotAssignments {
+		if a.Position == pos {
+			used[a.SlotIndex] = true
+		}
+	}
+	for i := 0; i < max; i++ {
+		if !used[i] {
+			return i, true
+		}
+	}
+	return -1, false
 }

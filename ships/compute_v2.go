@@ -22,9 +22,6 @@ func ComputeLoadoutV2(
 	// 1. Gems: provide their own StatMods from gem properties
 	builder.AddGemsFromLoadout(loadout)
 
-	// 2. Role Mode: provides its own StatMods
-	builder.AddRoleMode(role)
-
 	// 3. Formation: provides StatMods from FormationCatalog position bonuses only
 	if formation != nil {
 		builder.AddFormationPosition(formation, position)
@@ -71,9 +68,6 @@ func ComputeStackModifiers(
 
 	// 1. Gems: provide their own StatMods
 	builder.AddGemsFromLoadout(loadout)
-
-	// 2. Role Mode: provides its own StatMods
-	builder.AddRoleMode(stack.Role)
 
 	// 3. Formation: provides StatMods from FormationCatalog + tree nodes
 	if stack.Formation != nil {
@@ -145,7 +139,7 @@ func ComputeEffectiveShipV2(
 	// Get abilities
 	loadout := stack.GetOrInitLoadout(shipType)
 	_, grants, _ := EvaluateGemSockets(loadout.Sockets)
-	abilities := FilterAbilitiesForMode(effectiveShip, stack.Role, grants)
+	abilities := FilterAbilitiesForMode(effectiveShip, RoleEconomic, grants) // DUMMY ROLE, FILTERING DISABLED
 
 	return effectiveShip, abilities, modStack
 }
@@ -332,49 +326,12 @@ func ApplyStatModsToShip(base Ship, mods StatMods) Ship {
 // It takes the ship's built-in abilities, adds GemWord-granted abilities, then
 // applies Disabled/Enabled lists from RoleModesCatalog.
 func FilterAbilitiesForMode(s Ship, role RoleMode, runewordGrants []AbilityID) []Ability {
-	spec, ok := RoleModesCatalog[role]
-	if !ok {
-		// Unknown mode, return baseline abilities only
-		base := make([]Ability, 0, len(s.Abilities))
-		base = append(base, s.Abilities...)
-		return base
-	}
 
-	// Build a set for disabled IDs for quick lookup
-	disabled := make(map[AbilityID]struct{}, len(spec.DisabledAbilities))
-	for _, id := range spec.DisabledAbilities {
-		disabled[id] = struct{}{}
-	}
+	// Unknown mode, return baseline abilities only
+	base := make([]Ability, 0, len(s.Abilities))
+	base = append(base, s.Abilities...)
+	return base
 
-	// De-dup base abilities by ID
-	out := make([]Ability, 0, len(s.Abilities)+len(runewordGrants)+len(spec.EnabledAbilities))
-	seen := map[AbilityID]struct{}{}
-
-	// Helper to append if not disabled and not seen
-	appendIfAllowed := func(a Ability) {
-		if _, isDisabled := disabled[a.ID]; isDisabled {
-			return
-		}
-		if _, exists := seen[a.ID]; exists {
-			return
-		}
-		out = append(out, a)
-		seen[a.ID] = struct{}{}
-	}
-
-	// Base abilities
-	for _, a := range s.Abilities {
-		appendIfAllowed(a)
-	}
-	// Runeword-granted abilities
-	for _, id := range runewordGrants {
-		appendIfAllowed(abilityByID(id))
-	}
-	// Mode-enabled abilities (ensure included while in this mode)
-	for _, id := range spec.EnabledAbilities {
-		appendIfAllowed(abilityByID(id))
-	}
-	return out
 }
 
 // Internal: fetch ability from catalog with a safe fallback for missing data.

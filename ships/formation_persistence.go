@@ -1,6 +1,7 @@
 package ships
 
 import (
+    "fmt"
     "sort"
     "time"
 )
@@ -10,7 +11,8 @@ import (
 // The SlotIndex maps to specific coordinates from the formation layout system.
 type FormationSlotAssignment struct {
 	FormationAssignment        // Embedded: Position, ShipType, BucketIndex, Count, AssignedHP
-	SlotIndex           int    `bson:"slotIndex" json:"slotIndex"` // Which visual slot in this position (0-based)
+	SlotIndex           int    `bson:"slotIndex" json:"slotIndex"`               // Which visual slot in this position (0-based)
+	SlotKey             string `bson:"slotKey,omitempty" json:"slotKey,omitempty"` // Stable id: "x:y" from predefined Vector2
 	IsManuallyPlaced    bool   `bson:"isManuallyPlaced" json:"isManuallyPlaced"` // User placed vs auto-assigned
 }
 
@@ -24,9 +26,16 @@ func (fws *FormationWithSlots) GetLayoutOccupancy() map[string][]FormationLayout
     // Prepare result keyed by predefined position keys ("front","flank","back","support")
     result := make(map[string][]FormationLayoutPosition, len(mp))
 
-    // Group assignments by position key
+    // Backfill SlotKey and group assignments by position key
     byPos := make(map[string][]FormationSlotAssignment)
-    for _, a := range fws.SlotAssignments {
+    for i := range fws.SlotAssignments {
+        a := fws.SlotAssignments[i]
+        if a.SlotKey == "" {
+            if coord, ok := GetNextSlotCoordinate(fws.Type, a.Position, a.SlotIndex); ok {
+                fws.SlotAssignments[i].SlotKey = fmt.Sprintf("%.6f:%.6f", coord.X, coord.Y)
+                a.SlotKey = fws.SlotAssignments[i].SlotKey
+            }
+        }
         key := getPredefinedPositionKey(a.Position)
         byPos[key] = append(byPos[key], a)
     }
@@ -44,10 +53,24 @@ func (fws *FormationWithSlots) GetLayoutOccupancy() map[string][]FormationLayout
             items[i].Quantity = 0
         }
 
-        // Apply assignments
+        // Apply assignments (resolve by SlotKey first, then SlotIndex)
         if assigns, ok := byPos[key]; ok {
+            // Build coord-key -> index map
+            indexByKey := make(map[string]int, len(items))
+            for idx := range items {
+                k := fmt.Sprintf("%.6f:%.6f", items[idx].Position.X, items[idx].Position.Y)
+                indexByKey[k] = idx
+            }
             for _, a := range assigns {
-                idx := a.SlotIndex
+                idx := -1
+                if a.SlotKey != "" {
+                    if v, ok := indexByKey[a.SlotKey]; ok {
+                        idx = v
+                    }
+                }
+                if idx == -1 {
+                    idx = a.SlotIndex
+                }
                 if idx >= 0 && idx < len(items) {
                     items[idx].Filled = a.Count > 0
                     b := a.BucketIndex
@@ -104,11 +127,17 @@ func FromFormation(formation Formation) FormationWithSlots {
 		// Get the next available slot index for this position
 		slotIndex := positionCounts[assignment.Position]
 		positionCounts[assignment.Position]++
+
+		var slotKey string
+		if coord, ok := GetNextSlotCoordinate(formation.Type, assignment.Position, slotIndex); ok {
+			slotKey = fmt.Sprintf("%.6f:%.6f", coord.X, coord.Y)
+		}
 		
 		slotAssignments[i] = FormationSlotAssignment{
 			FormationAssignment: assignment,
-			SlotIndex:          slotIndex,
-			IsManuallyPlaced:   false, // Auto-assigned
+			SlotIndex:           slotIndex,
+			SlotKey:             slotKey,
+			IsManuallyPlaced:    false, // Auto-assigned
 		}
 	}
 
@@ -230,6 +259,9 @@ func (fws *FormationWithSlots) MoveAssignmentToSlot(assignmentIndex int, newSlot
 	}
 
 	assignment.SlotIndex = newSlotIndex
+    if coord, ok := GetNextSlotCoordinate(fws.Type, assignment.Position, newSlotIndex); ok {
+        assignment.SlotKey = fmt.Sprintf("%.6f:%.6f", coord.X, coord.Y)
+    }
 	assignment.IsManuallyPlaced = true
 	
 	return nil
@@ -252,6 +284,12 @@ func (fws *FormationWithSlots) SwapAssignmentSlots(index1, index2 int) error {
 
 	// Swap slot indices
 	assignment1.SlotIndex, assignment2.SlotIndex = assignment2.SlotIndex, assignment1.SlotIndex
+    if coord, ok := GetNextSlotCoordinate(fws.Type, assignment1.Position, assignment1.SlotIndex); ok {
+        assignment1.SlotKey = fmt.Sprintf("%.6f:%.6f", coord.X, coord.Y)
+    }
+    if coord, ok := GetNextSlotCoordinate(fws.Type, assignment2.Position, assignment2.SlotIndex); ok {
+        assignment2.SlotKey = fmt.Sprintf("%.6f:%.6f", coord.X, coord.Y)
+    }
 	assignment1.IsManuallyPlaced = true
 	assignment2.IsManuallyPlaced = true
 
@@ -261,52 +299,11 @@ func (fws *FormationWithSlots) SwapAssignmentSlots(index1, index2 int) error {
 // SplitAssignmentToSlot creates a new assignment by splitting ships from an existing bucket.
 // This allows users to split HP buckets across multiple visual slots without actually splitting the bucket.
 func (fws *FormationWithSlots) SplitAssignmentToSlot(
-	sourceIndex int,
-	splitCount int,
-	targetSlotIndex int,
+    sourceIndex int,
+    splitCount int,
+    targetSlotIndex int,
 ) error {
-	if sourceIndex < 0 || sourceIndex >= len(fws.SlotAssignments) {
-		return ErrInvalidAssignmentIndex
-	}
-
-	source := &fws.SlotAssignments[sourceIndex]
-
-	if splitCount <= 0 || splitCount >= source.Count {
-		return ErrInvalidSplitCount
-	}
-
-	// Verify target slot exists
-	_, ok := GetNextSlotCoordinate(fws.Type, source.Position, targetSlotIndex)
-	if !ok {
-		return ErrInvalidSlotIndex
-	}
-
-	// Calculate HP per ship
-	hpPerShip := source.AssignedHP / source.Count
-
-	// Create new assignment with split ships
-	newAssignment := FormationSlotAssignment{
-		FormationAssignment: FormationAssignment{
-			Position:    source.Position,
-			Layer:       source.Layer,
-			ShipType:    source.ShipType,
-			BucketIndex: source.BucketIndex, // Same bucket!
-			Count:       splitCount,
-			AssignedHP:  splitCount * hpPerShip,
-		},
-		SlotIndex:        targetSlotIndex,
-		IsManuallyPlaced: true,
-	}
-
-	// Reduce source assignment
-	source.Count -= splitCount
-	source.AssignedHP -= splitCount * hpPerShip
-	source.IsManuallyPlaced = true
-
-	// Add new assignment
-	fws.SlotAssignments = append(fws.SlotAssignments, newAssignment)
-
-	return nil
+    return ErrPartialAllocationDisabled
 }
 
 // MergeAssignments combines two assignments from the same bucket into one.
@@ -348,6 +345,7 @@ var (
 	ErrDifferentPositions      = &FormationError{Message: "assignments must be in the same position"}
 	ErrInvalidSplitCount       = &FormationError{Message: "split count must be between 1 and count-1"}
 	ErrCannotMergeAssignments  = &FormationError{Message: "assignments cannot be merged (different position/type/bucket)"}
+	ErrPartialAllocationDisabled = &FormationError{Message: "partial allocation disabled: assignments must be bucket-wide"}
 )
 
 // FormationError represents a formation operation error.

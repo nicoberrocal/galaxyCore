@@ -39,6 +39,72 @@ type PositionSlotLimits struct {
 	Support int
 }
 
+// chooseOverflowPosition selects an alternative position when the preferred one is full.
+// Policy: pick the position with the highest count of the same ShipType already present;
+// tie-breaker: among those, pick the one with the closest per-ship HP to this bucket;
+// second tie-breaker: pick the one with the most remaining capacity.
+func chooseOverflowPosition(formation *Formation, ships map[ShipType][]HPBucket, shipType ShipType, bucketIndex int, positionCounts map[FormationPosition]int) (FormationPosition, bool) {
+    candidates := []FormationPosition{PositionFront, PositionFlank, PositionBack, PositionSupport}
+
+    bestPos := PositionFront
+    found := false
+    bestSame := -1
+    bestHPDiff := int(^uint(0) >> 1) // max int
+    bestCap := -1
+
+    // Helper: get per-ship HP for a given bucket index
+    getHP := func(st ShipType, idx int) int {
+        bs := ships[st]
+        if idx >= 0 && idx < len(bs) {
+            return bs[idx].HP
+        }
+        return 0
+    }
+
+    targetHP := getHP(shipType, bucketIndex)
+
+    for _, pos := range candidates {
+        cap := GetMaxSlotsForPosition(formation.Type, pos)
+        if cap <= 0 || positionCounts[pos] >= cap {
+            continue // no capacity
+        }
+
+        // Count same ship types and compute closest HP difference within this position
+        same := 0
+        minDiff := int(^uint(0) >> 1)
+        for _, a := range formation.Assignments {
+            if a.Position != pos || a.ShipType != shipType {
+                continue
+            }
+            same++
+            diff := targetHP - getHP(shipType, a.BucketIndex)
+            if diff < 0 {
+                diff = -diff
+            }
+            if diff < minDiff {
+                minDiff = diff
+            }
+        }
+        if same == 0 {
+            // If none assigned yet, treat HP diff as large
+            minDiff = int(^uint(0) >> 1)
+        }
+
+        capRem := cap - positionCounts[pos]
+
+        // Prefer higher 'same', then lower HP diff, then higher remaining capacity
+        if !found || same > bestSame || (same == bestSame && (minDiff < bestHPDiff || (minDiff == bestHPDiff && capRem > bestCap))) {
+            bestPos = pos
+            bestSame = same
+            bestHPDiff = minDiff
+            bestCap = capRem
+            found = true
+        }
+    }
+
+    return bestPos, found
+}
+
 // FormationSlotLimits defines the maximum slots per position for each formation type.
 // These limits are designed to:
 // - Reflect each formation's tactical focus (e.g., Phalanx has more front slots)
@@ -551,35 +617,39 @@ func AutoAssignFormation(ships map[ShipType][]HPBucket, formationType FormationT
 	}
 
 	// Auto-assignment logic: assign ship types to positions based on their characteristics
-	// Enforce predefined slot capacity per position.
-	positionCounts := make(map[FormationPosition]int)
-	for shipType, buckets := range ships {
-		for bucketIndex, bucket := range buckets {
-			if bucket.Count == 0 || bucket.HP == 0 {
-				continue
-			}
+    // Enforce predefined slot capacity per position with overflow fallback.
+    positionCounts := make(map[FormationPosition]int)
+    for shipType, buckets := range ships {
+        for bucketIndex, bucket := range buckets {
+            if bucket.Count == 0 || bucket.HP == 0 {
+                continue
+            }
 
-			position := DetermineOptimalPosition(shipType, formationType)
-			// Enforce capacity
-			maxSlots := GetMaxSlotsForPosition(formationType, position)
-			if maxSlots > 0 && positionCounts[position] >= maxSlots {
-				// No available slot for this position; skip this bucket assignment
-				continue
-			}
+            position := DetermineOptimalPosition(shipType, formationType)
+            // Enforce capacity with overflow fallback
+            maxSlots := GetMaxSlotsForPosition(formationType, position)
+            if maxSlots > 0 && positionCounts[position] >= maxSlots {
+                if alt, ok := chooseOverflowPosition(&formation, ships, shipType, bucketIndex, positionCounts); ok {
+                    position = alt
+                } else {
+                    // No capacity anywhere; skip
+                    continue
+                }
+            }
 
-			layer := DetermineLayer(position, shipType)
+            layer := DetermineLayer(position, shipType)
 
-			formation.Assignments = append(formation.Assignments, FormationAssignment{
-				Position:    position,
-				Layer:       layer,
-				ShipType:    shipType,
-				BucketIndex: bucketIndex,
-				Count:       bucket.Count,
-				AssignedHP:  bucket.HP * bucket.Count,
-			})
-			positionCounts[position]++
-		}
-	}
+            formation.Assignments = append(formation.Assignments, FormationAssignment{
+                Position:    position,
+                Layer:       layer,
+                ShipType:    shipType,
+                BucketIndex: bucketIndex,
+                Count:       bucket.Count,
+                AssignedHP:  bucket.HP * bucket.Count,
+            })
+            positionCounts[position]++
+        }
+    }
 
 	return formation
 }

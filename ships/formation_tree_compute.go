@@ -95,9 +95,6 @@ func ComputeLoadoutV2WithTree(
 	// 1. Gems: provide their own StatMods
 	builder.AddGemsFromLoadout(loadout)
 
-	// 2. Role Mode: provides its own StatMods
-	builder.AddRoleMode(role)
-
 	// 3. Formation Tree: provides StatMods from unlocked nodes
 	if formation != nil && treeState != nil {
 		builder.AddFormationTreeNodes(treeState, formation.Type)
