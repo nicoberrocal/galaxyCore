@@ -701,6 +701,32 @@ func DetermineOptimalPosition(shipType ShipType, formationType FormationType) Fo
 			return PositionFlank
 		}
 		return PositionFront
+
+	case Cruiser:
+		// Medium tank/brawler: generally frontline
+		return PositionFront
+
+	case Corvette:
+		// Fast pursuit/assassin; prefers flanks, especially in mobile/aggressive formations
+		if formationType == FormationSkirmish || formationType == FormationVanguard {
+			return PositionFlank
+		}
+		if blueprint.Speed >= 7 {
+			return PositionFlank
+		}
+		return PositionFront
+
+	case Ballista:
+		// Long-range AoE platform; backline artillery
+		return PositionBack
+
+	case Ghost:
+		// Stealth assassin; flank for backstab lines
+		return PositionFlank
+
+	case Frigate:
+		// Electronic warfare/support; mid/support line
+		return PositionSupport
 	}
 
 	return PositionFront // default fallback
