@@ -1,6 +1,9 @@
 package ships
 
-import "time"
+import (
+    "sort"
+    "time"
+)
 
 // FormationSlotAssignment extends FormationAssignment with visual slot information.
 // This allows saving user-arranged formations to MongoDB while preserving visual layout.
@@ -9,6 +12,55 @@ type FormationSlotAssignment struct {
 	FormationAssignment        // Embedded: Position, ShipType, BucketIndex, Count, AssignedHP
 	SlotIndex           int    `bson:"slotIndex" json:"slotIndex"` // Which visual slot in this position (0-based)
 	IsManuallyPlaced    bool   `bson:"isManuallyPlaced" json:"isManuallyPlaced"` // User placed vs auto-assigned
+}
+
+// GetLayoutOccupancy returns the predefined layout with occupancy flags set from SlotAssignments.
+func (fws *FormationWithSlots) GetLayoutOccupancy() map[string][]FormationLayoutPosition {
+    mp, ok := getPredefinedMap(fws.Type)
+    if !ok {
+        return map[string][]FormationLayoutPosition{}
+    }
+
+    // Prepare result keyed by predefined position keys ("front","flank","back","support")
+    result := make(map[string][]FormationLayoutPosition, len(mp))
+
+    // Group assignments by position key
+    byPos := make(map[string][]FormationSlotAssignment)
+    for _, a := range fws.SlotAssignments {
+        key := getPredefinedPositionKey(a.Position)
+        byPos[key] = append(byPos[key], a)
+    }
+
+    for key, list := range mp {
+        // Copy and sort by Order
+        items := make([]FormationLayoutPosition, len(list))
+        copy(items, list)
+        sort.Slice(items, func(i, j int) bool { return items[i].Order < items[j].Order })
+
+        // Clear occupancy fields
+        for i := range items {
+            items[i].Filled = false
+            items[i].BucketIndex = nil
+            items[i].Quantity = 0
+        }
+
+        // Apply assignments
+        if assigns, ok := byPos[key]; ok {
+            for _, a := range assigns {
+                idx := a.SlotIndex
+                if idx >= 0 && idx < len(items) {
+                    items[idx].Filled = a.Count > 0
+                    b := a.BucketIndex
+                    items[idx].BucketIndex = &b
+                    items[idx].Quantity = a.Count
+                }
+            }
+        }
+
+        result[key] = items
+    }
+
+    return result
 }
 
 // FormationWithSlots extends Formation with visual slot assignments.

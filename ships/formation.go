@@ -47,9 +47,9 @@ type PositionSlotLimits struct {
 // - Preserve tactical meaningfulness of position assignments
 var FormationSlotLimits = map[FormationType]PositionSlotLimits{
 	FormationLine: {
-		Front:   15, // Balanced front-back line
+		Front:   14, // Balanced front-back line
 		Flank:   10,
-		Back:    15,
+		Back:    14,
 		Support: 8,
 	},
 	FormationBox: {
@@ -551,6 +551,8 @@ func AutoAssignFormation(ships map[ShipType][]HPBucket, formationType FormationT
 	}
 
 	// Auto-assignment logic: assign ship types to positions based on their characteristics
+	// Enforce predefined slot capacity per position.
+	positionCounts := make(map[FormationPosition]int)
 	for shipType, buckets := range ships {
 		for bucketIndex, bucket := range buckets {
 			if bucket.Count == 0 || bucket.HP == 0 {
@@ -558,6 +560,13 @@ func AutoAssignFormation(ships map[ShipType][]HPBucket, formationType FormationT
 			}
 
 			position := DetermineOptimalPosition(shipType, formationType)
+			// Enforce capacity
+			maxSlots := GetMaxSlotsForPosition(formationType, position)
+			if maxSlots > 0 && positionCounts[position] >= maxSlots {
+				// No available slot for this position; skip this bucket assignment
+				continue
+			}
+
 			layer := DetermineLayer(position, shipType)
 
 			formation.Assignments = append(formation.Assignments, FormationAssignment{
@@ -568,6 +577,7 @@ func AutoAssignFormation(ships map[ShipType][]HPBucket, formationType FormationT
 				Count:       bucket.Count,
 				AssignedHP:  bucket.HP * bucket.Count,
 			})
+			positionCounts[position]++
 		}
 	}
 

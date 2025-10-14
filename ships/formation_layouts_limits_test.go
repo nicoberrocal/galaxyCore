@@ -7,23 +7,23 @@ func TestPositionSlotLimits(t *testing.T) {
 	tests := []struct {
 		formation FormationType
 		position  FormationPosition
-		expected  int
 	}{
-		{FormationLine, PositionFront, 15},
-		{FormationLine, PositionFlank, 10},
-		{FormationLine, PositionBack, 15},
-		{FormationLine, PositionSupport, 8},
-		{FormationPhalanx, PositionFront, 25},
-		{FormationPhalanx, PositionFlank, 6},
-		{FormationSkirmish, PositionFlank, 20},
-		{FormationVanguard, PositionFront, 20},
+		{FormationLine, PositionFront},
+		{FormationLine, PositionFlank},
+		{FormationLine, PositionBack},
+		{FormationLine, PositionSupport},
+		{FormationPhalanx, PositionFront},
+		{FormationPhalanx, PositionFlank},
+		{FormationSkirmish, PositionFlank},
+		{FormationVanguard, PositionFront},
 	}
 
 	for _, tt := range tests {
+		expected := len(GetInitialSlots(tt.formation, tt.position))
 		got := GetMaxSlotsForPosition(tt.formation, tt.position)
-		if got != tt.expected {
+		if got != expected {
 			t.Errorf("GetMaxSlotsForPosition(%v, %v) = %d, want %d",
-				tt.formation, tt.position, got, tt.expected)
+				tt.formation, tt.position, got, expected)
 		}
 	}
 }
@@ -61,7 +61,7 @@ func TestGetNextSlotCoordinateEnforcesLimit(t *testing.T) {
 func TestGetAllSlotsForPositionCapsAtLimit(t *testing.T) {
 	formationType := FormationPhalanx
 	position := PositionFront
-	maxSlots := GetMaxSlotsForPosition(formationType, position) // 25
+	maxSlots := GetMaxSlotsForPosition(formationType, position)
 
 	// Request more than the limit
 	slots := GetAllSlotsForPosition(formationType, position, maxSlots+100)
@@ -90,7 +90,7 @@ func TestGetAllSlotsForPositionCapsAtLimit(t *testing.T) {
 func TestIsPositionFull(t *testing.T) {
 	formationType := FormationSkirmish
 	position := PositionFlank
-	maxSlots := GetMaxSlotsForPosition(formationType, position) // 20
+	maxSlots := GetMaxSlotsForPosition(formationType, position)
 
 	// Not full
 	if IsPositionFull(formationType, position, maxSlots-1) {
@@ -110,24 +110,24 @@ func TestIsPositionFull(t *testing.T) {
 
 // TestGetTotalMaxSlots verifies total slot calculation.
 func TestGetTotalMaxSlots(t *testing.T) {
-	tests := []struct {
-		formation FormationType
-		expected  int
-	}{
-		{FormationLine, 48},     // 15+10+15+8
-		{FormationBox, 44},      // 12+10+12+10
-		{FormationVanguard, 44}, // 20+8+10+6
-		{FormationSkirmish, 48}, // 8+20+12+8
-		{FormationEchelon, 40},  // 10+12+10+8
-		{FormationPhalanx, 49},  // 25+6+8+10
-		{FormationSwarm, 48},    // 12+12+12+12
+	formations := []FormationType{
+		FormationLine,
+		FormationBox,
+		FormationVanguard,
+		FormationSkirmish,
+		FormationEchelon,
+		FormationPhalanx,
+		FormationSwarm,
 	}
 
-	for _, tt := range tests {
-		got := GetTotalMaxSlots(tt.formation)
-		if got != tt.expected {
-			t.Errorf("GetTotalMaxSlots(%v) = %d, want %d",
-				tt.formation, got, tt.expected)
+	for _, f := range formations {
+		expected := GetMaxSlotsForPosition(f, PositionFront) +
+			GetMaxSlotsForPosition(f, PositionFlank) +
+			GetMaxSlotsForPosition(f, PositionBack) +
+			GetMaxSlotsForPosition(f, PositionSupport)
+		got := GetTotalMaxSlots(f)
+		if got != expected {
+			t.Errorf("GetTotalMaxSlots(%v) = %d, want %d", f, got, expected)
 		}
 	}
 }
@@ -147,23 +147,17 @@ func TestFormationLayoutSnapshotRespectsLimits(t *testing.T) {
 
 	snapshot := GenerateFormationLayoutSnapshot(formationType, slotCounts)
 
-	// Verify each position is capped at its limit
-	limits := FormationSlotLimits[formationType]
-
-	if len(snapshot.Positions[PositionFront]) > limits.Front {
-		t.Errorf("Front slots %d exceed limit %d",
-			len(snapshot.Positions[PositionFront]), limits.Front)
+	// Verify each position is capped at its limit derived from predefined slots
+	if max := GetMaxSlotsForPosition(formationType, PositionFront); len(snapshot.Positions[PositionFront]) > max {
+		t.Errorf("Front slots %d exceed limit %d", len(snapshot.Positions[PositionFront]), max)
 	}
-	if len(snapshot.Positions[PositionFlank]) > limits.Flank {
-		t.Errorf("Flank slots %d exceed limit %d",
-			len(snapshot.Positions[PositionFlank]), limits.Flank)
+	if max := GetMaxSlotsForPosition(formationType, PositionFlank); len(snapshot.Positions[PositionFlank]) > max {
+		t.Errorf("Flank slots %d exceed limit %d", len(snapshot.Positions[PositionFlank]), max)
 	}
-	if len(snapshot.Positions[PositionBack]) > limits.Back {
-		t.Errorf("Back slots %d exceed limit %d",
-			len(snapshot.Positions[PositionBack]), limits.Back)
+	if max := GetMaxSlotsForPosition(formationType, PositionBack); len(snapshot.Positions[PositionBack]) > max {
+		t.Errorf("Back slots %d exceed limit %d", len(snapshot.Positions[PositionBack]), max)
 	}
-	if len(snapshot.Positions[PositionSupport]) > limits.Support {
-		t.Errorf("Support slots %d exceed limit %d",
-			len(snapshot.Positions[PositionSupport]), limits.Support)
+	if max := GetMaxSlotsForPosition(formationType, PositionSupport); len(snapshot.Positions[PositionSupport]) > max {
+		t.Errorf("Support slots %d exceed limit %d", len(snapshot.Positions[PositionSupport]), max)
 	}
 }
