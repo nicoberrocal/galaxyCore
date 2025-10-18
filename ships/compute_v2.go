@@ -83,6 +83,17 @@ func ComputeStackModifiers(
 	// 4. Anchored state: provides penalty mods
 	builder.AddAnchoredPenalty(loadout.Anchored)
 
+	// 4b. Biology runtime: include active bio layers for this ship and inbound bio debuffs
+	if BioPopulateFromPath != nil {
+		if stack.Bio == nil || stack.Bio.ActivePath != string(stack.BioTreePath) {
+			stack.BuildBioFromCurrentPath(now)
+		}
+	}
+	if stack.Bio != nil {
+		builder.AddBioFromMachine(stack.Bio, shipType)
+		builder.AddInboundBioDebuffs(stack.Bio)
+	}
+
 	// 5. Abilities: provide their own StatMods when active
 	if stack.Ability != nil {
 		for _, abilityState := range *stack.Ability {

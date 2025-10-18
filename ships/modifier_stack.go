@@ -20,6 +20,13 @@ const (
 	SourceComposition       ModifierSource = "composition"        // Fleet composition bonuses
 	SourceGemPosition       ModifierSource = "gem_position"       // Gem+position synergy
 	
+	// Biology/BioTree sources
+	SourceBioPassive   ModifierSource = "bio_passive"   // Always-on bio node effects
+	SourceBioTriggered ModifierSource = "bio_triggered" // Triggered-duration bio effects
+	SourceBioTick      ModifierSource = "bio_tick"      // Tick-based periodic effects
+	SourceBioAccum     ModifierSource = "bio_accum"     // Accumulative/counter-based effects
+	SourceBioDebuff    ModifierSource = "bio_debuff"    // Enemy-applied bio debuffs
+	
 	// Temporary sources (duration-based)
 	SourceAbility      ModifierSource = "ability"       // Active ability effects
 	SourceAbilityStack ModifierSource = "ability_stack" // Stacking ability effects
@@ -63,13 +70,19 @@ const (
 	PriorityGem          = 100 // Gems apply first
 	PriorityGemWord      = 150 // GemWords build on gems
 	PriorityRoleMode     = 200 // Role mode is a strategic choice
+	// Bio passive sits between role and formation to allow formations to override some passives if needed
+	PriorityBioPassive   = 250 // Always-on bio node effects
 	PriorityFormation    = 300 // Formation positioning
 	PriorityComposition  = 350 // Fleet composition synergies
 	PrioritySynergy      = 400 // Cross-system synergies (gem+position, formation+role)
 	PriorityEnvironment  = 500 // Environmental effects
 	PriorityAbility      = 600 // Active abilities
+	// Bio triggered/tick effects resolve around abilities
+	PriorityBioTriggered = 610 // Triggered/tick bio effects
 	PriorityBuff         = 700 // Allied buffs
 	PriorityDebuff       = 800 // Enemy debuffs (applied last to see final stats)
+	// Bio-specific debuffs can be slightly after general debuffs if desired
+	PriorityBioDebuff    = 810 // Enemy bio debuffs
 )
 
 // NewModifierStack creates an empty modifier stack.

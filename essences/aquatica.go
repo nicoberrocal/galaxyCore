@@ -18,7 +18,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cephalopod_elastic_burst",
 			Title:       "Elastic Burst",
 			Description: "Can move while changing formation at 50% movement speed. Others cannot move or move very slowly.",
-			Path:        "cephalopod",
+			Path:        string(ships.Cephalopod),
 			Effect:      ships.StatMods{FormationSyncBonus: 0.5}, // +50% formation sync bonus (represents movement during formation change)
 			StatDelta:   StatDelta{SpeedPercent: 0.5},            // +50% speed (but only during formation changes)
 			ComplexEffects: []ComplexEffect{
@@ -38,7 +38,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cephalopod_ink_sac",
 			Title:       "Ink Sac Propulsion",
 			Description: "Gain 20% evasion for 5 ticks after activating an ability. Effect can be active only once.",
-			Path:        "cephalopod",
+			Path:        string(ships.Cephalopod),
 			StatDelta:   StatDelta{EvasionPct: 0.2}, // +20% evasion
 			ComplexEffects: []ComplexEffect{
 				{
@@ -58,7 +58,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cephalopod_decoy_drones",
 			Title:       "Decoy Drones",
 			Description: "When attacked from behind, deploy a decoy drone that draws fire and slows enemy upon destruction.",
-			Path:        "cephalopod",
+			Path:        string(ships.Cephalopod),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -82,7 +82,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cephalopod_neurotoxin",
 			Title:       "Neurotoxin Coating",
 			Description: "Your attacks apply a stack of toxin on critical hits. At 3 stacks the target is stunned for 1 tick.",
-			Path:        "cephalopod",
+			Path:        string(ships.Cephalopod),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -107,7 +107,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cephalopod_mimetic",
 			Title:       "Mimetic Genome",
 			Description: "Mimics the signature of the targeted stack, changing attack type to its weakest shield after engaging for 3 ticks.",
-			Path:        "cephalopod",
+			Path:        string(ships.Cephalopod),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -128,7 +128,7 @@ func BuildAquatica() *BioTree {
 			ID:          "chondrichthyan_electroreceptive",
 			Title:       "Electroreceptive Sense",
 			Description: "50% increased ping range and can detect cloaked wounded ships (<100% HP). Global detection below 20%.",
-			Path:        "chondrichthyan",
+			Path:        string(ships.Chondrichthyan),
 			Effect:      ships.StatMods{PingRangePct: 0.5, CloakDetect: true}, // +50% ping range, cloak detection
 			StatDelta:   StatDelta{AccuracyPercent: 0.1},                      // +10% accuracy (represents better detection)
 		},
@@ -137,7 +137,7 @@ func BuildAquatica() *BioTree {
 			ID:          "chondrichthyan_ram_ventilation",
 			Title:       "Ram Ventilation",
 			Description: "Gain a 2% stackable bonus to Speed and Damage for every tick sprinting towards an enemy with an active ability.",
-			Path:        "chondrichthyan",
+			Path:        string(ships.Chondrichthyan),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -158,7 +158,7 @@ func BuildAquatica() *BioTree {
 			ID:          "chondrichthyan_spiral_intestine",
 			Title:       "Spiral Intestine",
 			Description: "Gain 50% speed for 5 ticks after destroying a stack.",
-			Path:        "chondrichthyan",
+			Path:        string(ships.Chondrichthyan),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -176,7 +176,7 @@ func BuildAquatica() *BioTree {
 			ID:          "chondrichthyan_looming_presence",
 			Title:       "Looming Presence",
 			Description: "The fourth consecutive attack on a target has 25% crit chance.",
-			Path:        "chondrichthyan",
+			Path:        string(ships.Chondrichthyan),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -193,7 +193,7 @@ func BuildAquatica() *BioTree {
 			ID:          "chondrichthyan_frenzy_scent",
 			Title:       "Frenzy Scent",
 			Description: "Your damage is increased globally by 25% after losing a system. Lasts 10 ticks.",
-			Path:        "chondrichthyan",
+			Path:        string(ships.Chondrichthyan),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -217,7 +217,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cetacean_echolocative",
 			Title:       "Echolocative Sonar",
 			Description: "You and all allies within 200u gain +5% accuracy and cannot have their accuracy reduced below 75%.",
-			Path:        "cetacean",
+			Path:        string(ships.Cetacean),
 			Effect:      ships.StatMods{AccuracyPct: 0.05}, // +5% accuracy
 			StatDelta:   StatDelta{AccuracyPercent: 0.05},  // +5% accuracy
 			ComplexEffects: []ComplexEffect{
@@ -241,7 +241,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cetacean_pod_synchronization",
 			Title:       "Pod Synchronization",
 			Description: "Each allied stack attacking the same target reduces its shields by 2%, stacking up to 10%.",
-			Path:        "cetacean",
+			Path:        string(ships.Cetacean),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -262,7 +262,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cetacean_bio_acoustic",
 			Title:       "Bio Acoustic Field",
 			Description: "All ally moving stacks within 500u running the same formation gain +20% speed bonus.",
-			Path:        "cetacean",
+			Path:        string(ships.Cetacean),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -285,7 +285,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cetacean_communal_lungs",
 			Title:       "Communal Lungs",
 			Description: "Shares 15% of healing and 10% of energy regen to the lowest HP ally within 250u.",
-			Path:        "cetacean",
+			Path:        string(ships.Cetacean),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -311,7 +311,7 @@ func BuildAquatica() *BioTree {
 			ID:          "cetacean_large_migration",
 			Title:       "Large Migration",
 			Description: "While 800u+ from any friendly system, gain +25% shields if at least one ally is nearby.",
-			Path:        "cetacean",
+			Path:        string(ships.Cetacean),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,

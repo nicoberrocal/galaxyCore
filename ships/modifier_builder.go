@@ -254,6 +254,46 @@ func (mb *ModifierBuilder) AddDebuff(debuffID string, description string, mods S
 }
 
 // ========================
+// Biology Runtime Integration
+// ========================
+
+// AddBioFromMachine adds active bio node layers for the given ship type at builder time.
+func (mb *ModifierBuilder) AddBioFromMachine(bio *BioMachine, shipType ShipType) *ModifierBuilder {
+	if bio == nil {
+		return mb
+	}
+	layers := bio.CollectActiveLayersForShip(shipType, mb.now)
+	for _, bl := range layers {
+		if !isZeroMods(bl.Mods) {
+			if bl.ExpiresAt != nil && mb.now.Before(*bl.ExpiresAt) {
+				mb.stack.AddTemporary(bl.Source, bl.SourceID, bl.Desc, bl.Mods, bl.Priority, mb.now, bl.ExpiresAt.Sub(mb.now))
+			} else {
+				// treat as permanent for this snapshot
+				mb.stack.AddPermanent(bl.Source, bl.SourceID, bl.Desc, bl.Mods, bl.Priority, mb.now)
+			}
+		}
+	}
+	return mb
+}
+
+// AddInboundBioDebuffs adds enemy-applied debuffs captured by the bio machine.
+func (mb *ModifierBuilder) AddInboundBioDebuffs(bio *BioMachine) *ModifierBuilder {
+	if bio == nil {
+		return mb
+	}
+	for _, d := range bio.CollectInboundDebuffs(mb.now) {
+		mods := scaleMods(d.Mods, float64(max(1, d.Stacks)))
+		dur := d.ExpiresAt.Sub(mb.now)
+		if dur <= 0 {
+			// if already expired by clock skew, skip
+			continue
+		}
+		mb.stack.AddTemporary(SourceBioDebuff, d.ID, "Bio Debuff: "+d.ID, mods, PriorityBioDebuff, mb.now, dur)
+	}
+	return mb
+}
+
+// ========================
 // Environmental Integration
 // ========================
 

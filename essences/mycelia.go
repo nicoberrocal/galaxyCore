@@ -16,7 +16,7 @@ func BuildMycelia() *BioTree {
 			ID:          "sporeform_dormant_spores",
 			Title:       "Dormant Spores",
 			Description: "When stationary for 3+ ticks, gain a stacking +2% defense and +2% hull regen per tick (max 20%). Loses stacks instantly when moving.",
-			Path:        "sporeform",
+			Path:        string(ships.Sporeform),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -36,7 +36,7 @@ func BuildMycelia() *BioTree {
 			ID:          "sporeform_hyphal_invasion",
 			Title:       "Hyphal Invasion",
 			Description: "Each successful hit infects the target for 5 ticks. Infected enemies lose -5% accuracy and spread infection to nearby enemies within 100u if they die. Attack orders towards infected targets have 10% speed increase.",
-			Path:        "sporeform",
+			Path:        string(ships.Sporeform),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -58,7 +58,7 @@ func BuildMycelia() *BioTree {
 			ID:          "sporeform_digestive_mycelium",
 			Title:       "Digestive Mycelium",
 			Description: "Damaging infected targets restores 2% hull per tick. Killing an infected target grants +10% damage for 3 ticks.",
-			Path:        "sporeform",
+			Path:        string(ships.Sporeform),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -75,7 +75,7 @@ func BuildMycelia() *BioTree {
 			ID:          "sporeform_necrosporic_bloom",
 			Title:       "Necrosporic Bloom",
 			Description: "Upon your destruction, releases a 300u spore cloud that infects all ships inside. Enemies take 5% HP damage over 3 ticks; allies gain +5% regen.",
-			Path:        "sporeform",
+			Path:        string(ships.Sporeform),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexOnDeath,
@@ -91,7 +91,7 @@ func BuildMycelia() *BioTree {
 			ID:          "sporeform_mycelial_persistence",
 			Title:       "Mycelial Persistence",
 			Description: "When your stack is destroyed, 25% of your population reforms as a new micro-stack at your nearest controlled system after 10 ticks.",
-			Path:        "sporeform",
+			Path:        string(ships.Sporeform),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexOnDeath,
@@ -111,7 +111,7 @@ func BuildMycelia() *BioTree {
 			ID:          "cordyceps_neural_spores",
 			Title:       "Neural Spores",
 			Description: "Critical hits apply a 'confusion' stack. At 3 stacks, target ships attack random nearby units for 1 tick.",
-			Path:        "cordyceps",
+			Path:        string(ships.Cordyceps),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -133,7 +133,7 @@ func BuildMycelia() *BioTree {
 			ID:          "cordyceps_symbiotic_override",
 			Title:       "Symbiotic Override",
 			Description: "When engaging an enemy system, you can infect one building. For 5 ticks it doesn't operate.",
-			Path:        "cordyceps",
+			Path:        string(ships.Cordyceps),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -149,7 +149,7 @@ func BuildMycelia() *BioTree {
 			ID:          "cordyceps_spore_zombie",
 			Title:       "Spore Zombie",
 			Description: "When an infected stack dies within 200u, spawn a temporary 'Spore Husk' (20% of original HP, 50% damage) that lasts 3 ticks and fights for you.",
-			Path:        "cordyceps",
+			Path:        string(ships.Cordyceps),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -168,7 +168,7 @@ func BuildMycelia() *BioTree {
 			ID:          "cordyceps_myco_resonance",
 			Title:       "Myco-Resonance",
 			Description: "For every infected target within 300u, gain +2% evasion and +2% cooldown reduction.",
-			Path:        "cordyceps",
+			Path:        string(ships.Cordyceps),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -187,7 +187,7 @@ func BuildMycelia() *BioTree {
 			ID:          "cordyceps_parasitic_singularity",
 			Title:       "Parasitic Singularity",
 			Description: "Activate to merge with all infected enemies within 400u, dealing massive AoE true damage and healing 50% of your max HP per infection consumed. 20 tick cooldown.",
-			Path:        "cordyceps",
+			Path:        string(ships.Cordyceps),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -211,7 +211,7 @@ func BuildMycelia() *BioTree {
 			ID:          "mycorrhiza_networked_roots",
 			Title:       "Networked Roots",
 			Description: "All allied stacks within 300u are 'linked.' Linked ships share 10% of hull regen, gain +5% resistance to status effects and 10% movement speed.",
-			Path:        "mycorrhiza",
+			Path:        string(ships.Mycorrhiza),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -230,14 +230,14 @@ func BuildMycelia() *BioTree {
 			ID:          "mycorrhiza_spore_relay",
 			Title:       "Spore Relay",
 			Description: "Abilities you cast propagate through the fungal network, applying 50% of their secondary effects (but not damage) to linked allies.",
-			Path:        "mycorrhiza",
+			Path:        string(ships.Mycorrhiza),
 		},
 		// 3. Nutrient Exchange: Regen on ally kills or resource extraction
 		{
 			ID:          "mycorrhiza_nutrient_exchange",
 			Title:       "Nutrient Exchange",
 			Description: "When an ally in the network destroys a stack or extracts a resource, all linked units regain 5% energy and 3% HP.",
-			Path:        "mycorrhiza",
+			Path:        string(ships.Mycorrhiza),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -255,7 +255,7 @@ func BuildMycelia() *BioTree {
 			ID:          "mycorrhiza_fungal_overgrowth",
 			Title:       "Fungal Overgrowth",
 			Description: "When 3+ allies are within 300u, create an Overgrowth field for 5 ticks: +20% defense, -20% speed, and immunity to toxins.",
-			Path:        "mycorrhiza",
+			Path:        string(ships.Mycorrhiza),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -274,7 +274,7 @@ func BuildMycelia() *BioTree {
 			ID:          "mycorrhiza_synaptic_bloom",
 			Title:       "Synaptic Bloom",
 			Description: "Active ability — pulse through the network to instantly reset all allied ability cooldowns by 20% and cleanse one debuff. Costs 30% of your current HP.",
-			Path:        "mycorrhiza",
+			Path:        string(ships.Mycorrhiza),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,

@@ -17,7 +17,7 @@ func BuildFlora() *BioTree {
 			ID:          "carnivora_thigmonastic_triggers",
 			Title:       "Thigmonastic Triggers",
 			Description: "First strike attack gains 20% critical damage chance and roots the target in place for 1 tick.",
-			Path:        "carnivora",
+			Path:        string(ships.Carnivora),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -34,7 +34,7 @@ func BuildFlora() *BioTree {
 			ID:          "carnivora_digestive_enzymes",
 			Title:       "Digestive Enzymes",
 			Description: "Your attacks inflict a damage over time effect, dealing a small amount of stacking acid damage every tick for 5 ticks.",
-			Path:        "carnivora",
+			Path:        string(ships.Carnivora),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -50,7 +50,7 @@ func BuildFlora() *BioTree {
 			ID:          "carnivora_irresistible_aroma",
 			Title:       "Irresistible Aroma",
 			Description: "When a ship enters into your range view, blinds it of every stack except this one for 5 ticks.",
-			Path:        "carnivora",
+			Path:        string(ships.Carnivora),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -65,7 +65,7 @@ func BuildFlora() *BioTree {
 			ID:          "carnivora_rapid_strike_tendrils",
 			Title:       "Rapid Strike Tendrils",
 			Description: "Formation countering bonuses are increased by 20%.",
-			Path:        "carnivora",
+			Path:        string(ships.Carnivora),
 			Effect:      ships.StatMods{FormationSyncBonus: 0.2},
 		},
 		// 5. Adaptive Apex: Resistance gain on kill
@@ -73,7 +73,7 @@ func BuildFlora() *BioTree {
 			ID:          "carnivora_adaptive_apex",
 			Title:       "Adaptive Apex",
 			Description: "After destroying a stack, gain 3% resistance vs. that stack’s attack type (not biotree). Stacks up to 5×.",
-			Path:        "carnivora",
+			Path:        string(ships.Carnivora),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -92,7 +92,7 @@ func BuildFlora() *BioTree {
 			ID:          "arbor_iron_chads",
 			Title:       "Iron Chads",
 			Description: "Within 500u of asteroids, gain +1% HP and +1% to all shields stacking bonus for every percentage point of full deposits",
-			Path:        "arbor",
+			Path:        string(ships.Arbor),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -107,14 +107,14 @@ func BuildFlora() *BioTree {
 			ID:          "arbor_deep_root_system",
 			Title:       "Deep Root System",
 			Description: "You are immune to pull, push and slow effects from every stack that isn't your current target",
-			Path:        "arbor",
+			Path:        string(ships.Arbor),
 		},
 		// 3. Root Coordination: Double damage near allies
 		{
 			ID:          "arbor_root_coordination",
 			Title:       "Root Coordination",
 			Description: "Every 3rd tick fighting within 200u of the same allied ship, you have double damage.",
-			Path:        "arbor",
+			Path:        string(ships.Arbor),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -130,7 +130,7 @@ func BuildFlora() *BioTree {
 			ID:          "arbor_spectrum_defiance",
 			Title:       "Spectrum Defiance",
 			Description: "Within 500u of a star, you gain a 5% stacking max HP increase for every target attacking you",
-			Path:        "arbor",
+			Path:        string(ships.Arbor),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -146,13 +146,13 @@ func BuildFlora() *BioTree {
 			ID:          "arbor_seismic_root",
 			Title:       "Seismic Root",
 			Description: "When finished changing to a Box formation, release 200u shockwave that deals significant damage and stuns enemies for 3 ticks",
-			Path:        "arbor",
+			Path:        string(ships.Arbor),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
 					Conditions: []Condition{
 						{ConditionType: ConditionFormationType, CompareOp: CompareEqual, Value: "Box"}},
-					Spawn: &SpawnEffect{SpawnType: SpawnShockwave, SpawnRadius: 200},
+					Spawn:         &SpawnEffect{SpawnType: SpawnShockwave, SpawnRadius: 200},
 					StatusEffects: []StatusEffect{{Name: "Stun", Duration: 3, EffectType: StatusStun}},
 				},
 			},
@@ -166,7 +166,7 @@ func BuildFlora() *BioTree {
 			ID:          "verdant_bloom_deep_rooted_vitality",
 			Title:       "Deep Rooted Vitality",
 			Description: "Your base HP regen is increased by 100% in aggressive formation and 200% in defensive formations",
-			Path:        "verdant_bloom",
+			Path:        string(ships.VerdantBloom),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -187,7 +187,7 @@ func BuildFlora() *BioTree {
 			ID:          "verdant_bloom_photosynthetic_reactor",
 			Title:       "Photosynthetic Reactor",
 			Description: "Your base energy regeneration is increased by 30% while within 500u of a star, you and all nearby allies gain 1% ability cooldown recovery",
-			Path:        "verdant_bloom",
+			Path:        string(ships.VerdantBloom),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -203,14 +203,14 @@ func BuildFlora() *BioTree {
 			ID:          "verdant_bloom_sap_flow",
 			Title:       "Sap Flow",
 			Description: "When within 200u of an ally below 40% HP, 30% of overhealing you receive becomes a temporary damage shield. Attacks on damage dont trigger crits nor attack-based-healing.",
-			Path:        "verdant_bloom",
+			Path:        string(ships.VerdantBloom),
 		},
 		// 4. Pollen Cloud: AoE regen buff on ability use
 		{
 			ID:          "verdant_bloom_pollen_cloud",
 			Title:       "Pollen Cloud",
 			Description: "All allied ships around a 250u aura gain a 25% HP and Energy Regen increase of 25% your base regeneration rate after using an ability. 1 application max.",
-			Path:        "verdant_bloom",
+			Path:        string(ships.VerdantBloom),
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
@@ -226,10 +226,10 @@ func BuildFlora() *BioTree {
 			ID:          "verdant_bloom_blossom_through_extinction",
 			Title:       "Blossom Through Extinction",
 			Description: "At death, restore 25% of max HP and Energy to allied ships in 250u radius.",
-			Path:        "verdant_bloom",
+			Path:        string(ships.VerdantBloom),
 			ComplexEffects: []ComplexEffect{
 				{
-					EffectType: ComplexOnDeath,
+					EffectType:    ComplexOnDeath,
 					PrimaryEffect: &ships.StatMods{HPPct: 0.25},
 					AoE:           &AoETraitTarget{Radius: 250, TargetType: AoEAllies},
 				},
