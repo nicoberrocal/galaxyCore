@@ -106,8 +106,8 @@ const (
 type ComplexEffect struct {
 	EffectType      ComplexEffectType
 	Conditions      []Condition     // Conditions that must be met for effect to trigger
-	PrimaryEffect   *ships.StatMods // Main stat modifications
-	SecondaryEffect *ships.StatMods // Secondary effects (e.g., on-death effects)
+	PrimaryEffect   *ships.StatMods `bson:"primaryEffect,omitempty" json:"primaryEffect,omitempty"` // Main stat modifications
+	SecondaryEffect *ships.StatMods `bson:"secondaryEffect,omitempty" json:"secondaryEffect,omitempty"` // Secondary effects (e.g., on-death effects)
 	AoE             *AoETraitTarget // AoE targeting if applicable
 	Spawn           *SpawnEffect    // Spawn mechanics if applicable
 	StatusEffects   []StatusEffect  // Status effects to apply
@@ -199,10 +199,10 @@ type BioNode struct {
 	Title       string
 	Description string
 	Path        string
-	Effect      ships.StatMods
+	Effect      ships.StatMods      `bson:"effect,omitempty" json:"effect,omitempty"`
 	Effects     *BioNodeEffects
 	Triggers    *[]Trigger
-	Tradeoff    *ships.StatMods
+	Tradeoff    *ships.StatMods     `bson:"tradeoff,omitempty" json:"tradeoff,omitempty"`
 	// Complex effects for advanced biotree mechanics
 	ComplexEffects []ComplexEffect
 	// StatDelta for compatibility with existing essences system
@@ -255,7 +255,7 @@ type BioNodeEffects struct {
 	Target           string
 	TargetRange      bool
 	TargetRangeValue float64
-	Effect           *[]ships.StatMods
+	Effect           *[]ships.StatMods `bson:"effect,omitempty" json:"effect,omitempty"`
 	ComplexEffects   []ComplexEffect
 	StatusEffects    []StatusEffect
 }

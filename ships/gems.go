@@ -103,7 +103,7 @@ type Gem struct {
 	Name        string
 	Family      GemFamily
 	Tier        int // 1..MaxTier
-	Mods        StatMods
+	Mods        StatMods `bson:"mods,omitempty" json:"mods,omitempty"`
 	Description string
 	// Cosmic synthesis fields
 	Origin      GemOrigin   // astrophysical origin flavor (Pulsar, Supernova, ...)
@@ -741,7 +741,7 @@ type GemWord struct {
 	Name        string
 	Sequence    []GemFamily // ordered, must match sockets[0:len(Sequence)] families
 	MinTier     int         // each gem in the sequence must be at least this tier
-	Effects     StatMods    // additional stat modifiers
+	Effects     StatMods `bson:"effects,omitempty" json:"effects,omitempty"` // additional stat modifiers
 	Grants      []AbilityID // abilities unlocked by this GemWord
 	Description string
 }

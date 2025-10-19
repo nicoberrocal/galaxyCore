@@ -44,7 +44,7 @@ type ModifierLayer struct {
 	Source      ModifierSource `bson:"source" json:"source"`
 	SourceID    string         `bson:"sourceId" json:"sourceId"`       // Specific identifier (gem ID, ability ID, etc.)
 	Description string         `bson:"description" json:"description"` // Human-readable description
-	Mods        StatMods       `bson:"mods" json:"mods"`
+	Mods        StatMods       `bson:"mods,omitempty" json:"mods,omitempty"`
 	
 	// Lifetime tracking
 	AppliedAt time.Time  `bson:"appliedAt" json:"appliedAt"`
@@ -56,6 +56,16 @@ type ModifierLayer struct {
 	// Conditional flags
 	ActiveInCombat    *bool `bson:"activeInCombat,omitempty" json:"activeInCombat,omitempty"`       // nil = always, true = combat only, false = OOC only
 	RequiresFormation *bool `bson:"requiresFormation,omitempty" json:"requiresFormation,omitempty"` // nil = always, true = formation required
+}
+func (ms *ModifierStack) PruneZeroLayers() {
+    pruned := ms.Layers[:0]
+    for _, l := range ms.Layers {
+        if l.Mods.IsZero() {
+            continue
+        }
+        pruned = append(pruned, l)
+    }
+    ms.Layers = pruned
 }
 
 // ModifierStack is a collection of modifier layers that can be resolved into final StatMods.
@@ -99,44 +109,47 @@ func (ms *ModifierStack) AddLayer(layer ModifierLayer) {
 
 // AddPermanent adds a permanent modifier layer (gems, role mode, etc.).
 func (ms *ModifierStack) AddPermanent(source ModifierSource, sourceID, description string, mods StatMods, priority int, now time.Time) {
-	ms.AddLayer(ModifierLayer{
-		Source:      source,
-		SourceID:    sourceID,
-		Description: description,
-		Mods:        mods,
-		AppliedAt:   now,
-		ExpiresAt:   nil,
-		Priority:    priority,
-	})
+    if mods.IsZero() { return }
+    ms.AddLayer(ModifierLayer{
+        Source:      source,
+        SourceID:    sourceID,
+        Description: description,
+        Mods:        mods,
+        AppliedAt:   now,
+        ExpiresAt:   nil,
+        Priority:    priority,
+    })
 }
 
 // AddTemporary adds a temporary modifier layer with expiration (abilities, buffs, debuffs).
 func (ms *ModifierStack) AddTemporary(source ModifierSource, sourceID, description string, mods StatMods, priority int, now time.Time, duration time.Duration) {
-	expiresAt := now.Add(duration)
-	ms.AddLayer(ModifierLayer{
-		Source:      source,
-		SourceID:    sourceID,
-		Description: description,
-		Mods:        mods,
-		AppliedAt:   now,
-		ExpiresAt:   &expiresAt,
-		Priority:    priority,
-	})
+    expiresAt := now.Add(duration)
+    if mods.IsZero() { return }
+    ms.AddLayer(ModifierLayer{
+        Source:      source,
+        SourceID:    sourceID,
+        Description: description,
+        Mods:        mods,
+        AppliedAt:   now,
+        ExpiresAt:   &expiresAt,
+        Priority:    priority,
+    })
 }
 
 // AddConditional adds a conditional modifier (formation, combat-only, etc.).
 func (ms *ModifierStack) AddConditional(source ModifierSource, sourceID, description string, mods StatMods, priority int, now time.Time, activeInCombat, requiresFormation *bool) {
-	ms.AddLayer(ModifierLayer{
-		Source:            source,
-		SourceID:          sourceID,
-		Description:       description,
-		Mods:              mods,
-		AppliedAt:         now,
-		ExpiresAt:         nil,
-		Priority:          priority,
-		ActiveInCombat:    activeInCombat,
-		RequiresFormation: requiresFormation,
-	})
+    if mods.IsZero() { return }
+    ms.AddLayer(ModifierLayer{
+        Source:            source,
+        SourceID:          sourceID,
+        Description:       description,
+        Mods:              mods,
+        AppliedAt:         now,
+        ExpiresAt:         nil,
+        Priority:          priority,
+        ActiveInCombat:    activeInCombat,
+        RequiresFormation: requiresFormation,
+    })
 }
 
 // RemoveExpired removes all expired temporary modifiers.
@@ -210,6 +223,9 @@ func (ms *ModifierStack) Resolve(ctx ResolveContext) StatMods {
 		if !ms.isLayerApplicable(layer, ctx) {
 			continue
 		}
+		if layer.Mods.IsZero() {
+			continue
+		}
 		result = CombineMods(result, layer.Mods)
 	}
 	
@@ -267,7 +283,7 @@ func (ms *ModifierStack) GetLayersBySourceID(sourceID string) []ModifierLayer {
 type ModifierSummary struct {
 	Source      ModifierSource `json:"source"`
 	Description string         `json:"description"`
-	Mods        StatMods       `json:"mods"`
+	Mods        StatMods       `json:"mods,omitempty"`
 	IsActive    bool           `json:"isActive"`
 	ExpiresIn   *float64       `json:"expiresIn,omitempty"` // seconds, nil if permanent
 }

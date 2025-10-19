@@ -32,6 +32,7 @@ func ComputeLoadoutV2(
 
 	// Build the stack
 	stack := builder.Build()
+	stack.PruneZeroLayers()
 
 	// Resolve to final mods
 	ctx := ResolveContext{
@@ -109,6 +110,7 @@ func ComputeStackModifiers(
 	}
 
 	modStack := builder.Build()
+	modStack.PruneZeroLayers()
 
 	// Resolve context
 	ctx := ResolveContext{

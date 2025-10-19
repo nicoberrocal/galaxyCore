@@ -346,29 +346,5 @@ func (mb *ModifierBuilder) AddAnchoredPenalty(anchored bool) *ModifierBuilder {
 
 // isZeroMods checks if a StatMods struct has any non-zero values.
 func isZeroMods(m StatMods) bool {
-	if m.Damage.LaserPct != 0 || m.Damage.NuclearPct != 0 || m.Damage.AntimatterPct != 0 {
-		return false
-	}
-	if m.AttackIntervalPct != 0 || m.SpeedDelta != 0 || m.VisibilityDelta != 0 || m.AttackRangeDelta != 0 {
-		return false
-	}
-	if m.LaserShieldDelta != 0 || m.NuclearShieldDelta != 0 || m.AntimatterShieldDelta != 0 {
-		return false
-	}
-	if m.BucketHPPct != 0 || m.OutOfCombatRegenPct != 0 || m.AbilityCooldownPct != 0 {
-		return false
-	}
-	if m.TransportCapacityPct != 0 || m.WarpChargePct != 0 || m.WarpScatterPct != 0 || m.InterdictionResistPct != 0 {
-		return false
-	}
-	if m.StructureDamagePct != 0 || m.SplashRadiusDelta != 0 || m.AccuracyPct != 0 || m.CritPct != 0 {
-		return false
-	}
-	if m.FirstVolleyPct != 0 || m.ShieldPiercePct != 0 || m.UpkeepPct != 0 || m.ConstructionCostPct != 0 {
-		return false
-	}
-	if m.CloakDetect || m.PingRangePct != 0 || m.EvasionPct != 0 || m.FormationSyncBonus != 0 || m.PositionFlexibility != 0 {
-		return false
-	}
-	return true
+    return m.IsZero()
 }

@@ -1,5 +1,14 @@
 package ships
 
+import (
+ "encoding/json"
+ bson "go.mongodb.org/mongo-driver/v2/bson"
+)
+
+const statEps = 1e-9
+
+func fz(x float64) bool { return x > -statEps && x < statEps }
+
 // DamageMods expresses percentage damage multipliers by damage type.
 // Use values like +0.12 for +12% damage.
 // These are additive across sources and applied multiplicatively at resolve time.
@@ -65,11 +74,23 @@ type StatMods struct {
 	HPPct            float64 // % change to current HP
 }
 
-// ZeroMods returns a zero-initialized StatMods for convenience.
 func ZeroMods() StatMods { return StatMods{} }
 
-// CombineMods adds b into a and returns the result. Simple linear composition.
-// Clamping should be enforced at the application layer if needed.
+func (d DamageMods) IsZero() bool { return fz(d.LaserPct) && fz(d.NuclearPct) && fz(d.AntimatterPct) }
+
+func (m StatMods) IsZero() bool {
+	if !m.Damage.IsZero() { return false }
+	if !fz(m.AttackIntervalPct) || m.SpeedDelta != 0 || m.VisibilityDelta != 0 || m.AttackRangeDelta != 0 { return false }
+	if m.LaserShieldDelta != 0 || m.NuclearShieldDelta != 0 || m.AntimatterShieldDelta != 0 { return false }
+	if !fz(m.BucketHPPct) || !fz(m.OutOfCombatRegenPct) || !fz(m.AtCombatRegenPct) || !fz(m.AbilityCooldownPct) { return false }
+	if !fz(m.TransportCapacityPct) || !fz(m.WarpChargePct) || !fz(m.WarpScatterPct) || !fz(m.InterdictionResistPct) { return false }
+	if !fz(m.StructureDamagePct) || m.SplashRadiusDelta != 0 || !fz(m.AccuracyPct) || !fz(m.CritPct) { return false }
+	if !fz(m.FirstVolleyPct) || !fz(m.ShieldPiercePct) || !fz(m.UpkeepPct) || !fz(m.ConstructionCostPct) { return false }
+	if m.CloakDetect || !fz(m.PingRangePct) || !fz(m.EvasionPct) || !fz(m.FormationSyncBonus) || !fz(m.PositionFlexibility) { return false }
+	if !fz(m.GlobalDefensePct) || !fz(m.HPPct) { return false }
+	return true
+}
+
 func CombineMods(a, b StatMods) StatMods {
 	a.Damage.LaserPct += b.Damage.LaserPct
 	a.Damage.NuclearPct += b.Damage.NuclearPct
@@ -115,4 +136,88 @@ func CombineMods(a, b StatMods) StatMods {
 	a.GlobalDefensePct += b.GlobalDefensePct
 	a.HPPct += b.HPPct
 	return a
+}
+
+func (m StatMods) MarshalJSON() ([]byte, error) {
+	obj := make(map[string]any)
+	if !m.Damage.IsZero() {
+		dmg := make(map[string]any)
+		if !fz(m.Damage.LaserPct) { dmg["LaserPct"] = m.Damage.LaserPct }
+		if !fz(m.Damage.NuclearPct) { dmg["NuclearPct"] = m.Damage.NuclearPct }
+		if !fz(m.Damage.AntimatterPct) { dmg["AntimatterPct"] = m.Damage.AntimatterPct }
+		if len(dmg) > 0 { obj["Damage"] = dmg }
+	}
+	if !fz(m.AttackIntervalPct) { obj["AttackIntervalPct"] = m.AttackIntervalPct }
+	if m.SpeedDelta != 0 { obj["SpeedDelta"] = m.SpeedDelta }
+	if m.VisibilityDelta != 0 { obj["VisibilityDelta"] = m.VisibilityDelta }
+	if m.AttackRangeDelta != 0 { obj["AttackRangeDelta"] = m.AttackRangeDelta }
+	if m.LaserShieldDelta != 0 { obj["LaserShieldDelta"] = m.LaserShieldDelta }
+	if m.NuclearShieldDelta != 0 { obj["NuclearShieldDelta"] = m.NuclearShieldDelta }
+	if m.AntimatterShieldDelta != 0 { obj["AntimatterShieldDelta"] = m.AntimatterShieldDelta }
+	if !fz(m.BucketHPPct) { obj["BucketHPPct"] = m.BucketHPPct }
+	if !fz(m.OutOfCombatRegenPct) { obj["OutOfCombatRegenPct"] = m.OutOfCombatRegenPct }
+	if !fz(m.AtCombatRegenPct) { obj["AtCombatRegenPct"] = m.AtCombatRegenPct }
+	if !fz(m.AbilityCooldownPct) { obj["AbilityCooldownPct"] = m.AbilityCooldownPct }
+	if !fz(m.TransportCapacityPct) { obj["TransportCapacityPct"] = m.TransportCapacityPct }
+	if !fz(m.WarpChargePct) { obj["WarpChargePct"] = m.WarpChargePct }
+	if !fz(m.WarpScatterPct) { obj["WarpScatterPct"] = m.WarpScatterPct }
+	if !fz(m.InterdictionResistPct) { obj["InterdictionResistPct"] = m.InterdictionResistPct }
+	if !fz(m.StructureDamagePct) { obj["StructureDamagePct"] = m.StructureDamagePct }
+	if m.SplashRadiusDelta != 0 { obj["SplashRadiusDelta"] = m.SplashRadiusDelta }
+	if !fz(m.AccuracyPct) { obj["AccuracyPct"] = m.AccuracyPct }
+	if !fz(m.CritPct) { obj["CritPct"] = m.CritPct }
+	if !fz(m.FirstVolleyPct) { obj["FirstVolleyPct"] = m.FirstVolleyPct }
+	if !fz(m.ShieldPiercePct) { obj["ShieldPiercePct"] = m.ShieldPiercePct }
+	if !fz(m.UpkeepPct) { obj["UpkeepPct"] = m.UpkeepPct }
+	if !fz(m.ConstructionCostPct) { obj["ConstructionCostPct"] = m.ConstructionCostPct }
+	if m.CloakDetect { obj["CloakDetect"] = true }
+	if !fz(m.PingRangePct) { obj["PingRangePct"] = m.PingRangePct }
+	if !fz(m.EvasionPct) { obj["EvasionPct"] = m.EvasionPct }
+	if !fz(m.FormationSyncBonus) { obj["FormationSyncBonus"] = m.FormationSyncBonus }
+	if !fz(m.PositionFlexibility) { obj["PositionFlexibility"] = m.PositionFlexibility }
+	if !fz(m.GlobalDefensePct) { obj["GlobalDefensePct"] = m.GlobalDefensePct }
+	if !fz(m.HPPct) { obj["HPPct"] = m.HPPct }
+	return json.Marshal(obj)
+}
+
+func (m StatMods) MarshalBSON() ([]byte, error) {
+	doc := bson.M{}
+	if !m.Damage.IsZero() {
+		dmg := bson.M{}
+		if !fz(m.Damage.LaserPct) { dmg["LaserPct"] = m.Damage.LaserPct }
+		if !fz(m.Damage.NuclearPct) { dmg["NuclearPct"] = m.Damage.NuclearPct }
+		if !fz(m.Damage.AntimatterPct) { dmg["AntimatterPct"] = m.Damage.AntimatterPct }
+		if len(dmg) > 0 { doc["Damage"] = dmg }
+	}
+	if !fz(m.AttackIntervalPct) { doc["AttackIntervalPct"] = m.AttackIntervalPct }
+	if m.SpeedDelta != 0 { doc["SpeedDelta"] = m.SpeedDelta }
+	if m.VisibilityDelta != 0 { doc["VisibilityDelta"] = m.VisibilityDelta }
+	if m.AttackRangeDelta != 0 { doc["AttackRangeDelta"] = m.AttackRangeDelta }
+	if m.LaserShieldDelta != 0 { doc["LaserShieldDelta"] = m.LaserShieldDelta }
+	if m.NuclearShieldDelta != 0 { doc["NuclearShieldDelta"] = m.NuclearShieldDelta }
+	if m.AntimatterShieldDelta != 0 { doc["AntimatterShieldDelta"] = m.AntimatterShieldDelta }
+	if !fz(m.BucketHPPct) { doc["BucketHPPct"] = m.BucketHPPct }
+	if !fz(m.OutOfCombatRegenPct) { doc["OutOfCombatRegenPct"] = m.OutOfCombatRegenPct }
+	if !fz(m.AtCombatRegenPct) { doc["AtCombatRegenPct"] = m.AtCombatRegenPct }
+	if !fz(m.AbilityCooldownPct) { doc["AbilityCooldownPct"] = m.AbilityCooldownPct }
+	if !fz(m.TransportCapacityPct) { doc["TransportCapacityPct"] = m.TransportCapacityPct }
+	if !fz(m.WarpChargePct) { doc["WarpChargePct"] = m.WarpChargePct }
+	if !fz(m.WarpScatterPct) { doc["WarpScatterPct"] = m.WarpScatterPct }
+	if !fz(m.InterdictionResistPct) { doc["InterdictionResistPct"] = m.InterdictionResistPct }
+	if !fz(m.StructureDamagePct) { doc["StructureDamagePct"] = m.StructureDamagePct }
+	if m.SplashRadiusDelta != 0 { doc["SplashRadiusDelta"] = m.SplashRadiusDelta }
+	if !fz(m.AccuracyPct) { doc["AccuracyPct"] = m.AccuracyPct }
+	if !fz(m.CritPct) { doc["CritPct"] = m.CritPct }
+	if !fz(m.FirstVolleyPct) { doc["FirstVolleyPct"] = m.FirstVolleyPct }
+	if !fz(m.ShieldPiercePct) { doc["ShieldPiercePct"] = m.ShieldPiercePct }
+	if !fz(m.UpkeepPct) { doc["UpkeepPct"] = m.UpkeepPct }
+	if !fz(m.ConstructionCostPct) { doc["ConstructionCostPct"] = m.ConstructionCostPct }
+	if m.CloakDetect { doc["CloakDetect"] = true }
+	if !fz(m.PingRangePct) { doc["PingRangePct"] = m.PingRangePct }
+	if !fz(m.EvasionPct) { doc["EvasionPct"] = m.EvasionPct }
+	if !fz(m.FormationSyncBonus) { doc["FormationSyncBonus"] = m.FormationSyncBonus }
+	if !fz(m.PositionFlexibility) { doc["PositionFlexibility"] = m.PositionFlexibility }
+	if !fz(m.GlobalDefensePct) { doc["GlobalDefensePct"] = m.GlobalDefensePct }
+	if !fz(m.HPPct) { doc["HPPct"] = m.HPPct }
+	return bson.Marshal(doc)
 }

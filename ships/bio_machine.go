@@ -34,7 +34,7 @@ type BioDebuffState struct {
 	ID           string         `bson:"id" json:"id"`
 	SourceStack  bson.ObjectID  `bson:"sourceStack" json:"sourceStack"`
 	SourceNodeID string         `bson:"sourceNodeId" json:"sourceNodeId"`
-	Mods         StatMods       `bson:"mods" json:"mods"`
+	Mods         StatMods       `bson:"mods,omitempty" json:"mods,omitempty"`
 	Stacks       int            `bson:"stacks" json:"stacks"`
 	MaxStacks    int            `bson:"maxStacks" json:"maxStacks"`
 	AppliedAt    time.Time      `bson:"appliedAt" json:"appliedAt"`
@@ -47,7 +47,7 @@ type BioActiveLayer struct {
 	Source     ModifierSource
 	SourceID   string
 	Desc       string
-	Mods       StatMods
+	Mods       StatMods        `bson:"mods,omitempty" json:"mods,omitempty"`
 	ExpiresAt  *time.Time // nil => permanent for the snapshot
 	Priority   int
 }
@@ -91,10 +91,10 @@ type BioNodeRuntimeState struct {
 	TriggeredBy      *AbilityCastRef  `bson:"triggeredBy,omitempty" json:"triggeredBy,omitempty"`
 
 	// Stage-based StatMods (kept small and cache-friendly)
-	ModsPassive      StatMods         `bson:"modsPassive" json:"modsPassive"`
-	ModsTriggered    StatMods         `bson:"modsTriggered" json:"modsTriggered"`
-	ModsTick         StatMods         `bson:"modsTick" json:"modsTick"`
-	ModsAccumulated  StatMods         `bson:"modsAccumulated" json:"modsAccumulated"`
+	ModsPassive      StatMods         `bson:"modsPassive,omitempty" json:"modsPassive,omitempty"`
+	ModsTriggered    StatMods         `bson:"modsTriggered,omitempty" json:"modsTriggered,omitempty"`
+	ModsTick         StatMods         `bson:"modsTick,omitempty" json:"modsTick,omitempty"`
+	ModsAccumulated  StatMods         `bson:"modsAccumulated,omitempty" json:"modsAccumulated,omitempty"`
 
 	// Outgoing debuff prototype (applied to enemies when node logic triggers).
 	OutgoingDebuffID       string        `bson:"outgoingDebuffId,omitempty" json:"outgoingDebuffId,omitempty"`
