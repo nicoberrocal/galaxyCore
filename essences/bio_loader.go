@@ -6,6 +6,33 @@ import (
 	"github.com/nicoberrocal/galaxyCore/ships"
 )
 
+// CollectNodeIDsForPath returns all BioNode IDs across trees matching the given ShipStack BioTreePath.
+// It's more efficient than CollectNodesForPath when you only need the node IDs.
+func CollectNodeIDsForPath(path ships.BioTreePath) []string {
+	out := make([]string, 0, 32)
+	// Build trees
+	trees := []*BioTree{
+		BuildAquatica(),
+		BuildFlora(),
+		BuildFauna(),
+		BuildMycelia(),
+	}
+	match := string(path)
+	for _, tree := range trees {
+		for _, tier := range tree.Tiers {
+			for _, node := range tier {
+				if node == nil {
+					continue
+				}
+				if node.Path == match {
+					out = append(out, node.ID)
+				}
+			}
+		}
+	}
+	return out
+}
+
 // CollectNodesForPath returns all BioNodes across trees matching the given ShipStack BioTreePath.
 // It scans all known trees (Aquatica, Flora, Fauna, Mycelia) and filters nodes by BioNode.Path.
 func CollectNodesForPath(path ships.BioTreePath) []*BioNode {
@@ -21,7 +48,9 @@ func CollectNodesForPath(path ships.BioTreePath) []*BioNode {
 	for _, tree := range trees {
 		for _, tier := range tree.Tiers {
 			for _, node := range tier {
-				if node == nil { continue }
+				if node == nil {
+					continue
+				}
 				if node.Path == match {
 					out = append(out, node)
 				}
@@ -32,7 +61,9 @@ func CollectNodesForPath(path ships.BioTreePath) []*BioNode {
 }
 
 func PopulateStackBioForPath(stack *ships.ShipStack, path ships.BioTreePath, now time.Time) {
-	if stack == nil { return }
+	if stack == nil {
+		return
+	}
 	bm := stack.EnsureBio(now)
 	nodes := CollectNodesForPath(path)
 	pathStr := string(path)
@@ -42,7 +73,9 @@ func PopulateStackBioForPath(stack *ships.ShipStack, path ships.BioTreePath, now
 		bm.ActivePath = pathStr
 	}
 	for _, bn := range nodes {
-		if bn == nil { continue }
+		if bn == nil {
+			continue
+		}
 		rn := bm.Node(bn.ID).ForAllShips()
 		passive := bn.Effect
 		if bn.Tradeoff != nil {
@@ -70,7 +103,9 @@ func init() {
 // All matching nodes are considered unlocked and set up as passive by default; simple triggered durations from
 // ComplexEffects are attached for future event-driven activation. This avoids ad-hoc add/remove by using upsert semantics.
 func PopulateStackBioFromPath(stack *ships.ShipStack, now time.Time) {
-	if stack == nil { return }
+	if stack == nil {
+		return
+	}
 	bm := stack.EnsureBio(now)
 
 	nodes := CollectNodesForPath(stack.BioTreePath)
@@ -82,7 +117,9 @@ func PopulateStackBioFromPath(stack *ships.ShipStack, now time.Time) {
 		bm.ActivePath = pathStr
 	}
 	for _, bn := range nodes {
-		if bn == nil { continue }
+		if bn == nil {
+			continue
+		}
 		rn := bm.Node(bn.ID).ForAllShips()
 
 		// Passive effect: apply base Effect plus any Tradeoff mods
@@ -110,13 +147,29 @@ func PopulateStackBioFromPath(stack *ships.ShipStack, now time.Time) {
 
 // isZeroMods is a local copy to avoid exporting internals from ships.
 func isZeroMods(m ships.StatMods) bool {
-	if m.Damage.LaserPct != 0 || m.Damage.NuclearPct != 0 || m.Damage.AntimatterPct != 0 { return false }
-	if m.AttackIntervalPct != 0 || m.SpeedDelta != 0 || m.VisibilityDelta != 0 || m.AttackRangeDelta != 0 { return false }
-	if m.LaserShieldDelta != 0 || m.NuclearShieldDelta != 0 || m.AntimatterShieldDelta != 0 { return false }
-	if m.BucketHPPct != 0 || m.OutOfCombatRegenPct != 0 || m.AbilityCooldownPct != 0 || m.AtCombatRegenPct != 0 { return false }
-	if m.TransportCapacityPct != 0 || m.WarpChargePct != 0 || m.WarpScatterPct != 0 || m.InterdictionResistPct != 0 { return false }
-	if m.StructureDamagePct != 0 || m.SplashRadiusDelta != 0 || m.AccuracyPct != 0 || m.CritPct != 0 || m.FirstVolleyPct != 0 || m.ShieldPiercePct != 0 { return false }
-	if m.CloakDetect || m.PingRangePct != 0 || m.EvasionPct != 0 || m.FormationSyncBonus != 0 || m.PositionFlexibility != 0 { return false }
-	if m.GlobalDefensePct != 0 || m.HPPct != 0 { return false }
+	if m.Damage.LaserPct != 0 || m.Damage.NuclearPct != 0 || m.Damage.AntimatterPct != 0 {
+		return false
+	}
+	if m.AttackIntervalPct != 0 || m.SpeedDelta != 0 || m.VisibilityDelta != 0 || m.AttackRangeDelta != 0 {
+		return false
+	}
+	if m.LaserShieldDelta != 0 || m.NuclearShieldDelta != 0 || m.AntimatterShieldDelta != 0 {
+		return false
+	}
+	if m.BucketHPPct != 0 || m.OutOfCombatRegenPct != 0 || m.AbilityCooldownPct != 0 || m.AtCombatRegenPct != 0 {
+		return false
+	}
+	if m.TransportCapacityPct != 0 || m.WarpChargePct != 0 || m.WarpScatterPct != 0 || m.InterdictionResistPct != 0 {
+		return false
+	}
+	if m.StructureDamagePct != 0 || m.SplashRadiusDelta != 0 || m.AccuracyPct != 0 || m.CritPct != 0 || m.FirstVolleyPct != 0 || m.ShieldPiercePct != 0 {
+		return false
+	}
+	if m.CloakDetect || m.PingRangePct != 0 || m.EvasionPct != 0 || m.FormationSyncBonus != 0 || m.PositionFlexibility != 0 {
+		return false
+	}
+	if m.GlobalDefensePct != 0 || m.HPPct != 0 {
+		return false
+	}
 	return true
 }
