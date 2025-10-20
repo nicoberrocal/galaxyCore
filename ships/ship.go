@@ -18,12 +18,12 @@ type Ship struct {
 
 	// Abilities defines this ship type's available tactical/strategic tools.
 	// The full catalog is described in abilities.go. A ship may have up to 3.
-	Abilities        []Ability
+	Abilities []Ability
 
 	// RoleMode lets a ship type adopt a posture: Tactical/Economic/Recon/Scientific.
 	// This is a soft-reconfiguration with tradeoffs, not a full role swap.
 	// See roles.go for details and ApplyRoleMode() helper to compute modifiers.
-	RoleMode         RoleMode
+	RoleMode RoleMode
 
 	// Sockets are now managed per-ship-type in the stack's ShipLoadout
 	// Construction costs
@@ -39,16 +39,16 @@ type Ship struct {
 // Active abilities use CooldownSeconds/DurationSeconds. Passives typically have 0.
 // The concrete runtime state (timers/activation) is tracked separately in AbilityState.
 type Ability struct {
-    // ID is the stable identifier (e.g. "LightSpeed", "AlphaStrike").
-    ID                AbilityID
-    // Name is a human-readable label for UI.
-    Name              string
-    // Kind defines the interaction model (passive/active/toggle/aura/travel/conditional).
-    Kind              AbilityKind
-    // CooldownSeconds is the cooldown after use. 0 for passives or always-on toggles.
-    CooldownSeconds   int
-    // DurationSeconds is the active window for temporary effects. 0 for instant or toggle.
-    DurationSeconds   int
-    // Description documents tactical/strategic intent and effect summary.
-    Description       string
+	// ID is the stable identifier (e.g. "LightSpeed", "AlphaStrike").
+	ID AbilityID
+	// Name is a human-readable label for UI.
+	Name string
+	// Kind defines the interaction model (passive/active/toggle/aura/travel/conditional).
+	Kind AbilityKind
+	// CooldownSeconds is the cooldown after use. 0 for passives or always-on toggles.
+	CooldownSeconds int
+	// DurationSeconds is the active window for temporary effects. 0 for instant or toggle.
+	DurationSeconds int
+	// Description documents tactical/strategic intent and effect summary.
+	Description string
 }

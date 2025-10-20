@@ -23,84 +23,84 @@ const (
 
 // AbilityCastRef captures the ability that triggered a node, with the cast start time.
 type AbilityCastRef struct {
-	Ability   AbilityID  `bson:"ability" json:"ability"`
-	ShipType  ShipType   `bson:"shipType" json:"shipType"`
-	StartTime time.Time  `bson:"startTime" json:"startTime"`
+	Ability   AbilityID `bson:"ability" json:"ability"`
+	ShipType  ShipType  `bson:"shipType" json:"shipType"`
+	StartTime time.Time `bson:"startTime" json:"startTime"`
 }
 
 // BioDebuffState is an inbound debuff applied by enemy bio/traits to this stack.
 // These are consumed by the compute pipeline as debuff modifier layers.
 type BioDebuffState struct {
-	ID           string         `bson:"id" json:"id"`
-	SourceStack  bson.ObjectID  `bson:"sourceStack" json:"sourceStack"`
-	SourceNodeID string         `bson:"sourceNodeId" json:"sourceNodeId"`
-	Mods         StatMods       `bson:"mods,omitempty" json:"mods,omitempty"`
-	Stacks       int            `bson:"stacks" json:"stacks"`
-	MaxStacks    int            `bson:"maxStacks" json:"maxStacks"`
-	AppliedAt    time.Time      `bson:"appliedAt" json:"appliedAt"`
-	ExpiresAt    time.Time      `bson:"expiresAt" json:"expiresAt"`
+	ID           string        `bson:"id" json:"id"`
+	SourceStack  bson.ObjectID `bson:"sourceStack" json:"sourceStack"`
+	SourceNodeID string        `bson:"sourceNodeId" json:"sourceNodeId"`
+	Mods         StatMods      `bson:"mods,omitempty" json:"mods,omitempty"`
+	Stacks       int           `bson:"stacks" json:"stacks"`
+	MaxStacks    int           `bson:"maxStacks" json:"maxStacks"`
+	AppliedAt    time.Time     `bson:"appliedAt" json:"appliedAt"`
+	ExpiresAt    time.Time     `bson:"expiresAt" json:"expiresAt"`
 }
 
 // BioActiveLayer represents a ready-to-apply modifier layer produced by the bio machine
 // for the current snapshot. Builder will convert these into modifier stack layers.
 type BioActiveLayer struct {
-	Source     ModifierSource
-	SourceID   string
-	Desc       string
-	Mods       StatMods        `bson:"mods,omitempty" json:"mods,omitempty"`
-	ExpiresAt  *time.Time // nil => permanent for the snapshot
-	Priority   int
+	Source    ModifierSource
+	SourceID  string
+	Desc      string
+	Mods      StatMods   `bson:"mods,omitempty" json:"mods,omitempty"`
+	ExpiresAt *time.Time // nil => permanent for the snapshot
+	Priority  int
 }
 
 // BioNodeRuntimeState stores runtime, per-node state and its generated StatMods for each stage.
 // To avoid import cycles, this struct carries StatMods directly and is fully self-contained.
 type BioNodeRuntimeState struct {
 	// Identity
-	ID     string           `bson:"id" json:"id"`
-	Stage  BioNodeStage     `bson:"stage" json:"stage"`
+	ID    string       `bson:"id" json:"id"`
+	Stage BioNodeStage `bson:"stage" json:"stage"`
 
 	// Applicability
-	AllShips   bool                   `bson:"allShips" json:"allShips"`
-	ShipTypes  map[ShipType]bool      `bson:"shipTypes" json:"shipTypes"`
+	AllShips  bool              `bson:"allShips" json:"allShips"`
+	ShipTypes map[ShipType]bool `bson:"shipTypes" json:"shipTypes"`
 
 	// Targeting context for AoE or directed effects (ally/enemy selections or ship-type subsets).
-	AllyTargets      []bson.ObjectID  `bson:"allyTargets,omitempty" json:"allyTargets,omitempty"`
-	EnemyTargets     []bson.ObjectID  `bson:"enemyTargets,omitempty" json:"enemyTargets,omitempty"`
-	AllyShipTypes    []ShipType       `bson:"allyShipTypes,omitempty" json:"allyShipTypes,omitempty"`
-	EnemyShipTypes   []ShipType       `bson:"enemyShipTypes,omitempty" json:"enemyShipTypes,omitempty"`
+	AllyTargets    []bson.ObjectID `bson:"allyTargets,omitempty" json:"allyTargets,omitempty"`
+	EnemyTargets   []bson.ObjectID `bson:"enemyTargets,omitempty" json:"enemyTargets,omitempty"`
+	AllyShipTypes  []ShipType      `bson:"allyShipTypes,omitempty" json:"allyShipTypes,omitempty"`
+	EnemyShipTypes []ShipType      `bson:"enemyShipTypes,omitempty" json:"enemyShipTypes,omitempty"`
 
 	// Core stage timing
-	StartTime        time.Time        `bson:"startTime" json:"startTime"`
-	EndTime          time.Time        `bson:"endTime" json:"endTime"`
-	Duration         time.Duration    `bson:"duration" json:"duration"`
-	Cooldown         time.Duration    `bson:"cooldown" json:"cooldown"`
-	CooldownEndsAt   time.Time        `bson:"cooldownEndsAt" json:"cooldownEndsAt"`
-	LastTick         time.Time        `bson:"lastTick" json:"lastTick"`
-	TickPeriod       time.Duration    `bson:"tickPeriod" json:"tickPeriod"`
+	StartTime      time.Time     `bson:"startTime" json:"startTime"`
+	EndTime        time.Time     `bson:"endTime" json:"endTime"`
+	Duration       time.Duration `bson:"duration" json:"duration"`
+	Cooldown       time.Duration `bson:"cooldown" json:"cooldown"`
+	CooldownEndsAt time.Time     `bson:"cooldownEndsAt" json:"cooldownEndsAt"`
+	LastTick       time.Time     `bson:"lastTick" json:"lastTick"`
+	TickPeriod     time.Duration `bson:"tickPeriod" json:"tickPeriod"`
 
 	// Counters and accumulators
-	ActivationCount  int              `bson:"activationCount" json:"activationCount"`
-	MaxActivations   int              `bson:"maxActivations" json:"maxActivations"`
-	StackCount       int              `bson:"stackCount" json:"stackCount"`
-	MaxStacks        int              `bson:"maxStacks" json:"maxStacks"`
-	Accumulator      float64          `bson:"accumulator" json:"accumulator"`
-	AccumulatePerTick float64         `bson:"accumulatePerTick" json:"accumulatePerTick"`
-	AccumulateCap    float64          `bson:"accumulateCap" json:"accumulateCap"`
+	ActivationCount   int     `bson:"activationCount" json:"activationCount"`
+	MaxActivations    int     `bson:"maxActivations" json:"maxActivations"`
+	StackCount        int     `bson:"stackCount" json:"stackCount"`
+	MaxStacks         int     `bson:"maxStacks" json:"maxStacks"`
+	Accumulator       float64 `bson:"accumulator" json:"accumulator"`
+	AccumulatePerTick float64 `bson:"accumulatePerTick" json:"accumulatePerTick"`
+	AccumulateCap     float64 `bson:"accumulateCap" json:"accumulateCap"`
 
 	// Trigger provenance (e.g. ability cast that triggered this node)
-	TriggeredBy      *AbilityCastRef  `bson:"triggeredBy,omitempty" json:"triggeredBy,omitempty"`
+	TriggeredBy *AbilityCastRef `bson:"triggeredBy,omitempty" json:"triggeredBy,omitempty"`
 
 	// Stage-based StatMods (kept small and cache-friendly)
-	ModsPassive      StatMods         `bson:"modsPassive,omitempty" json:"modsPassive,omitempty"`
-	ModsTriggered    StatMods         `bson:"modsTriggered,omitempty" json:"modsTriggered,omitempty"`
-	ModsTick         StatMods         `bson:"modsTick,omitempty" json:"modsTick,omitempty"`
-	ModsAccumulated  StatMods         `bson:"modsAccumulated,omitempty" json:"modsAccumulated,omitempty"`
+	ModsPassive     StatMods `bson:"modsPassive,omitempty" json:"modsPassive,omitempty"`
+	ModsTriggered   StatMods `bson:"modsTriggered,omitempty" json:"modsTriggered,omitempty"`
+	ModsTick        StatMods `bson:"modsTick,omitempty" json:"modsTick,omitempty"`
+	ModsAccumulated StatMods `bson:"modsAccumulated,omitempty" json:"modsAccumulated,omitempty"`
 
 	// Outgoing debuff prototype (applied to enemies when node logic triggers).
-	OutgoingDebuffID       string        `bson:"outgoingDebuffId,omitempty" json:"outgoingDebuffId,omitempty"`
-	OutgoingDebuffMods     StatMods      `bson:"outgoingDebuffMods,omitempty" json:"outgoingDebuffMods,omitempty"`
-	OutgoingDebuffDuration time.Duration `bson:"outgoingDebuffDuration,omitempty" json:"outgoingDebuffDuration,omitempty"`
-	OutgoingDebuffMaxStacks int          `bson:"outgoingDebuffMaxStacks,omitempty" json:"outgoingDebuffMaxStacks,omitempty"`
+	OutgoingDebuffID        string        `bson:"outgoingDebuffId,omitempty" json:"outgoingDebuffId,omitempty"`
+	OutgoingDebuffMods      StatMods      `bson:"outgoingDebuffMods,omitempty" json:"outgoingDebuffMods,omitempty"`
+	OutgoingDebuffDuration  time.Duration `bson:"outgoingDebuffDuration,omitempty" json:"outgoingDebuffDuration,omitempty"`
+	OutgoingDebuffMaxStacks int           `bson:"outgoingDebuffMaxStacks,omitempty" json:"outgoingDebuffMaxStacks,omitempty"`
 
 	// Internal linkage for fluent API
 	parent *BioMachine `bson:"-" json:"-"`
@@ -112,14 +112,14 @@ func (n *BioNodeRuntimeState) ForAllShips() *BioNodeRuntimeState {
 	return n
 }
 func (n *BioNodeRuntimeState) ForShip(t ShipType) *BioNodeRuntimeState {
-    if n.ShipTypes == nil {
-        n.ShipTypes = make(map[ShipType]bool)
-    }
-    n.ShipTypes[t] = true
-    if n.parent != nil {
-        n.parent.IndexNode(n)
-    }
-    return n
+	if n.ShipTypes == nil {
+		n.ShipTypes = make(map[ShipType]bool)
+	}
+	n.ShipTypes[t] = true
+	if n.parent != nil {
+		n.parent.IndexNode(n)
+	}
+	return n
 }
 func (n *BioNodeRuntimeState) WithPassive(mods StatMods) *BioNodeRuntimeState {
 	n.ModsPassive = mods
@@ -171,12 +171,12 @@ func (n *BioNodeRuntimeState) CurrentLayers(shipType ShipType, now time.Time) []
 	case BioStagePassive:
 		if !isZeroMods(n.ModsPassive) {
 			layers = append(layers, BioActiveLayer{
-				Source:   SourceBioPassive,
-				SourceID: n.ID,
-				Desc:     "Bio Passive: " + n.ID,
-				Mods:     n.ModsPassive,
+				Source:    SourceBioPassive,
+				SourceID:  n.ID,
+				Desc:      "Bio Passive: " + n.ID,
+				Mods:      n.ModsPassive,
 				ExpiresAt: nil,
-				Priority: PriorityBioPassive,
+				Priority:  PriorityBioPassive,
 			})
 		}
 	case BioStageTriggered, BioStageCompositeActive:
@@ -213,12 +213,12 @@ func (n *BioNodeRuntimeState) CurrentLayers(shipType ShipType, now time.Time) []
 	case BioStageAccumulating:
 		if !isZeroMods(n.ModsAccumulated) && n.Accumulator > 0 {
 			layers = append(layers, BioActiveLayer{
-				Source:   SourceBioAccum,
-				SourceID: n.ID,
-				Desc:     "Bio Accumulated: " + n.ID,
-				Mods:     n.ModsAccumulated,
+				Source:    SourceBioAccum,
+				SourceID:  n.ID,
+				Desc:      "Bio Accumulated: " + n.ID,
+				Mods:      n.ModsAccumulated,
 				ExpiresAt: nil,
-				Priority: PriorityBioPassive,
+				Priority:  PriorityBioPassive,
 			})
 		}
 	case BioStageCooldown, BioStageCompositeCooloff:
@@ -228,12 +228,12 @@ func (n *BioNodeRuntimeState) CurrentLayers(shipType ShipType, now time.Time) []
 }
 
 type BioMachine struct {
-	Nodes          map[string]*BioNodeRuntimeState `bson:"nodes,omitempty" json:"nodes,omitempty"`
-	InboundDebuffs map[string]*BioDebuffState      `bson:"inboundDebuffs,omitempty" json:"inboundDebuffs,omitempty"`
+	Nodes          map[string]*BioNodeRuntimeState              `bson:"nodes,omitempty" json:"nodes,omitempty"`
+	InboundDebuffs map[string]*BioDebuffState                   `bson:"inboundDebuffs,omitempty" json:"inboundDebuffs,omitempty"`
 	ByShipType     map[ShipType]map[string]*BioNodeRuntimeState `bson:"-" json:"-"`
-	LastProcessed  time.Time `bson:"lastProcessed" json:"lastProcessed"`
-	ActivePath     string    `bson:"activePath,omitempty" json:"activePath,omitempty"`
-	UnlockAll      bool      `bson:"unlockAll" json:"unlockAll"` // if true, treat all configured nodes as unlocked
+	LastProcessed  time.Time                                    `bson:"lastProcessed" json:"lastProcessed"`
+	ActivePath     string                                       `bson:"activePath,omitempty" json:"activePath,omitempty"`
+	UnlockAll      bool                                         `bson:"unlockAll" json:"unlockAll"` // if true, treat all configured nodes as unlocked
 }
 
 var BioPopulateFromPath func(stack *ShipStack, now time.Time)
@@ -266,7 +266,10 @@ func (bm *BioMachine) IndexNode(n *BioNodeRuntimeState) {
 	}
 	for st := range n.ShipTypes {
 		m := bm.ByShipType[st]
-		if m == nil { m = make(map[string]*BioNodeRuntimeState, 4); bm.ByShipType[st] = m }
+		if m == nil {
+			m = make(map[string]*BioNodeRuntimeState, 4)
+			bm.ByShipType[st] = m
+		}
 		m[n.ID] = n
 	}
 }
@@ -274,9 +277,13 @@ func (bm *BioMachine) IndexNode(n *BioNodeRuntimeState) {
 // Tick advances timers, performs periodic accumulation, and transitions stages.
 // Designed to be O(#active nodes) and allocation-free on hot paths.
 func (bm *BioMachine) Tick(now time.Time) {
-	if now.Before(bm.LastProcessed) { bm.LastProcessed = now }
+	if now.Before(bm.LastProcessed) {
+		bm.LastProcessed = now
+	}
 	dt := now.Sub(bm.LastProcessed)
-	if dt <= 0 { return }
+	if dt <= 0 {
+		return
+	}
 
 	for _, n := range bm.Nodes {
 		switch n.Stage {
@@ -289,7 +296,11 @@ func (bm *BioMachine) Tick(now time.Time) {
 		case BioStageCooldown, BioStageCompositeCooloff:
 			if !n.CooldownEndsAt.IsZero() && now.After(n.CooldownEndsAt) {
 				// return to passive or accumulating baseline
-				if n.AccumulatePerTick > 0 { n.Stage = BioStageAccumulating } else { n.Stage = BioStagePassive }
+				if n.AccumulatePerTick > 0 {
+					n.Stage = BioStageAccumulating
+				} else {
+					n.Stage = BioStagePassive
+				}
 			}
 		}
 
@@ -301,13 +312,17 @@ func (bm *BioMachine) Tick(now time.Time) {
 		}
 		if n.AccumulatePerTick > 0 && (n.Stage == BioStageAccumulating || n.Stage == BioStageCompositeActive) {
 			n.Accumulator += n.AccumulatePerTick * dt.Seconds()
-			if n.Accumulator > n.AccumulateCap && n.AccumulateCap > 0 { n.Accumulator = n.AccumulateCap }
+			if n.Accumulator > n.AccumulateCap && n.AccumulateCap > 0 {
+				n.Accumulator = n.AccumulateCap
+			}
 		}
 	}
 
 	// Expire inbound debuffs
 	for id, d := range bm.InboundDebuffs {
-		if now.After(d.ExpiresAt) { delete(bm.InboundDebuffs, id) }
+		if now.After(d.ExpiresAt) {
+			delete(bm.InboundDebuffs, id)
+		}
 	}
 
 	bm.LastProcessed = now
@@ -319,10 +334,16 @@ func (bm *BioMachine) OnAbilityCast(ability AbilityID, shipType ShipType, start 
 	cast := &AbilityCastRef{Ability: ability, ShipType: shipType, StartTime: start}
 	// Trigger all nodes that have a triggered stage configured for this shipType
 	for _, n := range bm.Nodes {
-		if !(n.AllShips || (n.ShipTypes != nil && n.ShipTypes[shipType])) { continue }
-		if isZeroMods(n.ModsTriggered) || n.Duration <= 0 { continue }
+		if !(n.AllShips || (n.ShipTypes != nil && n.ShipTypes[shipType])) {
+			continue
+		}
+		if isZeroMods(n.ModsTriggered) || n.Duration <= 0 {
+			continue
+		}
 		// only if not in cooldown
-		if n.Stage == BioStageCooldown || n.Stage == BioStageCompositeCooloff { continue }
+		if n.Stage == BioStageCooldown || n.Stage == BioStageCompositeCooloff {
+			continue
+		}
 		n.Stage = BioStageTriggered
 		n.TriggeredBy = cast
 		n.StartTime = start
@@ -343,7 +364,9 @@ func (bm *BioMachine) ApplyInboundDebuff(id string, mods StatMods, duration time
 	}
 	// stack with clamp
 	d.Stacks += stacks
-	if d.MaxStacks > 0 && d.Stacks > d.MaxStacks { d.Stacks = d.MaxStacks }
+	if d.MaxStacks > 0 && d.Stacks > d.MaxStacks {
+		d.Stacks = d.MaxStacks
+	}
 	d.SourceStack = sourceStack
 	d.ExpiresAt = now.Add(duration)
 }
@@ -352,7 +375,9 @@ func (bm *BioMachine) ApplyInboundDebuff(id string, mods StatMods, duration time
 func (bm *BioMachine) CollectActiveLayersForShip(shipType ShipType, now time.Time) []BioActiveLayer {
 	layers := make([]BioActiveLayer, 0, 8)
 	if idx, ok := bm.ByShipType[shipType]; ok {
-		for _, n := range idx { layers = append(layers, n.CurrentLayers(shipType, now)...)}
+		for _, n := range idx {
+			layers = append(layers, n.CurrentLayers(shipType, now)...)
+		}
 	}
 	// Also include global nodes
 	for _, n := range bm.Nodes {
@@ -367,7 +392,9 @@ func (bm *BioMachine) CollectActiveLayersForShip(shipType ShipType, now time.Tim
 func (bm *BioMachine) CollectInboundDebuffs(now time.Time) []BioDebuffState {
 	res := make([]BioDebuffState, 0, len(bm.InboundDebuffs))
 	for _, d := range bm.InboundDebuffs {
-		if now.Before(d.ExpiresAt) { res = append(res, *d) }
+		if now.Before(d.ExpiresAt) {
+			res = append(res, *d)
+		}
 	}
 	return res
 }

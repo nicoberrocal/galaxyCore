@@ -181,6 +181,72 @@ func GetModifierBreakdown(
 	return modStack.GetSummary(ctx)
 }
 
+type ShipModifiersBreakdown struct {
+	Formation      StatMods          `json:"formation,omitempty" bson:"formation,omitempty"`
+	BioBuffs       StatMods          `json:"bioBuffs,omitempty" bson:"bioBuffs,omitempty"`
+	BioDebuffs     StatMods          `json:"bioDebuffs,omitempty" bson:"bioDebuffs,omitempty"`
+	Other          StatMods          `json:"other,omitempty" bson:"other,omitempty"`
+	Total          StatMods          `json:"total,omitempty" bson:"total,omitempty"`
+	FormationItems []ModifierSummary `json:"formationItems,omitempty" bson:"formationItems,omitempty"`
+	BioBuffItems   []ModifierSummary `json:"bioBuffItems,omitempty" bson:"bioBuffItems,omitempty"`
+	BioDebuffItems []ModifierSummary `json:"bioDebuffItems,omitempty" bson:"bioDebuffItems,omitempty"`
+	OtherItems     []ModifierSummary `json:"otherItems,omitempty" bson:"otherItems,omitempty"`
+}
+
+func isFormationSource(src ModifierSource) bool {
+	return src == SourceFormationPosition || src == SourceFormationCounter || src == ModifierSource("formation_tree")
+}
+
+func isBioBuffSource(src ModifierSource) bool {
+	return src == SourceBioPassive || src == SourceBioTriggered || src == SourceBioTick || src == SourceBioAccum
+}
+
+func GetFullModifiersBreakdownForShip(
+	stack *ShipStack,
+	shipType ShipType,
+	bucketIndex int,
+	now time.Time,
+	inCombat bool,
+	enemyFormation FormationType,
+) ShipModifiersBreakdown {
+	summaries := GetModifierBreakdown(stack, shipType, bucketIndex, now, inCombat, enemyFormation)
+
+	var out ShipModifiersBreakdown
+	out.Formation = ZeroMods()
+	out.BioBuffs = ZeroMods()
+	out.BioDebuffs = ZeroMods()
+	out.Other = ZeroMods()
+
+	for _, s := range summaries {
+		if !s.IsActive || s.Mods.IsZero() {
+			continue
+		}
+		switch {
+		case isFormationSource(s.Source):
+			out.Formation = CombineMods(out.Formation, s.Mods)
+			out.FormationItems = append(out.FormationItems, s)
+		case isBioBuffSource(s.Source):
+			out.BioBuffs = CombineMods(out.BioBuffs, s.Mods)
+			out.BioBuffItems = append(out.BioBuffItems, s)
+		case s.Source == SourceBioDebuff:
+			out.BioDebuffs = CombineMods(out.BioDebuffs, s.Mods)
+			out.BioDebuffItems = append(out.BioDebuffItems, s)
+		default:
+			out.Other = CombineMods(out.Other, s.Mods)
+			out.OtherItems = append(out.OtherItems, s)
+		}
+	}
+
+	total := ZeroMods()
+	total = CombineMods(total, out.Formation)
+	total = CombineMods(total, out.BioBuffs)
+	total = CombineMods(total, out.BioDebuffs)
+	total = CombineMods(total, out.Other)
+	out.Total = total
+
+	return out
+}
+
 // abilityBonusToStatMods converts ability bonus map to StatMods.
 // This is a helper to bridge the existing AbilityState.Bonus format.
 func abilityBonusToStatMods(bonus map[string]int) StatMods {
