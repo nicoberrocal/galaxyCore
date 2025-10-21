@@ -195,11 +195,12 @@ type AbilityState struct {
 }
 
 type GatheringState struct {
-	IsMining            bool          `bson:"isMining" json:"isMining"`                 // Whether the stack is currently mining
+	IsGathering         bool          `bson:"isGathering" json:"isGathering"`           // Whether the stack is currently mining
 	TargetID            bson.ObjectID `bson:"targetId" json:"targetId"`                 // ID of the target being gathered from
 	TargetType          string        `bson:"targetType" json:"targetType"`             // Type of target (e.g., "asteroid", "nebula")
 	ResourcePerTimeUnit int64         `bson:"resourcePerTime" json:"resourcePerTime"`   // Amount of resource gathered per time unit
 	TimeUnit            int64         `bson:"timeUnit" json:"timeUnit"`                 // Time unit in seconds for gathering
+	Stage               string        `bson:"stage,omitempty" json:"stage,omitempty"`   // Stage of the gathering process
 	MetalsGathered      int64         `bson:"metalsGathered" json:"metalsGathered"`     // Total metals gathered
 	HydrogenGathered    int64         `bson:"hydrogenGathered" json:"hydrogenGathered"` // Total hydrogen gathered
 	CrystalsGathered    int64         `bson:"crystalsGathered" json:"crystalsGathered"` // Total crystals gathered
