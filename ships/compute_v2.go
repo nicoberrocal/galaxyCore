@@ -401,6 +401,87 @@ func ApplyStatModsToShip(base Ship, mods StatMods) Ship {
 	return s
 }
 
+// ComputeEffectiveSpeed returns the effective speed for a ship type in a stack.
+// This is a lightweight function optimized for movement calculations where you only
+// need speed values and don't need full stat computation.
+//
+// Example usage for movement order calculations:
+//
+//	speeds := make(map[ShipType]int)
+//	for shipType := range stack.Ships {
+//	    speeds[shipType] = ComputeEffectiveSpeed(stack, shipType, 0, time.Now())
+//	}
+//	Use speeds map to determine which ship types move first
+func ComputeEffectiveSpeed(
+	stack *ShipStack,
+	shipType ShipType,
+	bucketIndex int,
+	now time.Time,
+) int {
+	blueprint, ok := ShipBlueprints[shipType]
+	if !ok {
+		return 0
+	}
+
+	baseSpeed := blueprint.Speed
+	speedDelta := 0
+
+	// 1. Gems: only speed-affecting gems
+	loadout := stack.GetOrInitLoadout(shipType)
+	for _, gem := range loadout.Sockets {
+		speedDelta += gem.Mods.SpeedDelta
+	}
+
+	// 2. Formation position bonuses: only speed
+	if stack.Formation != nil {
+		formation := stack.Formation.ToFormation()
+		if spec, ok := FormationCatalog[formation.Type]; ok {
+			position := stack.GetFormationPosition(shipType, bucketIndex)
+			if posMods, ok := spec.PositionBonuses[position]; ok {
+				speedDelta += posMods.SpeedDelta
+			}
+		}
+	}
+
+	// 3. Anchored penalty
+	if loadout.Anchored {
+		// Anchored ships have severely reduced speed
+		speedDelta -= 50
+	}
+
+	// 4. Bio effects: only speed-affecting bio nodes
+	if stack.Bio != nil {
+		// Ensure bio machine is built from current path
+		if BioPopulateFromPath != nil {
+			if stack.Bio.ActivePath != string(stack.BioTreePath) {
+				stack.BuildBioFromCurrentPath(now)
+			}
+		}
+		// Collect active bio layers for this ship type
+		layers := stack.Bio.CollectActiveLayersForShip(shipType, now)
+		for _, layer := range layers {
+			speedDelta += layer.Mods.SpeedDelta
+		}
+	}
+
+	// 5. Active abilities: only speed-affecting abilities
+	if stack.Ability != nil {
+		for _, abilityState := range *stack.Ability {
+			if abilityState.IsActive && abilityState.ShipType == shipType {
+				mods := GetAbilityMods(AbilityID(abilityState.Ability))
+				speedDelta += mods.SpeedDelta
+			}
+		}
+	}
+
+	finalSpeed := baseSpeed + speedDelta
+	if finalSpeed < 0 {
+		finalSpeed = 0 // Speed cannot be negative
+	}
+
+	return finalSpeed
+}
+
 // FilterAbilitiesForMode returns the abilities usable in the stack's current RoleMode.
 // It takes the ship's built-in abilities, adds GemWord-granted abilities, then
 // applies Disabled/Enabled lists from RoleModesCatalog.
