@@ -165,6 +165,7 @@ type BattleState struct {
 
 // MovementState tracks what the stack is currently doing in free space or at mining locations
 type MovementState struct {
+	Type        string        `bson:"type" json:"type,omitempty"`                       // "traveling", "mining", "idle", "in_combat"
 	State       string        `bson:"state" json:"state,omitempty"`                     // "traveling", "mining", "idle", "in_combat"
 	TargetID    bson.ObjectID `bson:"targetId,omitempty" json:"targetId,omitempty"`     // Target for movement/mining
 	TargetType  string        `bson:"targetType,omitempty" json:"targetType,omitempty"` // "asteroid", "nebula", "coordinate"
@@ -172,6 +173,7 @@ type MovementState struct {
 	StartY      float64       `bson:"startY,omitempty" json:"startY"`                   // Starting coordinates
 	Speed       int           `bson:"speed,omitempty" json:"speed"`                     // Speed of the stack
 	TargetX     float64       `bson:"targetX,omitempty" json:"targetX"`                 // Target coordinates
+	Stage       string        `bson:"stage,omitempty" json:"stage,omitempty"`           // Stage of the gathering process
 	TargetY     float64       `bson:"targetY,omitempty" json:"targetY"`                 // Target coordinates
 	StartTime   time.Time     `bson:"startTime,omitempty" json:"startTime"`             // When current action started
 	EndTime     time.Time     `bson:"endTime,omitempty" json:"endTime"`                 // When current action ends
