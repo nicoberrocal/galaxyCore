@@ -152,15 +152,24 @@ type HPBucket struct {
 	Count int `bson:"count"` // how many ships at this HP
 }
 
+// CombatCounters tracks deterministic combat mechanics (crit intervals, evasion, etc.)
+// These counters enable predictable combat outcomes without RNG.
+type CombatCounters struct {
+	AttackCount    int `bson:"attackCount" json:"attackCount"`       // Total attacks made (for crit timing)
+	DefenseCount   int `bson:"defenseCount" json:"defenseCount"`     // Total attacks received (for evasion timing)
+	LastCritAttack int `bson:"lastCritAttack" json:"lastCritAttack"` // Attack number of last crit
+}
+
 // BattleState tracks combat information for stacks in free space or mining locations
 type BattleState struct {
-	IsInCombat      bool            `bson:"isInCombat"`                               // Currently engaged in battle
-	EnemyStackID    []bson.ObjectID `bson:"enemyStackId,omitempty"`                   // Opponent stack ID
-	EnemyPlayerID   []bson.ObjectID `bson:"enemyPlayerId,omitempty"`                  // Opponent player ID
-	BattleStartedAt time.Time       `bson:"battleStartedAt,omitempty"`                // When battle began
-	BattleLocation  string          `bson:"battleLocation,omitempty"`                 // "empty_space", "asteroid", "nebula"
-	LocationID      bson.ObjectID   `bson:"locationId,omitempty"`                     // ID of asteroid/nebula if applicable
-	ProcessedAt     time.Time       `bson:"ProcessedAt,omitempty" json:"ProcessedAt"` // Last time this state was processed
+	IsInCombat      bool             `bson:"isInCombat"`                               // Currently engaged in battle
+	EnemyStackID    []bson.ObjectID  `bson:"enemyStackId,omitempty"`                   // Opponent stack ID
+	EnemyPlayerID   []bson.ObjectID  `bson:"enemyPlayerId,omitempty"`                  // Opponent player ID
+	BattleStartedAt time.Time        `bson:"battleStartedAt,omitempty"`                // When battle began
+	BattleLocation  string           `bson:"battleLocation,omitempty"`                 // "empty_space", "asteroid", "nebula"
+	LocationID      bson.ObjectID    `bson:"locationId,omitempty"`                     // ID of asteroid/nebula if applicable
+	ProcessedAt     time.Time        `bson:"ProcessedAt,omitempty" json:"ProcessedAt"` // Last time this state was processed
+	Counters        *CombatCounters  `bson:"counters,omitempty" json:"counters,omitempty"` // Deterministic combat counters
 }
 
 // MovementState tracks what the stack is currently doing in free space or at mining locations

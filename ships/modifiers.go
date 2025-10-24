@@ -1,9 +1,38 @@
 package ships
 
 import (
- "encoding/json"
- bson "go.mongodb.org/mongo-driver/v2/bson"
+	"encoding/json"
+	bson "go.mongodb.org/mongo-driver/v2/bson"
 )
+
+// Deterministic Combat System
+//
+// This combat system uses deterministic mechanics instead of RNG for predictable,
+// strategic gameplay in hourly turn-based battles:
+//
+// 1. CRIT: Counter-based, not random chance
+//    - CritPct = 0.33 → crit every 3rd attack (1/0.33)
+//    - CritPct = 0.50 → crit every 2nd attack (1/0.50)
+//    - Crit damage = base damage * 1.5 (+50%)
+//
+// 2. EVASION: Flat damage reduction, not dodge chance
+//    - EvasionPct = 0.35 → 35% damage reduction on all incoming damage
+//    - Capped at 75% reduction (EvasionPct = 0.75)
+//    - Stacks additively from multiple sources (bio traits, formations, etc.)
+//
+// 3. FIRST STRIKE: Bonus on attack counter == 1
+//    - FirstVolleyPct = 0.30 → +30% damage on first attack only
+//    - Resets when battle ends or stack enters cooldown
+//
+// 4. SHIELDS: Asymptotic mitigation by attack type
+//    - Each attack type (Laser/Nuclear/Antimatter) mitigated by corresponding shield
+//    - Formula: damage / (1 + shieldValue * 0.15)
+//    - Never reaches 100% mitigation (diminishing returns)
+//    - Bio debuffs can reduce shields (even below 0, capped at 0 for calculations)
+//
+// 5. BIO DEBUFFS: Applied post-combat, affect next round
+//    - Stack over multiple combat rounds
+//    - Can reduce shields, add damage over time, etc.
 
 const statEps = 1e-9
 
@@ -52,8 +81,8 @@ type StatMods struct {
 	StructureDamagePct float64 // % bonus vs structures/infrastructure
 	SplashRadiusDelta  int     // + radius cells for splash
 	AccuracyPct        float64 // % flat accuracy improvement
-	CritPct            float64 // % flat critical chance improvement
-	FirstVolleyPct     float64 // % bonus to the first volley
+	CritPct            float64 // DETERMINISTIC: crit interval = 1/CritPct (e.g., 0.33 = every 3rd attack, 0.50 = every 2nd)
+	FirstVolleyPct     float64 // % bonus damage on the first attack in combat (attack counter == 1)
 	ShieldPiercePct    float64 // % of shields ignored (applied carefully)
 
 	// Economy/logistics
@@ -65,7 +94,7 @@ type StatMods struct {
 	PingRangePct float64 // % change to Ping ability range
 
 	// Formation-specific modifiers (applied in formation combat contexts)
-	EvasionPct          float64 // % flat evasion chance
+	EvasionPct          float64 // DETERMINISTIC: flat % damage reduction (not dodge chance). Capped at 75% reduction.
 	FormationSyncBonus  float64 // % bonus when position requirements are met
 	PositionFlexibility float64 // % reduced penalty for suboptimal positions
 
