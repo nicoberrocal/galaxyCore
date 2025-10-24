@@ -501,3 +501,78 @@ func abilityByID(id AbilityID) Ability {
 	}
 	return Ability{ID: id, Name: string(id), Kind: AbilityPassive, Description: "(missing from catalog)"}
 }
+
+// addAttackConditionalMods adds bio trait modifiers that are conditional on attack count.
+// This enables traits like "first strike only" or "every 3rd attack" mechanics.
+func addAttackConditionalMods(
+	builder *ModifierBuilder,
+	bio *BioMachine,
+	counters *CombatCounters,
+	shipType ShipType,
+	now time.Time,
+) {
+	attackCount := counters.AttackCount
+
+	for _, node := range bio.Nodes {
+		// Skip if not applicable to this ship type
+		if !(node.AllShips || (node.ShipTypes != nil && node.ShipTypes[shipType])) {
+			continue
+		}
+
+		// Check for attack-count-based conditions
+		switch node.ID {
+		case "carnivora_thigmonastic_triggers":
+			// First attack only: guaranteed crit
+			if attackCount == 1 {
+				builder.stack.AddPermanent(
+					SourceBioTriggered,
+					"thigmonastic_first_strike",
+					"Thigmonastic Triggers: First Strike Crit",
+					StatMods{CritPct: 1.0},
+					PriorityBioTriggered,
+					now,
+				)
+			}
+
+		case "apex_kill_focus":
+			// Bonus damage on first 3 attacks
+			if attackCount <= 3 {
+				builder.stack.AddPermanent(
+					SourceBioTriggered,
+					"kill_focus_burst",
+					"Kill Focus: Burst Damage Window",
+					StatMods{
+						Damage: DamageMods{
+							LaserPct:      0.10,
+							NuclearPct:    0.10,
+							AntimatterPct: 0.10,
+						},
+					},
+					PriorityBioTriggered,
+					now,
+				)
+			}
+
+		case "sporeform_hyphal_burst":
+			// Every 3rd attack gets bonus damage
+			if attackCount%3 == 0 {
+				builder.stack.AddPermanent(
+					SourceBioTriggered,
+					"hyphal_burst_bonus",
+					"Hyphal Burst: Periodic Damage Spike",
+					StatMods{
+						Damage: DamageMods{
+							LaserPct:      0.15,
+							NuclearPct:    0.15,
+							AntimatterPct: 0.15,
+						},
+					},
+					PriorityBioTriggered,
+					now,
+				)
+			}
+
+		// Add more attack-conditional traits here as you design them
+		}
+	}
+}
