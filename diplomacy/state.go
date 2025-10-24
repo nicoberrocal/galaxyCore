@@ -21,7 +21,7 @@ type Pair struct {
 	B bson.ObjectID
 }
 
-func normalizePair(a, b bson.ObjectID) Pair {
+func PairNormalize(a, b bson.ObjectID) Pair {
 	if bytes.Compare(a[:], b[:]) <= 0 {
 		return Pair{A: a, B: b}
 	}

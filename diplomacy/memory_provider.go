@@ -30,7 +30,7 @@ func (p *MemoryProvider) EnsureState(mapID bson.ObjectID) *State {
 }
 
 func (p *MemoryProvider) AreAllies(mapID, a, b bson.ObjectID, now time.Time) (bool, error) {
-	pair := normalizePair(a, b)
+	pair := PairNormalize(a, b)
 	st := p.EnsureState(mapID)
 	if e, ok := st.Relations[pair]; ok {
 		if e.Relation == RelationAlly {
@@ -48,7 +48,7 @@ func (p *MemoryProvider) AreEnemies(mapID, a, b bson.ObjectID, now time.Time) (b
 		if start, days, ok := p.peaceLookup(mapID); ok && days > 0 {
 			if now.Before(start.Add(time.Duration(days) * 24 * time.Hour)) {
 				// During peace period, not enemies unless explicitly marked as enemy
-				pair := normalizePair(a, b)
+				pair := PairNormalize(a, b)
 				st := p.EnsureState(mapID)
 				if e, ok := st.Relations[pair]; ok {
 					if e.Relation == RelationEnemy {
@@ -63,7 +63,7 @@ func (p *MemoryProvider) AreEnemies(mapID, a, b bson.ObjectID, now time.Time) (b
 	}
 
 	// Outside peace, default to enemies unless ally or valid ceasefire.
-	pair := normalizePair(a, b)
+	pair := PairNormalize(a, b)
 	st := p.EnsureState(mapID)
 	if e, ok := st.Relations[pair]; ok {
 		switch e.Relation {
@@ -91,17 +91,17 @@ func (p *MemoryProvider) FormAlliance(mapID, a, b bson.ObjectID, until *time.Tim
 	if until != nil {
 		entry.Until = *until
 	}
-	st.Relations[normalizePair(a, b)] = entry
+	st.Relations[PairNormalize(a, b)] = entry
 }
 
 func (p *MemoryProvider) BreakAlliance(mapID, a, b bson.ObjectID) {
 	st := p.EnsureState(mapID)
-	delete(st.Relations, normalizePair(a, b))
+	delete(st.Relations, PairNormalize(a, b))
 }
 
 func (p *MemoryProvider) SetCeasefire(mapID, a, b bson.ObjectID, until time.Time) {
 	st := p.EnsureState(mapID)
-	st.Relations[normalizePair(a, b)] = Entry{Relation: RelationCeasefire, Until: until}
+	st.Relations[PairNormalize(a, b)] = Entry{Relation: RelationCeasefire, Until: until}
 }
 
 func (p *MemoryProvider) SetEnemy(mapID, a, b bson.ObjectID, until *time.Time) {
@@ -110,5 +110,5 @@ func (p *MemoryProvider) SetEnemy(mapID, a, b bson.ObjectID, until *time.Time) {
 	if until != nil {
 		entry.Until = *until
 	}
-	st.Relations[normalizePair(a, b)] = entry
+	st.Relations[PairNormalize(a, b)] = entry
 }
