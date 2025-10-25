@@ -2,6 +2,7 @@ package ships
 
 import (
 	"time"
+	bson "go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // ComputeLoadoutV2 is the new version that uses the layered modifier system.
@@ -93,6 +94,7 @@ func ComputeStackModifiers(
 	if stack.Bio != nil {
 		builder.AddBioFromMachine(stack.Bio, shipType)
 		builder.AddInboundBioDebuffs(stack.Bio)
+		builder.AddInboundAllyBuffs(stack.Bio)
 	}
 
 	// 5. Abilities: provide their own StatMods when active
@@ -198,7 +200,7 @@ func isFormationSource(src ModifierSource) bool {
 }
 
 func isBioBuffSource(src ModifierSource) bool {
-	return src == SourceBioPassive || src == SourceBioTriggered || src == SourceBioTick || src == SourceBioAccum
+	return src == SourceBioPassive || src == SourceBioTriggered || src == SourceBioTick || src == SourceBioAccum || src == SourceBuff
 }
 
 func GetFullModifiersBreakdownForShip(
@@ -462,6 +464,12 @@ func ComputeEffectiveSpeed(
 		for _, layer := range layers {
 			speedDelta += layer.Mods.SpeedDelta
 		}
+		// Include inbound ally buffs that affect speed, only if not target-scoped
+		for _, b := range stack.Bio.CollectInboundBuffs(now) {
+			if b.TargetStack.IsZero() {
+				speedDelta += b.Mods.SpeedDelta
+			}
+		}
 	}
 
 	// 5. Active abilities: only speed-affecting abilities
@@ -479,6 +487,78 @@ func ComputeEffectiveSpeed(
 		finalSpeed = 0 // Speed cannot be negative
 	}
 
+	return finalSpeed
+}
+
+// ComputeEffectiveSpeedForTarget returns effective speed when moving to act against a specific target stack.
+// It is identical to ComputeEffectiveSpeed except inbound ally buffs are filtered for the given target.
+func ComputeEffectiveSpeedForTarget(
+	stack *ShipStack,
+	shipType ShipType,
+	bucketIndex int,
+	targetID bson.ObjectID,
+	now time.Time,
+) int {
+	blueprint, ok := ShipBlueprints[shipType]
+	if !ok {
+		return 0
+	}
+
+	baseSpeed := blueprint.Speed
+	speedDelta := 0
+
+	// 1. Gems
+	loadout := stack.GetOrInitLoadout(shipType)
+	for _, gem := range loadout.Sockets {
+		speedDelta += gem.Mods.SpeedDelta
+	}
+
+	// 2. Formation
+	if stack.Formation != nil {
+		formation := stack.Formation.ToFormation()
+		if spec, ok := FormationCatalog[formation.Type]; ok {
+			position := stack.GetFormationPosition(shipType, bucketIndex)
+			if posMods, ok := spec.PositionBonuses[position]; ok {
+				speedDelta += posMods.SpeedDelta
+			}
+		}
+	}
+
+	// 3. Anchored
+	if loadout.Anchored {
+		speedDelta -= 50
+	}
+
+	// 4. Bio layers and inbound buffs filtered by target
+	if stack.Bio != nil {
+		if BioPopulateFromPath != nil {
+			if stack.Bio.ActivePath != string(stack.BioTreePath) {
+				stack.BuildBioFromCurrentPath(now)
+			}
+		}
+		layers := stack.Bio.CollectActiveLayersForShip(shipType, now)
+		for _, layer := range layers {
+			speedDelta += layer.Mods.SpeedDelta
+		}
+		for _, b := range stack.Bio.CollectInboundBuffsForTarget(targetID, now) {
+			speedDelta += b.Mods.SpeedDelta
+		}
+	}
+
+	// 5. Abilities
+	if stack.Ability != nil {
+		for _, abilityState := range *stack.Ability {
+			if abilityState.IsActive && abilityState.ShipType == shipType {
+				mods := GetAbilityMods(AbilityID(abilityState.Ability))
+				speedDelta += mods.SpeedDelta
+			}
+		}
+	}
+
+	finalSpeed := baseSpeed + speedDelta
+	if finalSpeed < 0 {
+		finalSpeed = 0
+	}
 	return finalSpeed
 }
 

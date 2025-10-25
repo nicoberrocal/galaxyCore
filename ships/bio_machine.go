@@ -41,6 +41,23 @@ type BioDebuffState struct {
 	ExpiresAt    time.Time     `bson:"expiresAt" json:"expiresAt"`
 }
 
+// BioBuffState is an inbound ally buff applied by allied traits/nodes to this stack.
+// These are consumed by the compute pipeline as buff modifier layers.
+type BioBuffState struct {
+	ID           string        `bson:"id" json:"id"`
+	SourceStack  bson.ObjectID `bson:"sourceStack" json:"sourceStack"`
+	SourceNodeID string        `bson:"sourceNodeId" json:"sourceNodeId"`
+	Mods         StatMods      `bson:"mods,omitempty" json:"mods,omitempty"`
+	Stacks       int           `bson:"stacks" json:"stacks"`
+	MaxStacks    int           `bson:"maxStacks" json:"maxStacks"`
+	AppliedAt    time.Time     `bson:"appliedAt" json:"appliedAt"`
+	ExpiresAt    time.Time     `bson:"expiresAt" json:"expiresAt"`
+	// Optional target scoping. If set, buff is intended for actions against this target stack.
+	TargetStack bson.ObjectID `bson:"targetStack,omitempty" json:"targetStack,omitempty"`
+	// Optional scope hint (e.g., "movement", "movement_attack_target", "combat").
+	Scope string `bson:"scope,omitempty" json:"scope,omitempty"`
+}
+
 // BioActiveLayer represents a ready-to-apply modifier layer produced by the bio machine
 // for the current snapshot. Builder will convert these into modifier stack layers.
 type BioActiveLayer struct {
@@ -230,6 +247,7 @@ func (n *BioNodeRuntimeState) CurrentLayers(shipType ShipType, now time.Time) []
 type BioMachine struct {
 	Nodes          map[string]*BioNodeRuntimeState              `bson:"nodes,omitempty" json:"nodes,omitempty"`
 	InboundDebuffs map[string]*BioDebuffState                   `bson:"inboundDebuffs,omitempty" json:"inboundDebuffs,omitempty"`
+	InboundBuffs   map[string]*BioBuffState                     `bson:"inboundBuffs,omitempty" json:"inboundBuffs,omitempty"`
 	ByShipType     map[ShipType]map[string]*BioNodeRuntimeState `bson:"-" json:"-"`
 	LastProcessed  time.Time                                    `bson:"lastProcessed" json:"lastProcessed"`
 	ActivePath     string                                       `bson:"activePath,omitempty" json:"activePath,omitempty"`
@@ -243,6 +261,7 @@ func NewBioMachine(now time.Time) *BioMachine {
 	return &BioMachine{
 		Nodes:          make(map[string]*BioNodeRuntimeState, 16),
 		InboundDebuffs: make(map[string]*BioDebuffState, 4),
+		InboundBuffs:   make(map[string]*BioBuffState, 4),
 		ByShipType:     make(map[ShipType]map[string]*BioNodeRuntimeState, 4),
 		LastProcessed:  now,
 		UnlockAll:      true,
@@ -325,6 +344,13 @@ func (bm *BioMachine) Tick(now time.Time) {
 		}
 	}
 
+	// Expire inbound buffs
+	for id, b := range bm.InboundBuffs {
+		if now.After(b.ExpiresAt) {
+			delete(bm.InboundBuffs, id)
+		}
+	}
+
 	bm.LastProcessed = now
 }
 
@@ -356,7 +382,7 @@ func (bm *BioMachine) OnAbilityCast(ability AbilityID, shipType ShipType, start 
 }
 
 // ApplyInboundDebuff upserts a debuff applied by an enemy trait/node to this stack.
-func (bm *BioMachine) ApplyInboundDebuff(id string, mods StatMods, duration time.Duration, stacks int, maxStacks int, sourceStack bson.ObjectID, now time.Time) {
+func (bm *BioMachine) ApplyInboundDebuff(id string, mods StatMods, duration time.Duration, stacks int, maxStacks int, sourceStack bson.ObjectID, sourceNodeID string, now time.Time) {
 	d, ok := bm.InboundDebuffs[id]
 	if !ok {
 		d = &BioDebuffState{ID: id, Mods: mods, Stacks: 0, MaxStacks: maxStacks, AppliedAt: now}
@@ -368,7 +394,37 @@ func (bm *BioMachine) ApplyInboundDebuff(id string, mods StatMods, duration time
 		d.Stacks = d.MaxStacks
 	}
 	d.SourceStack = sourceStack
+	d.SourceNodeID = sourceNodeID
 	d.ExpiresAt = now.Add(duration)
+}
+
+// ApplyInboundBuff upserts a buff applied by an allied trait/node to this stack.
+func (bm *BioMachine) ApplyInboundBuff(
+	id string,
+	mods StatMods,
+	duration time.Duration,
+	stacks int,
+	maxStacks int,
+	sourceStack bson.ObjectID,
+	sourceNodeID string,
+	targetStack bson.ObjectID,
+	scope string,
+	now time.Time,
+) {
+	b, ok := bm.InboundBuffs[id]
+	if !ok {
+		b = &BioBuffState{ID: id, Mods: mods, Stacks: 0, MaxStacks: maxStacks, AppliedAt: now}
+		bm.InboundBuffs[id] = b
+	}
+	b.Stacks += stacks
+	if b.MaxStacks > 0 && b.Stacks > b.MaxStacks {
+		b.Stacks = b.MaxStacks
+	}
+	b.SourceStack = sourceStack
+	b.SourceNodeID = sourceNodeID
+	b.TargetStack = targetStack
+	b.Scope = scope
+	b.ExpiresAt = now.Add(duration)
 }
 
 // CollectActiveLayersForShip returns a list of bio-generated layers for a specific shipType at time now.
@@ -394,6 +450,32 @@ func (bm *BioMachine) CollectInboundDebuffs(now time.Time) []BioDebuffState {
 	for _, d := range bm.InboundDebuffs {
 		if now.Before(d.ExpiresAt) {
 			res = append(res, *d)
+		}
+	}
+	return res
+}
+
+// CollectInboundBuffs returns the current active inbound ally buffs.
+func (bm *BioMachine) CollectInboundBuffs(now time.Time) []BioBuffState {
+	res := make([]BioBuffState, 0, len(bm.InboundBuffs))
+	for _, b := range bm.InboundBuffs {
+		if now.Before(b.ExpiresAt) {
+			res = append(res, *b)
+		}
+	}
+	return res
+}
+
+// CollectInboundBuffsForTarget returns active inbound buffs applicable to a specific target.
+// A buff applies if it has no TargetStack set, or matches the provided target.
+func (bm *BioMachine) CollectInboundBuffsForTarget(target bson.ObjectID, now time.Time) []BioBuffState {
+	res := make([]BioBuffState, 0, len(bm.InboundBuffs))
+	for _, b := range bm.InboundBuffs {
+		if !now.Before(b.ExpiresAt) {
+			continue
+		}
+		if b.TargetStack.IsZero() || b.TargetStack == target {
+			res = append(res, *b)
 		}
 	}
 	return res

@@ -118,11 +118,19 @@ func (s *ShipStack) BioOnAbilityCast(ability AbilityID, shipType ShipType, start
 }
 
 // BioApplyInboundDebuff upserts an enemy-applied bio debuff on this stack.
-func (s *ShipStack) BioApplyInboundDebuff(id string, mods StatMods, duration time.Duration, stacks int, maxStacks int, sourceStack bson.ObjectID, now time.Time) {
+func (s *ShipStack) BioApplyInboundDebuff(id string, mods StatMods, duration time.Duration, stacks int, maxStacks int, sourceStack bson.ObjectID, sourceNodeID string, now time.Time) {
 	if s.Bio == nil {
 		s.Bio = NewBioMachine(now)
 	}
-	s.Bio.ApplyInboundDebuff(id, mods, duration, stacks, maxStacks, sourceStack, now)
+	s.Bio.ApplyInboundDebuff(id, mods, duration, stacks, maxStacks, sourceStack, sourceNodeID, now)
+}
+
+// BioApplyInboundBuff upserts an ally-applied bio buff on this stack.
+func (s *ShipStack) BioApplyInboundBuff(id string, mods StatMods, duration time.Duration, stacks int, maxStacks int, sourceStack bson.ObjectID, sourceNodeID string, targetStack bson.ObjectID, scope string, now time.Time) {
+	if s.Bio == nil {
+		s.Bio = NewBioMachine(now)
+	}
+	s.Bio.ApplyInboundBuff(id, mods, duration, stacks, maxStacks, sourceStack, sourceNodeID, targetStack, scope, now)
 }
 
 // StartModeSwitch sets a new RoleMode for the entire stack and applies a

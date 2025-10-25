@@ -523,6 +523,7 @@ func applyBioDebuffsPostCombat(attacker, defender *ShipStack, now time.Time) {
 					1, // Apply 1 stack per combat round
 					node.OutgoingDebuffMaxStacks,
 					attacker.ID,
+					node.ID,
 					now,
 				)
 			}
@@ -540,6 +541,7 @@ func applyBioDebuffsPostCombat(attacker, defender *ShipStack, now time.Time) {
 					1,
 					node.OutgoingDebuffMaxStacks,
 					defender.ID,
+					node.ID,
 					now,
 				)
 			}

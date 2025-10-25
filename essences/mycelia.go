@@ -35,7 +35,7 @@ func BuildMycelia() *BioTree {
 		{
 			ID:          "sporeform_hyphal_invasion",
 			Title:       "Hyphal Invasion",
-			Description: "Each successful hit infects the target for 5 ticks. Infected enemies lose -5% accuracy and spread infection to nearby enemies within 100u if they die. Attack orders towards infected targets have 10% speed increase.",
+			Description: "Each successful hit infects the target for 5 ticks. Infected enemies lose -5% accuracy and spread infection to nearby enemies within 100u if they die. Attack orders towards infected targets grant a movement speed bonus.",
 			Path:        string(ships.Sporeform),
 			ComplexEffects: []ComplexEffect{
 				{

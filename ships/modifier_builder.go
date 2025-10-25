@@ -288,9 +288,45 @@ func (mb *ModifierBuilder) AddInboundBioDebuffs(bio *BioMachine) *ModifierBuilde
 			// if already expired by clock skew, skip
 			continue
 		}
-		mb.stack.AddTemporary(SourceBioDebuff, d.ID, "Bio Debuff: "+d.ID, mods, PriorityBioDebuff, mb.now, dur)
+		desc := "Bio Debuff: "
+		if d.SourceNodeID != "" {
+			desc += d.SourceNodeID
+		} else {
+			desc += d.ID
+		}
+		mb.stack.AddTemporary(SourceBioDebuff, d.ID, desc, mods, PriorityBioDebuff, mb.now, dur)
 	}
 	return mb
+}
+
+// AddInboundAllyBuffs adds ally-applied buffs captured by the bio machine.
+func (mb *ModifierBuilder) AddInboundAllyBuffs(bio *BioMachine) *ModifierBuilder {
+    if bio == nil {
+        return mb
+    }
+    for _, b := range bio.CollectInboundBuffs(mb.now) {
+        mods := scaleMods(b.Mods, float64(max(1, b.Stacks)))
+        dur := b.ExpiresAt.Sub(mb.now)
+        if dur <= 0 { continue }
+        desc := "Ally Buff: "
+        if b.SourceNodeID != "" { desc += b.SourceNodeID } else { desc += b.ID }
+        expiresAt := mb.now.Add(dur)
+        layer := ModifierLayer{
+            Source:      SourceBuff,
+            SourceID:    b.ID,
+            Description: desc,
+            Mods:        mods,
+            AppliedAt:   mb.now,
+            ExpiresAt:   &expiresAt,
+            Priority:    PriorityBuff,
+        }
+        if b.Scope == "movement" || b.Scope == "movement_attack_target" {
+            ac := false
+            layer.ActiveInCombat = &ac
+        }
+        mb.stack.AddLayer(layer)
+    }
+    return mb
 }
 
 // ========================
