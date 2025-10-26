@@ -90,6 +90,11 @@ func PopulateStackBioForPath(stack *ships.ShipStack, path ships.BioTreePath, now
 				cd := time.Duration(ce.Cooldown) * time.Second
 				rn.WithTriggered(*ce.PrimaryEffect, dur, cd)
 			}
+			
+			// Store trigger information for event-driven activation
+			if ce.Trigger != "" {
+				_ = ce.Trigger // Placeholder for future trigger system integration
+			}
 		}
 	}
 }
@@ -131,13 +136,21 @@ func PopulateStackBioFromPath(stack *ships.ShipStack, now time.Time) {
 			rn.WithPassive(passive)
 		}
 
-		// Map simple ComplexEffects with duration into a triggered configuration using PrimaryEffect
+		// Map ComplexEffects with trigger information for event-driven activation
 		for _, ce := range bn.ComplexEffects {
 			if ce.PrimaryEffect != nil && ce.Duration > 0 {
 				// Interpret tree durations in seconds for now
 				dur := time.Duration(ce.Duration) * time.Second
 				cd := time.Duration(ce.Cooldown) * time.Second
 				rn.WithTriggered(*ce.PrimaryEffect, dur, cd)
+			}
+			
+			// Store trigger information for event-driven activation
+			// This allows the bio machine to respond to specific game events
+			if ce.Trigger != "" {
+				// Store trigger info in the node's metadata for event handling
+				// The actual trigger logic will be implemented in the bio machine
+				_ = ce.Trigger // Placeholder for future trigger system integration
 			}
 		}
 

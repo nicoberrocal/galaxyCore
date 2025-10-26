@@ -105,6 +105,7 @@ const (
 // This includes conditional logic, delayed effects, and multi-stage effects
 type ComplexEffect struct {
 	EffectType      ComplexEffectType
+	Trigger         Trigger         // Event that triggers this effect
 	Conditions      []Condition     // Conditions that must be met for effect to trigger
 	PrimaryEffect   *ships.StatMods `bson:"primaryEffect,omitempty" json:"primaryEffect,omitempty"`     // Main stat modifications
 	SecondaryEffect *ships.StatMods `bson:"secondaryEffect,omitempty" json:"secondaryEffect,omitempty"` // Secondary effects (e.g., on-death effects)
@@ -230,17 +231,28 @@ const (
 	TriggerOnStationary           Trigger = "on_stationary"
 	TriggerOnSuccessfulHit        Trigger = "on_successful_hit"
 	TriggerOnStackDeath           Trigger = "on_stack_death"
+	TriggerOnKill                 Trigger = "on_kill"
+	TriggerOnAllyDeath            Trigger = "on_ally_death"
+	TriggerOnEnemyDeath           Trigger = "on_enemy_death"
+	TriggerOnDeath                Trigger = "on_death"
+	TriggerOnResourceExtract      Trigger = "on_resource_extract"
+	TriggerOnSystemEngage         Trigger = "on_system_engage"
+	TriggerOnTick                 Trigger = "on_tick"
+	TriggerOnFormationChangeComplete Trigger = "on_formation_change_complete"
+	TriggerOnFirstStrike          Trigger = "on_first_strike"
+	TriggerOnAllyDamaged          Trigger = "on_ally_damaged"
+	TriggerOnNearAsteroid         Trigger = "on_near_asteroid"
+	TriggerOnNearStar             Trigger = "on_near_star"
+	TriggerOnActiveAbility        Trigger = "on_active_ability"
 	TriggerOnConsecutiveAttacks   Trigger = "on_consecutive_attacks"
 	TriggerOnLowHP                Trigger = "on_low_hp"
 	TriggerOnAllyNearby           Trigger = "on_ally_nearby"
 	TriggerOnTerrainNearby        Trigger = "on_terrain_nearby"
 	TriggerOnSystemEngaged        Trigger = "on_system_engaged"
-	TriggerOnKill                 Trigger = "on_kill"
 	TriggerOnCombatEnter          Trigger = "on_combat_enter"
 	TriggerOnAllyWouldDie         Trigger = "on_ally_would_die"
 	TriggerOnShipDeathInArea      Trigger = "on_ship_death_in_area"
 	TriggerOnAbilityCooldown      Trigger = "on_ability_cooldown"
-	TriggerOnTick                 Trigger = "on_tick"
 )
 
 type NodeTrigger struct {
@@ -300,4 +312,182 @@ func NewNode(id, title, desc, path string, eff, trade ships.StatMods) *BioNode {
 		Path:        path,
 		Tradeoff:    &trade,
 	}
+}
+
+// EvaluateTriggerAndCondition checks if both trigger and conditions are met for a bio effect
+// This provides a general trigger + condition evaluation system
+func EvaluateTriggerAndCondition(
+	nodeID string,
+	trigger Trigger,
+	conditions []Condition,
+	eventData interface{},
+) bool {
+	// First check if trigger is activated by the current event
+	if !IsTriggerActive(trigger, eventData) {
+		return false
+	}
+	
+	// Then check all conditions
+	if !AreConditionsMet(conditions, eventData) {
+		return false
+	}
+	
+	// Both trigger and conditions are met
+	return true
+}
+
+// IsTriggerActive checks if the given trigger is activated by the current event
+func IsTriggerActive(trigger Trigger, eventData interface{}) bool {
+	switch trigger {
+	case TriggerOnFirstStrike:
+		// This would be triggered by first attack events
+		return true // Placeholder - would need actual first strike detection
+	case TriggerOnSuccessfulHit:
+		// This would be triggered by attack events
+		return true // Placeholder - would need actual hit detection
+	case TriggerOnCriticalHit:
+		// This would be triggered by critical hit events
+		return true // Placeholder - would need actual crit detection
+	case TriggerOnStationary:
+		// This would be triggered by movement state events
+		return true // Placeholder - would need actual stationary detection
+	case TriggerOnTick:
+		// This is triggered every tick
+		return true
+	case TriggerOnDeath:
+		// This would be triggered by death events
+		return true // Placeholder - would need actual death detection
+	case TriggerOnKill:
+		// This would be triggered by kill events
+		return true // Placeholder - would need actual kill detection
+	case TriggerOnAbilityCast:
+		// This would be triggered by ability cast events
+		return true // Placeholder - would need actual ability cast detection
+	case TriggerOnActiveAbility:
+		// This would be triggered by active ability usage
+		return true // Placeholder - would need actual active ability detection
+	case TriggerOnFormationChangeComplete:
+		// This would be triggered by formation change completion
+		return true // Placeholder - would need actual formation change detection
+	case TriggerOnNearAsteroid:
+		// This would be triggered by terrain proximity events
+		return true // Placeholder - would need actual terrain detection
+	case TriggerOnNearStar:
+		// This would be triggered by terrain proximity events
+		return true // Placeholder - would need actual terrain detection
+	case TriggerOnEnemyEnterRange:
+		// This would be triggered by enemy proximity events
+		return true // Placeholder - would need actual proximity detection
+	case TriggerOnAllyNearby:
+		// This would be triggered by ally proximity events
+		return true // Placeholder - would need actual proximity detection
+	case TriggerOnAllyDeath:
+		// This would be triggered by ally death events
+		return true // Placeholder - would need actual ally death detection
+	case TriggerOnEnemyDeath:
+		// This would be triggered by enemy death events
+		return true // Placeholder - would need actual enemy death detection
+	case TriggerOnSystemEngage:
+		// This would be triggered by system engagement events
+		return true // Placeholder - would need actual system engagement detection
+	case "":
+		// No trigger specified - always active
+		return true
+	default:
+		// Unknown trigger - default to not active
+		return false
+	}
+}
+
+// AreConditionsMet checks if all conditions are satisfied
+func AreConditionsMet(conditions []Condition, eventData interface{}) bool {
+	for _, condition := range conditions {
+		if !IsConditionMet(condition, eventData) {
+			return false
+		}
+	}
+	return true
+}
+
+// IsConditionMet checks if a single condition is satisfied
+func IsConditionMet(condition Condition, eventData interface{}) bool {
+	switch condition.ConditionType {
+	case ConditionCombatState:
+		if state, ok := condition.Value.(string); ok {
+			// Placeholder - would need actual combat state detection
+			// For now, return true if state is "engaging" as that's commonly used
+			return state == "engaging"
+		}
+	case ConditionCriticalHit:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual critical hit detection
+			return value
+		}
+	case ConditionStationary:
+		if value, ok := condition.Value.(int); ok {
+			// Placeholder - would need actual stationary detection with tick count
+			// For now, return true if value is >= 3 as commonly used
+			return value >= 3
+		}
+	case ConditionTargetInfected:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual infection status detection
+			return value
+		}
+	case ConditionKillCount:
+		if value, ok := condition.Value.(int); ok {
+			// Placeholder - would need actual kill count detection
+			// For now, return true if value > 0 as commonly used
+			return value > 0
+		}
+	case ConditionAllyCount:
+		if value, ok := condition.Value.(int); ok {
+			// Placeholder - would need actual ally count detection
+			// For now, return true if value >= 3 as commonly used
+			return value >= 3
+		}
+	case ConditionTerrainNear:
+		if value, ok := condition.Value.(string); ok {
+			// Placeholder - would need actual terrain detection
+			// For now, return true for any terrain type
+			return value == "asteroid" || value == "star"
+		}
+	case ConditionFormationType:
+		if value, ok := condition.Value.(string); ok {
+			// Placeholder - would need actual formation type detection
+			// For now, return true for common formation types
+			return value == "aggressive" || value == "defensive" || value == "Box"
+		}
+	case ConditionAbilityUsed:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual ability usage detection
+			return value
+		}
+	case ConditionAllyInNetwork:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual network status detection
+			return value
+		}
+	case ConditionBuildingInfected:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual building infection detection
+			return value
+		}
+	case ConditionIsAttacked:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual attack status detection
+			return value
+		}
+	case ConditionAttackFromBehind:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual attack direction detection
+			return value
+		}
+	case ConditionTargetIsAttackingAlly:
+		if value, ok := condition.Value.(bool); ok {
+			// Placeholder - would need actual target attack detection
+			return value
+		}
+	}
+	return false
 }

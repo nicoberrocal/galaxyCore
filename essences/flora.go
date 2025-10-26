@@ -21,6 +21,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnFirstStrike,
 					Conditions: []Condition{
 						{ConditionType: ConditionCombatState, CompareOp: CompareEqual, Value: "engaging"},
 					},
@@ -38,6 +39,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnSuccessfulHit,
 					Conditions: []Condition{
 						{ConditionType: ConditionCriticalHit, CompareOp: CompareEqual, Value: true},
 					},
@@ -54,6 +56,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnEnemyEnterRange,
 					Conditions: []Condition{
 						{ConditionType: ConditionEnemyCount, CompareOp: CompareGreater, Value: 0}},
 					StatusEffects: []StatusEffect{{Name: "Blind", Duration: 5, EffectType: StatusBlind}},
@@ -77,6 +80,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnKill,
 					Conditions: []Condition{
 						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0}},
 					PrimaryEffect: &ships.StatMods{GlobalDefensePct: 0.03},
@@ -96,6 +100,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnNearAsteroid,
 					Conditions: []Condition{
 						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "asteroid"}},
 					PrimaryEffect: &ships.StatMods{HPPct: 0.01, LaserShieldDelta: 1, NuclearShieldDelta: 1, AntimatterShieldDelta: 1},
@@ -118,6 +123,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionAllyNearby, CompareOp: CompareEqual, Value: true}},
 					PrimaryEffect: &ships.StatMods{Damage: ships.DamageMods{LaserPct: 1, NuclearPct: 1, AntimatterPct: 1}},
@@ -134,6 +140,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnNearStar,
 					Conditions: []Condition{
 						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "star"},
 						{ConditionType: ConditionIsAttacked, CompareOp: CompareEqual, Value: true}},
@@ -150,6 +157,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnFormationChangeComplete,
 					Conditions: []Condition{
 						{ConditionType: ConditionFormationType, CompareOp: CompareEqual, Value: "Box"}},
 					Spawn:         &SpawnEffect{SpawnType: SpawnShockwave, SpawnRadius: 200},
@@ -170,12 +178,14 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionFormationType, CompareOp: CompareEqual, Value: "aggressive"}},
 					PrimaryEffect: &ships.StatMods{AtCombatRegenPct: 1},
 				},
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionFormationType, CompareOp: CompareEqual, Value: "defensive"}},
 					PrimaryEffect: &ships.StatMods{AtCombatRegenPct: 2},
@@ -191,6 +201,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnNearStar,
 					Conditions: []Condition{
 						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "star"}},
 					PrimaryEffect: &ships.StatMods{AbilityCooldownPct: -0.01},
@@ -214,6 +225,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAbilityCast,
 					Conditions: []Condition{
 						{ConditionType: ConditionAbilityUsed, CompareOp: CompareEqual, Value: true}},
 					PrimaryEffect: &ships.StatMods{AtCombatRegenPct: 0.25},
@@ -230,6 +242,7 @@ func BuildFlora() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType:    ComplexOnDeath,
+					Trigger:       TriggerOnDeath,
 					PrimaryEffect: &ships.StatMods{HPPct: 0.25},
 					AoE:           &AoETraitTarget{Radius: 250, TargetType: AoEAllies},
 				},

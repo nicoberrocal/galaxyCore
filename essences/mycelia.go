@@ -20,6 +20,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnStationary,
 					Conditions: []Condition{
 						{ConditionType: ConditionStationary, CompareOp: CompareGreaterEq, Value: 3},
 					},
@@ -40,9 +41,8 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
-					Conditions: []Condition{
-						{ConditionType: ConditionCriticalHit, CompareOp: CompareEqual, Value: true},
-					},
+					Trigger:    TriggerOnSuccessfulHit,
+					Conditions: []Condition{},
 					StatusEffects: []StatusEffect{
 						{
 							Name:       "Infection",
@@ -62,6 +62,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionTargetInfected, CompareOp: CompareEqual, Value: true},
 					},
@@ -79,6 +80,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexOnDeath,
+					Trigger:    TriggerOnDeath,
 					Spawn: &SpawnEffect{
 						SpawnType:   SpawnSporeCloud,
 						SpawnRadius: 300,
@@ -95,6 +97,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexOnDeath,
+					Trigger:    TriggerOnDeath,
 					Spawn: &SpawnEffect{
 						SpawnType: SpawnMicroStack,
 					},
@@ -115,6 +118,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnCriticalHit,
 					Conditions: []Condition{
 						{ConditionType: ConditionCriticalHit, CompareOp: CompareEqual, Value: true},
 					},
@@ -137,6 +141,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnSystemEngage,
 					Conditions: []Condition{
 						{ConditionType: ConditionBuildingInfected, CompareOp: CompareEqual, Value: true},
 					},
@@ -153,6 +158,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnEnemyDeath,
 					Conditions: []Condition{
 						{ConditionType: ConditionTargetInfected, CompareOp: CompareEqual, Value: true},
 					},
@@ -172,6 +178,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionTargetInfected, CompareOp: CompareEqual, Value: true},
 					},
@@ -191,6 +198,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnActiveAbility,
 					Conditions: []Condition{
 						{ConditionType: ConditionAbilityUsed, CompareOp: CompareEqual, Value: true},
 					},
@@ -215,6 +223,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionAllyInNetwork, CompareOp: CompareEqual, Value: true},
 					},
@@ -231,6 +240,15 @@ func BuildMycelia() *BioTree {
 			Title:       "Spore Relay",
 			Description: "Abilities you cast propagate through the fungal network, applying 50% of their secondary effects (but not damage) to linked allies.",
 			Path:        string(ships.Mycorrhiza),
+			ComplexEffects: []ComplexEffect{
+				{
+					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAbilityCast,
+					Conditions: []Condition{
+						{ConditionType: ConditionAllyInNetwork, CompareOp: CompareEqual, Value: true},
+					},
+				},
+			},
 		},
 		// 3. Nutrient Exchange: Regen on ally kills or resource extraction
 		{
@@ -241,6 +259,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyDeath,
 					Conditions: []Condition{
 						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0},
 					},
@@ -259,6 +278,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
 						{ConditionType: ConditionAllyCount, CompareOp: CompareGreaterEq, Value: 3},
 					},
@@ -278,6 +298,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnActiveAbility,
 					Conditions: []Condition{
 						{ConditionType: ConditionAbilityUsed, CompareOp: CompareEqual, Value: true},
 					},
