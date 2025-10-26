@@ -169,6 +169,7 @@ const (
 	ConditionBuildingInfected      ConditionType = "building_infected"
 	ConditionAllyInNetwork         ConditionType = "ally_in_network"
 	ConditionTargetIsAttackingAlly ConditionType = "target_is_attacking_ally"
+	ConditionInfectedTargetNearby  ConditionType = "infected_target_nearby"
 )
 
 type ComparisonOp string
@@ -487,6 +488,12 @@ func IsConditionMet(condition Condition, eventData interface{}) bool {
 		if value, ok := condition.Value.(bool); ok {
 			// Placeholder - would need actual target attack detection
 			return value
+		}
+	case ConditionInfectedTargetNearby:
+		if value, ok := condition.Value.(int); ok {
+			// Placeholder - would need actual infected target proximity detection
+			// For now, return true if distance is reasonable (<= 300u as commonly used)
+			return value <= 300
 		}
 	}
 	return false

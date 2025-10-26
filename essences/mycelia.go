@@ -62,7 +62,7 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
-					Trigger:    TriggerOnTick,
+					Trigger:    TriggerOnSuccessfulHit,
 					Conditions: []Condition{
 						{ConditionType: ConditionTargetInfected, CompareOp: CompareEqual, Value: true},
 					},
@@ -181,6 +181,7 @@ func BuildMycelia() *BioTree {
 					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionTargetInfected, CompareOp: CompareEqual, Value: true},
+						{ConditionType: ConditionInfectedTargetNearby, CompareOp: CompareLessEq, Value: 300},
 					},
 					PrimaryEffect: &ships.StatMods{
 						EvasionPct:         0.02,
