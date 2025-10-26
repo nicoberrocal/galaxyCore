@@ -80,10 +80,11 @@ type StatMods struct {
 	// Combat quality of life
 	StructureDamagePct float64 // % bonus vs structures/infrastructure
 	SplashRadiusDelta  int     // + radius cells for splash
-	AccuracyPct        float64 // % flat accuracy improvement
+	AccuracyPct        float64 // ATTACKER-OWNED: reduces target evasion if positive; if negative (debuff), increases attacker evasion
 	CritPct            float64 // DETERMINISTIC: crit interval = 1/CritPct (e.g., 0.33 = every 3rd attack, 0.50 = every 2nd)
+	CritDamagePct      float64 // % bonus crit damage (default 0.50 = +50% = 1.5x multiplier)
 	FirstVolleyPct     float64 // % bonus damage on the first attack in combat (attack counter == 1)
-	ShieldPiercePct    float64 // % of shields ignored (applied carefully)
+	ShieldPiercePct    float64 // % of shields ignored (0.0-1.0, where 1.0 = 100% pierce)
 
 	// Economy/logistics
 	UpkeepPct           float64 // % change to upkeep
@@ -113,7 +114,7 @@ func (m StatMods) IsZero() bool {
 	if m.LaserShieldDelta != 0 || m.NuclearShieldDelta != 0 || m.AntimatterShieldDelta != 0 { return false }
 	if !fz(m.BucketHPPct) || !fz(m.OutOfCombatRegenPct) || !fz(m.AtCombatRegenPct) || !fz(m.AbilityCooldownPct) { return false }
 	if !fz(m.TransportCapacityPct) || !fz(m.WarpChargePct) || !fz(m.WarpScatterPct) || !fz(m.InterdictionResistPct) { return false }
-	if !fz(m.StructureDamagePct) || m.SplashRadiusDelta != 0 || !fz(m.AccuracyPct) || !fz(m.CritPct) { return false }
+	if !fz(m.StructureDamagePct) || m.SplashRadiusDelta != 0 || !fz(m.AccuracyPct) || !fz(m.CritPct) || !fz(m.CritDamagePct) { return false }
 	if !fz(m.FirstVolleyPct) || !fz(m.ShieldPiercePct) || !fz(m.UpkeepPct) || !fz(m.ConstructionCostPct) { return false }
 	if m.CloakDetect || !fz(m.PingRangePct) || !fz(m.EvasionPct) || !fz(m.FormationSyncBonus) || !fz(m.PositionFlexibility) { return false }
 	if !fz(m.GlobalDefensePct) || !fz(m.HPPct) { return false }
@@ -149,6 +150,7 @@ func CombineMods(a, b StatMods) StatMods {
 	a.SplashRadiusDelta += b.SplashRadiusDelta
 	a.AccuracyPct += b.AccuracyPct
 	a.CritPct += b.CritPct
+	a.CritDamagePct += b.CritDamagePct
 	a.FirstVolleyPct += b.FirstVolleyPct
 	a.ShieldPiercePct += b.ShieldPiercePct
 
@@ -195,6 +197,7 @@ func (m StatMods) MarshalJSON() ([]byte, error) {
 	if m.SplashRadiusDelta != 0 { obj["SplashRadiusDelta"] = m.SplashRadiusDelta }
 	if !fz(m.AccuracyPct) { obj["AccuracyPct"] = m.AccuracyPct }
 	if !fz(m.CritPct) { obj["CritPct"] = m.CritPct }
+	if !fz(m.CritDamagePct) { obj["CritDamagePct"] = m.CritDamagePct }
 	if !fz(m.FirstVolleyPct) { obj["FirstVolleyPct"] = m.FirstVolleyPct }
 	if !fz(m.ShieldPiercePct) { obj["ShieldPiercePct"] = m.ShieldPiercePct }
 	if !fz(m.UpkeepPct) { obj["UpkeepPct"] = m.UpkeepPct }
@@ -237,6 +240,7 @@ func (m StatMods) MarshalBSON() ([]byte, error) {
 	if m.SplashRadiusDelta != 0 { doc["SplashRadiusDelta"] = m.SplashRadiusDelta }
 	if !fz(m.AccuracyPct) { doc["AccuracyPct"] = m.AccuracyPct }
 	if !fz(m.CritPct) { doc["CritPct"] = m.CritPct }
+	if !fz(m.CritDamagePct) { doc["CritDamagePct"] = m.CritDamagePct }
 	if !fz(m.FirstVolleyPct) { doc["FirstVolleyPct"] = m.FirstVolleyPct }
 	if !fz(m.ShieldPiercePct) { doc["ShieldPiercePct"] = m.ShieldPiercePct }
 	if !fz(m.UpkeepPct) { doc["UpkeepPct"] = m.UpkeepPct }

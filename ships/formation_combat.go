@@ -7,12 +7,13 @@ import "time"
 
 // CombatContext holds the state for a formation-aware combat encounter.
 type CombatContext struct {
-	Attacker         *ShipStack
-	Defender         *ShipStack
-	AttackDirection  AttackDirection
-	FormationCounter float64            // Attacker's formation advantage multiplier
-	Now              time.Time          // Combat timestamp for stat calculations
+	Attacker             *ShipStack
+	Defender             *ShipStack
+	AttackDirection      AttackDirection
+	FormationCounter     float64        // Attacker's formation advantage multiplier
+	Now                  time.Time      // Combat timestamp for stat calculations
 	AttackerDamageByType map[string]int // Damage composition by attack type (Laser/Nuclear/Antimatter)
+	AttackerShieldPierce float64        // Average shield pierce across attacker's fleet
 }
 
 // NewCombatContext initializes a combat context between two stacks.
@@ -41,9 +42,12 @@ func NewCombatContext(attacker, defender *ShipStack, now time.Time) *CombatConte
 	return ctx
 }
 
-// calculateDamageComposition pre-calculates the attacker's damage by attack type.
+// calculateDamageComposition pre-calculates the attacker's damage by attack type and average shield pierce.
 // This enables weighted shield application where each attack type is mitigated by the corresponding shield.
 func (ctx *CombatContext) calculateDamageComposition() {
+	totalDamage := 0
+	weightedShieldPierce := 0.0
+
 	for shipType, buckets := range ctx.Attacker.Ships {
 		blueprint := ShipBlueprints[shipType]
 		attackType := blueprint.AttackType
@@ -54,15 +58,24 @@ func (ctx *CombatContext) calculateDamageComposition() {
 			}
 
 			// Get effective stats with all modifiers (formation + bio + gems)
-			// EffectiveShipInCombat already applies all damage modifiers to AttackDamage
-			effectiveShip, _, _ := ctx.Attacker.EffectiveShipInCombat(
-				shipType, bucketIdx, ctx.Defender.Formation.Type, ctx.Now,
+			_, finalMods := ComputeStackModifiers(
+				ctx.Attacker, shipType, bucketIdx, ctx.Now, true, ctx.Defender.Formation.Type,
 			)
+			effectiveShip := ApplyStatModsToShip(blueprint, finalMods)
 
 			// Calculate damage (already includes type-specific bonuses from modifiers)
 			damage := effectiveShip.AttackDamage * bucket.Count
 			ctx.AttackerDamageByType[attackType] += damage
+			totalDamage += damage
+
+			// Weight shield pierce by damage contribution
+			weightedShieldPierce += finalMods.ShieldPiercePct * float64(damage)
 		}
+	}
+
+	// Calculate average shield pierce weighted by damage
+	if totalDamage > 0 {
+		ctx.AttackerShieldPierce = weightedShieldPierce / float64(totalDamage)
 	}
 }
 
@@ -70,11 +83,12 @@ func (ctx *CombatContext) calculateDamageComposition() {
 // Formula: damage / (1 + shieldValue * scalingFactor)
 // This creates diminishing returns where shields never reach 100% mitigation.
 // Example with scalingFactor=0.15:
-//   Shield 0:  100% damage (no mitigation)
-//   Shield 3:  ~69% damage (31% reduction)
-//   Shield 5:  ~57% damage (43% reduction)
-//   Shield 10: ~40% damage (60% reduction)
-//   Shield 20: ~25% damage (75% reduction)
+//
+//	Shield 0:  100% damage (no mitigation)
+//	Shield 3:  ~69% damage (31% reduction)
+//	Shield 5:  ~57% damage (43% reduction)
+//	Shield 10: ~40% damage (60% reduction)
+//	Shield 20: ~25% damage (75% reduction)
 func applyAsymptoticShieldMitigation(damage int, shieldValue int) int {
 	if shieldValue < 0 {
 		shieldValue = 0 // Bio debuffs can reduce shields below 0, cap at 0
@@ -162,7 +176,7 @@ func (ctx *CombatContext) DistributeDamageToDefender(totalDamage int) map[ShipTy
 			assignmentDamage := CalculateAssignmentDamage(damage, assignment, assignments)
 
 			// Apply defender's type-specific weighted shield effectiveness
-			finalDamage := ctx.applyWeightedShieldMitigation(assignmentDamage, assignment.ShipType, assignment.BucketIndex)
+			finalDamage := ctx.applyWeightedShieldMitigation(assignmentDamage, assignment.ShipType, assignment.BucketIndex, ctx.AttackerShieldPierce)
 
 			// Record damage for this ship type and bucket
 			if damageMap[assignment.ShipType] == nil {
@@ -200,7 +214,7 @@ func (ctx *CombatContext) distributeEvenlyToDefender(totalDamage int) map[ShipTy
 			}
 			bucketProportion := float64(bucket.Count) / float64(totalShips)
 			bucketDamage := int(float64(totalDamage) * bucketProportion)
-			damageMap[shipType][bucketIndex] = ctx.applyWeightedShieldMitigation(bucketDamage, shipType, bucketIndex)
+			damageMap[shipType][bucketIndex] = ctx.applyWeightedShieldMitigation(bucketDamage, shipType, bucketIndex, ctx.AttackerShieldPierce)
 		}
 	}
 
@@ -210,10 +224,12 @@ func (ctx *CombatContext) distributeEvenlyToDefender(totalDamage int) map[ShipTy
 // applyWeightedShieldMitigation applies type-specific asymptotic shield mitigation.
 // Each attack type (Laser/Nuclear/Antimatter) is mitigated by the corresponding shield value.
 // Damage is weighted by the attacker's damage composition to properly handle mixed fleets.
+// Shield pierce from attacker reduces effective shield values.
 func (ctx *CombatContext) applyWeightedShieldMitigation(
 	assignmentDamage int,
 	defenderShipType ShipType,
 	defenderBucketIndex int,
+	attackerShieldPierce float64,
 ) int {
 	// Get defender's effective shields with all modifiers
 	defenderShip, _, _ := ctx.Defender.EffectiveShipInCombat(
@@ -254,8 +270,15 @@ func (ctx *CombatContext) applyWeightedShieldMitigation(
 			shieldValue = 0
 		}
 
+		// Apply shield pierce: reduce effective shield value
+		// ShieldPiercePct ranges from 0.0 to 1.0 (0% to 100% pierce)
+		effectiveShield := int(float64(shieldValue) * (1.0 - attackerShieldPierce))
+		if effectiveShield < 0 {
+			effectiveShield = 0
+		}
+
 		// Apply asymptotic mitigation
-		mitigatedDamage := applyAsymptoticShieldMitigation(typeAssignmentDamage, shieldValue)
+		mitigatedDamage := applyAsymptoticShieldMitigation(typeAssignmentDamage, effectiveShield)
 		finalDamage += mitigatedDamage
 	}
 
@@ -326,7 +349,7 @@ type FormationBattleResult struct {
 
 // ExecuteFormationBattleRound performs one round of turn-based combat with formations.
 // This version uses deterministic mechanics (counter-based crits, evasion as damage reduction)
-// and type-specific weighted shield mitigation.
+// and type-specific weighted shield mitigation with full cross-stack modifier support.
 func ExecuteFormationBattleRound(attacker, defender *ShipStack, now time.Time) FormationBattleResult {
 	result := FormationBattleResult{
 		AttackerShipsLost:     make(map[ShipType]int),
@@ -360,63 +383,14 @@ func ExecuteFormationBattleRound(attacker, defender *ShipStack, now time.Time) F
 	result.FormationAdvantage = ctx.FormationCounter
 
 	// Phase 1: Attacker deals damage with deterministic mechanics
-	attackerTotalDamage := 0
-	for shipType, buckets := range attacker.Ships {
-		for bucketIndex, bucket := range buckets {
-			if bucket.Count == 0 {
-				continue
-			}
-
-			// Get effective stats and modifiers
-			_, finalMods := ComputeStackModifiers(
-				attacker, shipType, bucketIndex, now, true, defender.Formation.Type,
-			)
-			blueprint := ShipBlueprints[shipType]
-			effectiveShip := ApplyStatModsToShip(blueprint, finalMods)
-
-			baseDamage := effectiveShip.AttackDamage * bucket.Count
-
-			// Apply deterministic first strike bonus
-			if attacker.Battle.Counters.AttackCount == 1 && finalMods.FirstVolleyPct > 0 {
-				baseDamage = int(float64(baseDamage) * (1.0 + finalMods.FirstVolleyPct))
-			}
-
-			// Apply deterministic crit (counter-based)
-			if finalMods.CritPct > 0 {
-				critInterval := int(1.0 / finalMods.CritPct)
-				if critInterval > 0 && attacker.Battle.Counters.AttackCount%critInterval == 0 {
-					baseDamage = int(float64(baseDamage) * 1.5) // +50% crit damage
-				}
-			}
-
-			// Apply formation counter multiplier
-			damage := int(float64(baseDamage) * ctx.FormationCounter)
-			attackerTotalDamage += damage
-		}
-	}
-
+	attackerTotalDamage := calculateStackDamage(attacker, defender, now, attacker.Battle.Counters.AttackCount, ctx.FormationCounter)
 	result.AttackerDamageDealt = attackerTotalDamage
 
-	// Distribute and apply damage to defender (with weighted shields and evasion)
+	// Distribute and apply damage to defender (with weighted shields, shield pierce, and evasion)
 	defenderDamageMap := ctx.DistributeDamageToDefender(attackerTotalDamage)
-	
-	// Apply deterministic evasion (flat damage reduction) to each bucket
-	for shipType, bucketDamages := range defenderDamageMap {
-		for bucketIndex, damage := range bucketDamages {
-			// Get defender's effective evasion from modifiers
-			_, defMods := ComputeStackModifiers(
-				defender, shipType, bucketIndex, now, true, attacker.Formation.Type,
-			)
 
-			// Evasion as flat damage reduction (not dodge chance)
-			evasionMult := 1.0 - defMods.EvasionPct
-			if evasionMult < 0.25 { // Cap at 75% reduction
-				evasionMult = 0.25
-			}
-
-			defenderDamageMap[shipType][bucketIndex] = int(float64(damage) * evasionMult)
-		}
-	}
+	// Apply cross-stack modifiers: accuracy vs evasion (flat damage reduction)
+	applyAccuracyVsEvasion(defenderDamageMap, attacker, defender, now)
 
 	defenderShipsBeforeDamage := countShips(defender.Ships)
 	ApplyDamageToStack(defender, defenderDamageMap)
@@ -437,59 +411,13 @@ func ExecuteFormationBattleRound(attacker, defender *ShipStack, now time.Time) F
 
 		ctxReverse := NewCombatContext(defender, attacker, now)
 
-		defenderTotalDamage := 0
-		for shipType, buckets := range defender.Ships {
-			for bucketIndex, bucket := range buckets {
-				if bucket.Count == 0 {
-					continue
-				}
-
-				// Get effective stats and modifiers
-				_, defMods := ComputeStackModifiers(
-					defender, shipType, bucketIndex, now, true, attacker.Formation.Type,
-				)
-				blueprint := ShipBlueprints[shipType]
-				effectiveShip := ApplyStatModsToShip(blueprint, defMods)
-
-				baseDamage := effectiveShip.AttackDamage * bucket.Count
-
-				// Apply deterministic first strike bonus
-				if defender.Battle.Counters.AttackCount == 1 && defMods.FirstVolleyPct > 0 {
-					baseDamage = int(float64(baseDamage) * (1.0 + defMods.FirstVolleyPct))
-				}
-
-				// Apply deterministic crit
-				if defMods.CritPct > 0 {
-					critInterval := int(1.0 / defMods.CritPct)
-					if critInterval > 0 && defender.Battle.Counters.AttackCount%critInterval == 0 {
-						baseDamage = int(float64(baseDamage) * 1.5)
-					}
-				}
-
-				damage := int(float64(baseDamage) * ctxReverse.FormationCounter)
-				defenderTotalDamage += damage
-			}
-		}
-
+		defenderTotalDamage := calculateStackDamage(defender, attacker, now, defender.Battle.Counters.AttackCount, ctxReverse.FormationCounter)
 		result.DefenderDamageDealt = defenderTotalDamage
 
 		attackerDamageMap := ctxReverse.DistributeDamageToDefender(defenderTotalDamage)
 
-		// Apply evasion to attacker
-		for shipType, bucketDamages := range attackerDamageMap {
-			for bucketIndex, damage := range bucketDamages {
-				_, atkMods := ComputeStackModifiers(
-					attacker, shipType, bucketIndex, now, true, defender.Formation.Type,
-				)
-
-				evasionMult := 1.0 - atkMods.EvasionPct
-				if evasionMult < 0.25 {
-					evasionMult = 0.25
-				}
-
-				attackerDamageMap[shipType][bucketIndex] = int(float64(damage) * evasionMult)
-			}
-		}
+		// Apply cross-stack modifiers: accuracy vs evasion
+		applyAccuracyVsEvasion(attackerDamageMap, defender, attacker, now)
 
 		attackerShipsBeforeDamage := countShips(attacker.Ships)
 		ApplyDamageToStack(attacker, attackerDamageMap)
@@ -507,6 +435,125 @@ func ExecuteFormationBattleRound(attacker, defender *ShipStack, now time.Time) F
 	applyBioDebuffsPostCombat(attacker, defender, now)
 
 	return result
+}
+
+// calculateStackDamage computes total damage output for a stack with all modifiers applied.
+// Handles first strike, crit (with configurable crit damage), and formation counter.
+func calculateStackDamage(
+	attacker *ShipStack,
+	defender *ShipStack,
+	now time.Time,
+	attackCount int,
+	formationCounter float64,
+) int {
+	totalDamage := 0
+
+	for shipType, buckets := range attacker.Ships {
+		for bucketIndex, bucket := range buckets {
+			if bucket.Count == 0 {
+				continue
+			}
+
+			// Get effective stats and modifiers
+			_, finalMods := ComputeStackModifiers(
+				attacker, shipType, bucketIndex, now, true, defender.Formation.Type,
+			)
+			blueprint := ShipBlueprints[shipType]
+			effectiveShip := ApplyStatModsToShip(blueprint, finalMods)
+
+			baseDamage := effectiveShip.AttackDamage * bucket.Count
+
+			// Apply deterministic first strike bonus
+			if attackCount == 1 && finalMods.FirstVolleyPct > 0 {
+				baseDamage = int(float64(baseDamage) * (1.0 + finalMods.FirstVolleyPct))
+			}
+
+			// Apply deterministic crit (counter-based) with configurable crit damage
+			if finalMods.CritPct > 0 {
+				critInterval := int(1.0 / finalMods.CritPct)
+				if critInterval > 0 && attackCount%critInterval == 0 {
+					// Use CritDamagePct from mods
+					critDamage := finalMods.CritDamagePct
+
+					baseDamage = int(float64(baseDamage) * (1.0 + critDamage))
+				}
+			}
+
+			// Apply formation counter multiplier
+			damage := int(float64(baseDamage) * formationCounter)
+			totalDamage += damage
+		}
+	}
+
+	return totalDamage
+}
+
+// applyAccuracyVsEvasion applies cross-stack accuracy vs evasion mechanics.
+// Attacker's accuracy reduces defender's evasion. Negative accuracy (from debuffs) increases attacker's evasion.
+// Evasion is applied as flat damage reduction, capped at 75%.
+func applyAccuracyVsEvasion(
+	damageMap map[ShipType]map[int]int,
+	attacker *ShipStack,
+	defender *ShipStack,
+	now time.Time,
+) {
+	// Calculate attacker's average accuracy weighted by damage
+	attackerAccuracy := calculateAverageAccuracy(attacker, defender, now)
+
+	// Apply evasion reduction to each defender bucket
+	for shipType, bucketDamages := range damageMap {
+		for bucketIndex, damage := range bucketDamages {
+			// Get defender's effective evasion from modifiers
+			_, defMods := ComputeStackModifiers(
+				defender, shipType, bucketIndex, now, true, attacker.Formation.Type,
+			)
+
+			// Accuracy reduces target evasion
+			effectiveEvasion := defMods.EvasionPct - attackerAccuracy
+			if effectiveEvasion < 0 {
+				effectiveEvasion = 0 // Evasion cannot go negative
+			}
+
+			// Evasion as flat damage reduction (not dodge chance)
+			evasionMult := 1.0 - effectiveEvasion
+			if evasionMult < 0.25 { // Cap at 75% reduction
+				evasionMult = 0.25
+			}
+
+			damageMap[shipType][bucketIndex] = int(float64(damage) * evasionMult)
+		}
+	}
+}
+
+// calculateAverageAccuracy computes the attacker's average accuracy weighted by damage output.
+func calculateAverageAccuracy(attacker *ShipStack, defender *ShipStack, now time.Time) float64 {
+	totalDamage := 0
+	weightedAccuracy := 0.0
+
+	for shipType, buckets := range attacker.Ships {
+		for bucketIndex, bucket := range buckets {
+			if bucket.Count == 0 {
+				continue
+			}
+
+			_, finalMods := ComputeStackModifiers(
+				attacker, shipType, bucketIndex, now, true, defender.Formation.Type,
+			)
+			blueprint := ShipBlueprints[shipType]
+			effectiveShip := ApplyStatModsToShip(blueprint, finalMods)
+
+			damage := effectiveShip.AttackDamage * bucket.Count
+			totalDamage += damage
+
+			// Weight accuracy by damage contribution
+			weightedAccuracy += finalMods.AccuracyPct * float64(damage)
+		}
+	}
+
+	if totalDamage > 0 {
+		return weightedAccuracy / float64(totalDamage)
+	}
+	return 0.0
 }
 
 // applyBioDebuffsPostCombat applies outgoing bio debuffs from both stacks after combat.
