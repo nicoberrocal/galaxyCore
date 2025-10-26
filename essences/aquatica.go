@@ -24,6 +24,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnFormationChange,
 					Conditions: []Condition{
 						{ConditionType: ConditionFormationType, CompareOp: CompareEqual, Value: "changing"},
 					},
@@ -43,6 +44,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAbilityCast,
 					Conditions: []Condition{
 						{ConditionType: ConditionAbilityUsed, CompareOp: CompareEqual, Value: true},
 					},
@@ -62,6 +64,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAttackFromBehind,
 					Conditions: []Condition{
 						{ConditionType: ConditionAttackFromBehind, CompareOp: CompareEqual, Value: true},
 					},
@@ -86,6 +89,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnCriticalHit,
 					Conditions: []Condition{
 						{ConditionType: ConditionCriticalHit, CompareOp: CompareEqual, Value: true},
 					},
@@ -111,6 +115,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnCombatStart,
 					Conditions: []Condition{
 						{ConditionType: ConditionCombatState, CompareOp: CompareEqual, Value: "engaging"},
 					},
@@ -141,6 +146,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnMovementSprint,
 					Conditions: []Condition{
 						{ConditionType: ConditionMovementState, CompareOp: CompareEqual, Value: "sprinting_toward_enemy"},
 						{ConditionType: ConditionHasStatus, CompareOp: CompareEqual, Value: "active_ability"},
@@ -162,6 +168,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnKill,
 					Conditions: []Condition{
 						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0},
 					},
@@ -180,6 +187,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnConsecutiveAttacks,
 					Conditions: []Condition{
 						{ConditionType: ConditionConsecutiveAttacks, CompareOp: CompareEqual, Value: 4},
 					},
@@ -197,6 +205,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnSystemLost,
 					Conditions: []Condition{
 						{ConditionType: ConditionSystemLost, CompareOp: CompareEqual, Value: true},
 					},
@@ -223,7 +232,9 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareEqual, Value: 200},
 						{ConditionType: ConditionAllyCount, CompareOp: CompareGreater, Value: 0},
 					},
 					AoE: &AoETraitTarget{
@@ -245,6 +256,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
 						{ConditionType: ConditionAllyCount, CompareOp: CompareGreater, Value: 0},
 					},
@@ -266,9 +278,11 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
 						{ConditionType: ConditionFormationType, CompareOp: CompareEqual, Value: "same"},
 						{ConditionType: ConditionMovementState, CompareOp: CompareEqual, Value: "moving"},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 500},
 					},
 					AoE: &AoETraitTarget{
 						Radius:     500,
@@ -289,15 +303,15 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
-						{ConditionType: ConditionAllyNearby, CompareOp: CompareEqual, Value: true},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 250},
 						{ConditionType: ConditionHPPercent, CompareOp: CompareLess, Value: 1.0}, // Ally has lower HP
 					},
 					AoE: &AoETraitTarget{
 						Radius:     250,
 						TargetType: AoEAllies,
 						MaxTargets: 1, // Only the lowest HP ally
-						Origin:     AoESelf,
 					},
 					PrimaryEffect: &ships.StatMods{
 						AtCombatRegenPct: 0.15, // +15% combat regen (healing)
@@ -315,6 +329,7 @@ func BuildAquatica() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
 						{ConditionType: ConditionDistance, CompareOp: CompareGreater, Value: 800},
 						{ConditionType: ConditionAllyCount, CompareOp: CompareGreater, Value: 0},

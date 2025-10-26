@@ -170,6 +170,8 @@ const (
 	ConditionAllyInNetwork         ConditionType = "ally_in_network"
 	ConditionTargetIsAttackingAlly ConditionType = "target_is_attacking_ally"
 	ConditionInfectedTargetNearby  ConditionType = "infected_target_nearby"
+	ConditionEnemyNearby           ConditionType = "enemy_nearby"
+	ConditionNearbyDistance        ConditionType = "nearby_distance"
 )
 
 type ComparisonOp string
@@ -494,6 +496,25 @@ func IsConditionMet(condition Condition, eventData interface{}) bool {
 			// Placeholder - would need actual infected target proximity detection
 			// For now, return true if distance is reasonable (<= 300u as commonly used)
 			return value <= 300
+		}
+	case ConditionEnemyNearby:
+		if value, ok := condition.Value.(int); ok {
+			// Placeholder - would need actual enemy proximity detection
+			// For now, return true if distance is reasonable (<= 200u as commonly used)
+			return value <= 200
+		}
+	case ConditionNearbyDistance:
+		if value, ok := condition.Value.(int); ok {
+			// Placeholder - would need actual distance detection
+			// For now, return true if distance is reasonable based on comparison
+			switch condition.CompareOp {
+			case CompareGreater:
+				return value > 0 // Placeholder logic
+			case CompareLessEq:
+				return value <= 500 // Common max distance for terrain effects
+			default:
+				return true
+			}
 		}
 	}
 	return false

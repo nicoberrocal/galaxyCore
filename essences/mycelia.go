@@ -161,6 +161,7 @@ func BuildMycelia() *BioTree {
 					Trigger:    TriggerOnEnemyDeath,
 					Conditions: []Condition{
 						{ConditionType: ConditionTargetInfected, CompareOp: CompareEqual, Value: true},
+						{ConditionType: ConditionEnemyNearby, CompareOp: CompareLessEq, Value: 200},
 					},
 					Spawn: &SpawnEffect{
 						SpawnType: SpawnSporeHusk,
@@ -202,6 +203,7 @@ func BuildMycelia() *BioTree {
 					Trigger:    TriggerOnActiveAbility,
 					Conditions: []Condition{
 						{ConditionType: ConditionAbilityUsed, CompareOp: CompareEqual, Value: true},
+						{ConditionType: ConditionInfectedTargetNearby, CompareOp: CompareLessEq, Value: 400},
 					},
 					AoE: &AoETraitTarget{
 						Radius:     400,
@@ -227,6 +229,7 @@ func BuildMycelia() *BioTree {
 					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
 						{ConditionType: ConditionAllyInNetwork, CompareOp: CompareEqual, Value: true},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 300},
 					},
 					PrimaryEffect: &ships.StatMods{
 						AtCombatRegenPct: 0.1,
@@ -260,9 +263,9 @@ func BuildMycelia() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
-					Trigger:    TriggerOnAllyDeath,
+					Trigger:    TriggerOnEnemyDeath,
 					Conditions: []Condition{
-						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0},
+						{ConditionType: ConditionAllyInNetwork, CompareOp: CompareEqual, Value: true},
 					},
 					PrimaryEffect: &ships.StatMods{
 						HPPct: 0.03,
@@ -282,6 +285,7 @@ func BuildMycelia() *BioTree {
 					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
 						{ConditionType: ConditionAllyCount, CompareOp: CompareGreaterEq, Value: 3},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 300},
 					},
 					Spawn: &SpawnEffect{
 						SpawnType: SpawnOvergrowth,

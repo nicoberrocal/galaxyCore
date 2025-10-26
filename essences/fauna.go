@@ -21,6 +21,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnEnemyEnterRange,
 					Conditions: []Condition{
 						{ConditionType: ConditionEnemyCount, CompareOp: CompareGreater, Value: 0},
 					},
@@ -39,6 +40,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnCombatStart,
 					Conditions: []Condition{
 						{ConditionType: ConditionCombatState, CompareOp: CompareEqual, Value: "engaging"},
 					},
@@ -56,8 +58,10 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyDamaged,
 					Conditions: []Condition{
 						{ConditionType: ConditionTargetIsAttackingAlly, CompareOp: CompareEqual, Value: true},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 200},
 					},
 					Cooldown: 10, // ticks
 				},
@@ -72,6 +76,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnEnemyDeath,
 					Conditions: []Condition{
 						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0},
 					},
@@ -88,6 +93,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnSuccessfulHit,
 					Conditions: []Condition{
 						{ConditionType: ConditionCriticalHit, CompareOp: CompareEqual, Value: true},
 					},
@@ -109,8 +115,10 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyNearby,
 					Conditions: []Condition{
 						{ConditionType: ConditionAllyCount, CompareOp: CompareGreater, Value: 0},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 150},
 					},
 					PrimaryEffect: &ships.StatMods{Damage: ships.DamageMods{LaserPct: 0.02, NuclearPct: 0.02, AntimatterPct: 0.02}, EvasionPct: 0.01},
 				},
@@ -125,6 +133,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAttackFromBehind,
 					Conditions: []Condition{
 						{ConditionType: ConditionAttackFromBehind, CompareOp: CompareEqual, Value: true},
 					},
@@ -138,6 +147,16 @@ func BuildFauna() *BioTree {
 			Title:       "Communal Defense",
 			Description: "When an enemy attack will kill an allied stack, the highest allied HP stack in 300u receives the damage instead. The stack that received the attack is cleansed of all debuffs. Cooldown 15 ticks, shared by all allied ships in the radius.",
 			Path:        string(ships.PackHunter),
+			ComplexEffects: []ComplexEffect{
+				{
+					EffectType: ComplexConditional,
+					Trigger:    TriggerOnAllyDamaged,
+					Conditions: []Condition{
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 300},
+					},
+					PrimaryEffect: &ships.StatMods{Damage: ships.DamageMods{LaserPct: 0.15, NuclearPct: 0.15, AntimatterPct: 0.15}},
+				},
+			},
 		},
 		// 4. Hunting Cry: AoE buff on combat start
 		{
@@ -148,6 +167,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnCombatStart,
 					Conditions: []Condition{
 						{ConditionType: ConditionCombatState, CompareOp: CompareEqual, Value: "engaging"},
 					},
@@ -165,6 +185,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnEnemyDeath,
 					Conditions: []Condition{
 						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0},
 					},
@@ -185,8 +206,10 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnShipDeathInArea,
 					Conditions: []Condition{
 						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 200},
 					},
 					PrimaryEffect: &ships.StatMods{HPPct: 0.05},
 				},
@@ -201,6 +224,7 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnSuccessfulHit,
 					Conditions: []Condition{
 						{ConditionType: ConditionCriticalHit, CompareOp: CompareEqual, Value: true},
 					},
@@ -217,8 +241,10 @@ func BuildFauna() *BioTree {
 			ComplexEffects: []ComplexEffect{
 				{
 					EffectType: ComplexConditional,
+					Trigger:    TriggerOnShipDeathInArea,
 					Conditions: []Condition{
 						{ConditionType: ConditionKillCount, CompareOp: CompareGreater, Value: 0},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 500},
 					},
 					PrimaryEffect: &ships.StatMods{AtCombatRegenPct: 0.02, AbilityCooldownPct: -0.02},
 					Duration:      10, // ticks
@@ -231,6 +257,15 @@ func BuildFauna() *BioTree {
 			Title:       "Parasitic Latches",
 			Description: "When you damage an enemy ship, you siphon a small amount of energy from them, reducing ability cooldown recovery and granting it to you. Drains diminish by 25% per tick",
 			Path:        string(ships.Scavengers),
+			ComplexEffects: []ComplexEffect{
+				{
+					EffectType:    ComplexConditional,
+					Trigger:       TriggerOnSuccessfulHit,
+					Conditions:    []Condition{},
+					PrimaryEffect: &ships.StatMods{AtCombatRegenPct: 0.02, AbilityCooldownPct: -0.02},
+					Duration:      10, // ticks
+				},
+			},
 		},
 		// 5. Winged Brother: Increased visibility and detection
 		{
@@ -239,6 +274,14 @@ func BuildFauna() *BioTree {
 			Description: "You have +10× visibility range and detect destroyed structures and derelict ships globally",
 			Path:        string(ships.Scavengers),
 			Effect:      ships.StatMods{VisibilityDelta: 1000},
+			ComplexEffects: []ComplexEffect{
+				{
+					EffectType:    ComplexConditional,
+					Conditions:    []Condition{},
+					PrimaryEffect: &ships.StatMods{AtCombatRegenPct: 0.02, AbilityCooldownPct: -0.02},
+					Duration:      10, // ticks
+				},
+			},
 		},
 	}
 

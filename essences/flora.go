@@ -40,10 +40,8 @@ func BuildFlora() *BioTree {
 				{
 					EffectType: ComplexConditional,
 					Trigger:    TriggerOnSuccessfulHit,
-					Conditions: []Condition{
-						{ConditionType: ConditionCriticalHit, CompareOp: CompareEqual, Value: true},
-					},
-					Spawn: &SpawnEffect{SpawnType: SpawnAcidEffect, Duration: 5},
+					Conditions: []Condition{},
+					Spawn:      &SpawnEffect{SpawnType: SpawnAcidEffect, Duration: 5},
 				},
 			},
 		},
@@ -70,6 +68,14 @@ func BuildFlora() *BioTree {
 			Description: "Formation countering bonuses are increased by 20%.",
 			Path:        string(ships.Carnivora),
 			Effect:      ships.StatMods{FormationSyncBonus: 0.2},
+			ComplexEffects: []ComplexEffect{
+				{
+					EffectType:    ComplexConditional,
+					Trigger:       TriggerOnCombatStart,
+					Conditions:    []Condition{},
+					PrimaryEffect: &ships.StatMods{FormationSyncBonus: 0.2},
+				},
+			},
 		},
 		// 5. Adaptive Apex: Resistance gain on kill
 		{
@@ -102,7 +108,9 @@ func BuildFlora() *BioTree {
 					EffectType: ComplexConditional,
 					Trigger:    TriggerOnNearAsteroid,
 					Conditions: []Condition{
-						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "asteroid"}},
+						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "asteroid"},
+						{ConditionType: ConditionNearbyDistance, CompareOp: CompareLessEq, Value: 500},
+					},
 					PrimaryEffect: &ships.StatMods{HPPct: 0.01, LaserShieldDelta: 1, NuclearShieldDelta: 1, AntimatterShieldDelta: 1},
 				},
 			},
@@ -125,7 +133,7 @@ func BuildFlora() *BioTree {
 					EffectType: ComplexConditional,
 					Trigger:    TriggerOnTick,
 					Conditions: []Condition{
-						{ConditionType: ConditionAllyNearby, CompareOp: CompareEqual, Value: true}},
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 200}},
 					PrimaryEffect: &ships.StatMods{Damage: ships.DamageMods{LaserPct: 1, NuclearPct: 1, AntimatterPct: 1}},
 					Duration:      1,
 				},
@@ -143,6 +151,7 @@ func BuildFlora() *BioTree {
 					Trigger:    TriggerOnNearStar,
 					Conditions: []Condition{
 						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "star"},
+						{ConditionType: ConditionNearbyDistance, CompareOp: CompareLessEq, Value: 500},
 						{ConditionType: ConditionIsAttacked, CompareOp: CompareEqual, Value: true}},
 					PrimaryEffect: &ships.StatMods{HPPct: 0.05},
 				},
@@ -203,7 +212,8 @@ func BuildFlora() *BioTree {
 					EffectType: ComplexConditional,
 					Trigger:    TriggerOnNearStar,
 					Conditions: []Condition{
-						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "star"}},
+						{ConditionType: ConditionTerrainNear, CompareOp: CompareEqual, Value: "star"},
+						{ConditionType: ConditionNearbyDistance, CompareOp: CompareLessEq, Value: 500}},
 					PrimaryEffect: &ships.StatMods{AbilityCooldownPct: -0.01},
 					AoE:           &AoETraitTarget{Radius: 500, TargetType: AoEAllies},
 				},
@@ -215,6 +225,17 @@ func BuildFlora() *BioTree {
 			Title:       "Sap Flow",
 			Description: "When within 200u of an ally below 40% HP, 30% of overhealing you receive becomes a temporary damage shield. Attacks on damage dont trigger crits nor attack-based-healing.",
 			Path:        string(ships.VerdantBloom),
+			ComplexEffects: []ComplexEffect{
+				{
+					EffectType: ComplexConditional,
+					Trigger:    TriggerOnTick,
+					Conditions: []Condition{
+						{ConditionType: ConditionAllyNearby, CompareOp: CompareLessEq, Value: 200},
+						{ConditionType: ConditionHPPercent, CompareOp: CompareLess, Value: 0.4},
+					},
+					PrimaryEffect: &ships.StatMods{GlobalDefensePct: 0.3}, // 30% overhealing to shield (using defense as placeholder)
+				},
+			},
 		},
 		// 4. Pollen Cloud: AoE regen buff on ability use
 		{
