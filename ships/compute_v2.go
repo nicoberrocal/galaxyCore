@@ -563,6 +563,76 @@ func ComputeEffectiveSpeedForTarget(
 	return finalSpeed
 }
 
+// ComputeEffectiveAttackRangeForTarget returns effective attack range when acting against a specific target stack.
+// It is identical to a hypothetical ComputeEffectiveAttackRange except inbound ally buffs are filtered for the given target.
+func ComputeEffectiveAttackRangeForTarget(
+	stack *ShipStack,
+	shipType ShipType,
+	bucketIndex int,
+	targetID bson.ObjectID,
+	now time.Time,
+) int {
+	blueprint, ok := ShipBlueprints[shipType]
+	if !ok {
+		return 0
+	}
+
+	baseRange := blueprint.AttackRange
+	rangeDelta := 0
+
+	// 1. Gems
+	loadout := stack.GetOrInitLoadout(shipType)
+	for _, gem := range loadout.Sockets {
+		rangeDelta += gem.Mods.AttackRangeDelta
+	}
+
+	// 2. Formation
+	if stack.Formation != nil {
+		formation := stack.Formation.ToFormation()
+		if spec, ok := FormationCatalog[formation.Type]; ok {
+			position := stack.GetFormationPosition(shipType, bucketIndex)
+			if posMods, ok := spec.PositionBonuses[position]; ok {
+				rangeDelta += posMods.AttackRangeDelta
+			}
+		}
+	}
+
+	// 3. Anchored (no penalty for attack range)
+	// Anchored ships maintain their attack range
+
+	// 4. Bio layers and inbound buffs filtered by target
+	if stack.Bio != nil {
+		if BioPopulateFromPath != nil {
+			if stack.Bio.ActivePath != string(stack.BioTreePath) {
+				stack.BuildBioFromCurrentPath(now)
+			}
+		}
+		layers := stack.Bio.CollectActiveLayersForShip(shipType, now)
+		for _, layer := range layers {
+			rangeDelta += layer.Mods.AttackRangeDelta
+		}
+		for _, b := range stack.Bio.CollectInboundBuffsForTarget(targetID, now) {
+			rangeDelta += b.Mods.AttackRangeDelta
+		}
+	}
+
+	// 5. Abilities
+	if stack.Ability != nil {
+		for _, abilityState := range *stack.Ability {
+			if abilityState.IsActive && abilityState.ShipType == shipType {
+				mods := GetAbilityMods(AbilityID(abilityState.Ability))
+				rangeDelta += mods.AttackRangeDelta
+			}
+		}
+	}
+
+	finalRange := baseRange + rangeDelta
+	if finalRange < 0 {
+		finalRange = 0 // Range cannot be negative
+	}
+	return finalRange
+}
+
 // FilterAbilitiesForMode returns the abilities usable in the stack's current RoleMode.
 // It takes the ship's built-in abilities, adds GemWord-granted abilities, then
 // applies Disabled/Enabled lists from RoleModesCatalog.
