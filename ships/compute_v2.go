@@ -633,6 +633,34 @@ func ComputeEffectiveAttackRangeForTarget(
 	return finalRange
 }
 
+// GetStackAttackRanges returns effective attack ranges for all ship types in a stack
+// when acting against a specific target. This is a convenience wrapper around ComputeEffectiveAttackRangeForTarget.
+//
+// Performance note: This iterates over stack.Ships and calls the per-ship method for each type.
+// The overhead is negligible (O(n) where n = number of ship types, typically < 10).
+//
+// Example usage for range checks:
+//
+//	ranges := GetStackAttackRanges(stack, targetID, time.Now())
+//	for shipType, attackRange := range ranges {
+//	    if distance <= attackRange {
+//	        // Ship type can attack target
+//	    }
+//	}
+func GetStackAttackRanges(
+	stack *ShipStack,
+	targetID bson.ObjectID,
+	now time.Time,
+) map[ShipType]int {
+	ranges := make(map[ShipType]int, len(stack.Ships))
+
+	for shipType := range stack.Ships {
+		ranges[shipType] = ComputeEffectiveAttackRangeForTarget(stack, shipType, 0, targetID, now)
+	}
+
+	return ranges
+}
+
 // FilterAbilitiesForMode returns the abilities usable in the stack's current RoleMode.
 // It takes the ship's built-in abilities, adds GemWord-granted abilities, then
 // applies Disabled/Enabled lists from RoleModesCatalog.
