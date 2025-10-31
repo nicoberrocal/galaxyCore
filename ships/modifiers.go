@@ -60,6 +60,7 @@ type StatMods struct {
 	SpeedDelta        int        // +/- to base Speed
 	VisibilityDelta   int        // +/- to base VisibilityRange
 	AttackRangeDelta  int        // +/- to base AttackRange
+	AttackRangePct    float64    // % multiplier to attack range (e.g., -0.30 = 0.7x, 0.20 = 1.2x)
 
 	LaserShieldDelta      int // +/- to LaserShield
 	NuclearShieldDelta    int // +/- to NuclearShield
@@ -110,7 +111,7 @@ func (d DamageMods) IsZero() bool { return fz(d.LaserPct) && fz(d.NuclearPct) &&
 
 func (m StatMods) IsZero() bool {
 	if !m.Damage.IsZero() { return false }
-	if !fz(m.AttackIntervalPct) || m.SpeedDelta != 0 || m.VisibilityDelta != 0 || m.AttackRangeDelta != 0 { return false }
+	if !fz(m.AttackIntervalPct) || m.SpeedDelta != 0 || m.VisibilityDelta != 0 || m.AttackRangeDelta != 0 || !fz(m.AttackRangePct) { return false }
 	if m.LaserShieldDelta != 0 || m.NuclearShieldDelta != 0 || m.AntimatterShieldDelta != 0 { return false }
 	if !fz(m.BucketHPPct) || !fz(m.OutOfCombatRegenPct) || !fz(m.AtCombatRegenPct) || !fz(m.AbilityCooldownPct) { return false }
 	if !fz(m.TransportCapacityPct) || !fz(m.WarpChargePct) || !fz(m.WarpScatterPct) || !fz(m.InterdictionResistPct) { return false }
@@ -130,6 +131,7 @@ func CombineMods(a, b StatMods) StatMods {
 	a.SpeedDelta += b.SpeedDelta
 	a.VisibilityDelta += b.VisibilityDelta
 	a.AttackRangeDelta += b.AttackRangeDelta
+	a.AttackRangePct += b.AttackRangePct
 
 	a.LaserShieldDelta += b.LaserShieldDelta
 	a.NuclearShieldDelta += b.NuclearShieldDelta
@@ -182,6 +184,7 @@ func (m StatMods) MarshalJSON() ([]byte, error) {
 	if m.SpeedDelta != 0 { obj["SpeedDelta"] = m.SpeedDelta }
 	if m.VisibilityDelta != 0 { obj["VisibilityDelta"] = m.VisibilityDelta }
 	if m.AttackRangeDelta != 0 { obj["AttackRangeDelta"] = m.AttackRangeDelta }
+	if !fz(m.AttackRangePct) { obj["AttackRangePct"] = m.AttackRangePct }
 	if m.LaserShieldDelta != 0 { obj["LaserShieldDelta"] = m.LaserShieldDelta }
 	if m.NuclearShieldDelta != 0 { obj["NuclearShieldDelta"] = m.NuclearShieldDelta }
 	if m.AntimatterShieldDelta != 0 { obj["AntimatterShieldDelta"] = m.AntimatterShieldDelta }
@@ -225,6 +228,7 @@ func (m StatMods) MarshalBSON() ([]byte, error) {
 	if m.SpeedDelta != 0 { doc["SpeedDelta"] = m.SpeedDelta }
 	if m.VisibilityDelta != 0 { doc["VisibilityDelta"] = m.VisibilityDelta }
 	if m.AttackRangeDelta != 0 { doc["AttackRangeDelta"] = m.AttackRangeDelta }
+	if !fz(m.AttackRangePct) { doc["AttackRangePct"] = m.AttackRangePct }
 	if m.LaserShieldDelta != 0 { doc["LaserShieldDelta"] = m.LaserShieldDelta }
 	if m.NuclearShieldDelta != 0 { doc["NuclearShieldDelta"] = m.NuclearShieldDelta }
 	if m.AntimatterShieldDelta != 0 { doc["AntimatterShieldDelta"] = m.AntimatterShieldDelta }

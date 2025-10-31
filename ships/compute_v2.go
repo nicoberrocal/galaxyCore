@@ -563,102 +563,156 @@ func ComputeEffectiveSpeedForTarget(
 	return finalSpeed
 }
 
-// ComputeEffectiveAttackRangeForTarget returns effective attack range when acting against a specific target stack.
-// It is identical to a hypothetical ComputeEffectiveAttackRange except inbound ally buffs are filtered for the given target.
-func ComputeEffectiveAttackRangeForTarget(
-	stack *ShipStack,
-	shipType ShipType,
-	bucketIndex int,
-	targetID bson.ObjectID,
-	now time.Time,
-) int {
-	blueprint, ok := ShipBlueprints[shipType]
+// ComputeStackAttackRange calculates the stack-wide effective attack range using a weighted formula.
+// Formula: R = sum(r * m * w) / sum(w)
+// Where:
+//   - r = ship type base attack range (from blueprint)
+//   - m = modifiers from formation position, gems, bio, abilities (AttackRangeDelta + AttackRangePct)
+//   - w = weight = ship type attack damage * quantity in assignment
+//
+// This makes high-power ships dominate the stack's effective range.
+// The result is cached in stack.EffectiveAttackRange.
+//
+// Example calculation:
+//
+//	Ghost (3 range, 48 dmg, 1 unit, flank 0.8x): (3 * 0.8 * 48) = 115.2
+//	Drone (1 range, 8 dmg, 5 units, support 1.1x): (1 * 1.1 * 40) = 44
+//	Scout (2 range, 12 dmg, 1 unit, flank 0.8x): (2 * 0.8 * 12) = 19.2
+//	Carrier (4 range, 75 dmg, 1 unit, back 1.2x): (4 * 1.2 * 75) = 360
+//	Fighter (3 range, 28 dmg, 1 unit, front 0.7x): (3 * 0.7 * 28) = 58.8
+//	Total weighted range: 597.2, Total weight: 203 → R = 2.94 ≈ 3
+func ComputeStackAttackRange(stack *ShipStack, now time.Time) int {
+	if stack.Formation == nil {
+		// No formation: use simple average of all ship types
+		return computeStackAttackRangeNoFormation(stack)
+	}
+
+	formation := stack.Formation.ToFormation()
+	if len(formation.Assignments) == 0 {
+		return computeStackAttackRangeNoFormation(stack)
+	}
+
+	spec, ok := FormationCatalog[formation.Type]
 	if !ok {
-		return 0
+		return computeStackAttackRangeNoFormation(stack)
 	}
 
-	baseRange := blueprint.AttackRange
-	rangeDelta := 0
+	totalWeightedRange := 0.0
+	totalWeight := 0.0
 
-	// 1. Gems
-	loadout := stack.GetOrInitLoadout(shipType)
-	for _, gem := range loadout.Sockets {
-		rangeDelta += gem.Mods.AttackRangeDelta
-	}
+	// Iterate over formation assignments to get position-specific modifiers
+	for _, assignment := range formation.Assignments {
+		if assignment.Count == 0 {
+			continue
+		}
 
-	// 2. Formation
-	if stack.Formation != nil {
-		formation := stack.Formation.ToFormation()
-		if spec, ok := FormationCatalog[formation.Type]; ok {
-			position := stack.GetFormationPosition(shipType, bucketIndex)
-			if posMods, ok := spec.PositionBonuses[position]; ok {
-				rangeDelta += posMods.AttackRangeDelta
+		blueprint, ok := ShipBlueprints[assignment.ShipType]
+		if !ok {
+			continue
+		}
+
+		// Base attack range from blueprint
+		baseRange := float64(blueprint.AttackRange)
+
+		// Get position bonuses
+		positionMods := ZeroMods()
+		if posMods, exists := spec.PositionBonuses[assignment.Position]; exists {
+			positionMods = posMods
+		}
+
+		// Get loadout modifiers (gems, bio, abilities)
+		loadout := stack.GetOrInitLoadout(assignment.ShipType)
+		loadoutMods := ZeroMods()
+		
+		// Gems
+		for _, gem := range loadout.Sockets {
+			loadoutMods = CombineMods(loadoutMods, gem.Mods)
+		}
+
+		// Bio effects
+		if stack.Bio != nil {
+			if BioPopulateFromPath != nil {
+				if stack.Bio.ActivePath != string(stack.BioTreePath) {
+					stack.BuildBioFromCurrentPath(now)
+				}
+			}
+			layers := stack.Bio.CollectActiveLayersForShip(assignment.ShipType, now)
+			for _, layer := range layers {
+				loadoutMods = CombineMods(loadoutMods, layer.Mods)
 			}
 		}
-	}
 
-	// 3. Anchored (no penalty for attack range)
-	// Anchored ships maintain their attack range
-
-	// 4. Bio layers and inbound buffs filtered by target
-	if stack.Bio != nil {
-		if BioPopulateFromPath != nil {
-			if stack.Bio.ActivePath != string(stack.BioTreePath) {
-				stack.BuildBioFromCurrentPath(now)
+		// Abilities
+		if stack.Ability != nil {
+			for _, abilityState := range *stack.Ability {
+				if abilityState.IsActive && abilityState.ShipType == assignment.ShipType {
+					abilityMods := GetAbilityMods(AbilityID(abilityState.Ability))
+					loadoutMods = CombineMods(loadoutMods, abilityMods)
+				}
 			}
 		}
-		layers := stack.Bio.CollectActiveLayersForShip(shipType, now)
-		for _, layer := range layers {
-			rangeDelta += layer.Mods.AttackRangeDelta
+
+		// Combine all modifiers
+		combinedMods := CombineMods(positionMods, loadoutMods)
+
+		// Apply modifiers: m = (baseRange + delta) * (1 + pct)
+		modifiedRange := (baseRange + float64(combinedMods.AttackRangeDelta)) * (1.0 + combinedMods.AttackRangePct)
+		if modifiedRange < 0 {
+			modifiedRange = 0
 		}
-		for _, b := range stack.Bio.CollectInboundBuffsForTarget(targetID, now) {
-			rangeDelta += b.Mods.AttackRangeDelta
-		}
+
+		// Weight: ship damage * quantity
+		weight := float64(blueprint.AttackDamage * assignment.Count)
+
+		totalWeightedRange += modifiedRange * weight
+		totalWeight += weight
 	}
 
-	// 5. Abilities
-	if stack.Ability != nil {
-		for _, abilityState := range *stack.Ability {
-			if abilityState.IsActive && abilityState.ShipType == shipType {
-				mods := GetAbilityMods(AbilityID(abilityState.Ability))
-				rangeDelta += mods.AttackRangeDelta
-			}
-		}
+	if totalWeight == 0 {
+		return computeStackAttackRangeNoFormation(stack)
 	}
 
-	finalRange := baseRange + rangeDelta
-	if finalRange < 0 {
-		finalRange = 0 // Range cannot be negative
+	effectiveRange := int(totalWeightedRange / totalWeight)
+	if effectiveRange < 1 {
+		effectiveRange = 1 // Minimum range of 1
 	}
-	return finalRange
+
+	return effectiveRange
 }
 
-// GetStackAttackRanges returns effective attack ranges for all ship types in a stack
-// when acting against a specific target. This is a convenience wrapper around ComputeEffectiveAttackRangeForTarget.
-//
-// Performance note: This iterates over stack.Ships and calls the per-ship method for each type.
-// The overhead is negligible (O(n) where n = number of ship types, typically < 10).
-//
-// Example usage for range checks:
-//
-//	ranges := GetStackAttackRanges(stack, targetID, time.Now())
-//	for shipType, attackRange := range ranges {
-//	    if distance <= attackRange {
-//	        // Ship type can attack target
-//	    }
-//	}
-func GetStackAttackRanges(
-	stack *ShipStack,
-	targetID bson.ObjectID,
-	now time.Time,
-) map[ShipType]int {
-	ranges := make(map[ShipType]int, len(stack.Ships))
+// computeStackAttackRangeNoFormation calculates attack range when no formation is present.
+// Uses simple damage-weighted average across all ship types.
+func computeStackAttackRangeNoFormation(stack *ShipStack) int {
+	totalWeightedRange := 0.0
+	totalWeight := 0.0
 
-	for shipType := range stack.Ships {
-		ranges[shipType] = ComputeEffectiveAttackRangeForTarget(stack, shipType, 0, targetID, now)
+	for shipType, buckets := range stack.Ships {
+		blueprint, ok := ShipBlueprints[shipType]
+		if !ok {
+			continue
+		}
+
+		for _, bucket := range buckets {
+			if bucket.Count == 0 {
+				continue
+			}
+
+			weight := float64(blueprint.AttackDamage * bucket.Count)
+			totalWeightedRange += float64(blueprint.AttackRange) * weight
+			totalWeight += weight
+		}
 	}
 
-	return ranges
+	if totalWeight == 0 {
+		return 1
+	}
+
+	effectiveRange := int(totalWeightedRange / totalWeight)
+	if effectiveRange < 1 {
+		effectiveRange = 1
+	}
+
+	return effectiveRange
 }
 
 // FilterAbilitiesForMode returns the abilities usable in the stack's current RoleMode.

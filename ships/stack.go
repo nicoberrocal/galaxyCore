@@ -68,6 +68,9 @@ type ShipStack struct {
 	FormationReconfigUntil time.Time                            `bson:"formationReconfigUntil,omitempty" json:"formationReconfigUntil,omitempty"`
 	SavedFormations        map[FormationType]FormationWithSlots `bson:"savedFormations,omitempty" json:"savedFormations,omitempty"`
 
+	// Computed stack-wide stats (cached for performance)
+	EffectiveAttackRange int `bson:"effectiveAttackRange,omitempty" json:"effectiveAttackRange,omitempty"` // Weighted attack range from formation composition
+
 	// Current activity and movement
 	Movement    []*MovementState `bson:"movement,omitempty" json:"movement,omitempty"`
 	Battle      *BattleState     `bson:"battle,omitempty" json:"battle,omitempty"`       // Combat state for free space battles

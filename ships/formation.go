@@ -234,14 +234,17 @@ var FormationCatalog = map[FormationType]FormationSpec{
 			PositionFront: {
 				LaserShieldDelta: 1,
 				Damage:           DamageMods{LaserPct: 0.10, NuclearPct: 0.10, AntimatterPct: 0.10},
+				AttackRangePct:   -0.30, // 0.7x multiplier
 			},
 			PositionFlank: {
-				SpeedDelta: 1,
-				CritPct:    0.05,
+				SpeedDelta:     1,
+				CritPct:        0.05,
+				AttackRangePct: -0.20, // 0.8x multiplier
 			},
 			PositionBack: {
 				AttackRangeDelta: 1,
 				VisibilityDelta:  1,
+				AttackRangePct:   0.20, // 1.2x multiplier
 			},
 		},
 		SpecialProperties: []string{"frontal_strength", "flank_vulnerable"},
@@ -257,21 +260,25 @@ var FormationCatalog = map[FormationType]FormationSpec{
 				LaserShieldDelta:      1,
 				NuclearShieldDelta:    1,
 				AntimatterShieldDelta: 1,
+				AttackRangePct:        -0.30, // 0.7x multiplier
 			},
 			PositionFlank: {
 				LaserShieldDelta:      1,
 				NuclearShieldDelta:    1,
 				AntimatterShieldDelta: 1,
+				AttackRangePct:        -0.20, // 0.8x multiplier
 			},
 			PositionBack: {
 				LaserShieldDelta:      1,
 				NuclearShieldDelta:    1,
 				AntimatterShieldDelta: 1,
+				AttackRangePct:        0.20, // 1.2x multiplier
 			},
 			PositionSupport: {
 				LaserShieldDelta:      1,
 				NuclearShieldDelta:    1,
 				AntimatterShieldDelta: 1,
+				AttackRangePct:        0.10, // 1.1x multiplier
 			},
 		},
 		SpecialProperties: []string{"even_distribution", "siege_resistant"},
@@ -286,10 +293,12 @@ var FormationCatalog = map[FormationType]FormationSpec{
 			PositionFront: {
 				Damage:             DamageMods{LaserPct: 0.25, NuclearPct: 0.25, AntimatterPct: 0.25},
 				NuclearShieldDelta: 1,
+				AttackRangePct:     -0.30, // 0.7x multiplier
 			},
 			PositionSupport: {
 				BucketHPPct:        -0.20,
 				AbilityCooldownPct: -0.30,
+				AttackRangePct:     0.10, // 1.1x multiplier
 			},
 		},
 		SpecialProperties: []string{"fast_reconfig", "aggressive"},
@@ -302,13 +311,15 @@ var FormationCatalog = map[FormationType]FormationSpec{
 		ReconfigureTime: 90,
 		PositionBonuses: map[FormationPosition]StatMods{
 			PositionFlank: {
-				SpeedDelta:  2,
-				AccuracyPct: 0.15,
-				Damage:      DamageMods{LaserPct: 0.20, NuclearPct: 0.20, AntimatterPct: 0.20},
+				SpeedDelta:     2,
+				AccuracyPct:    0.15,
+				Damage:         DamageMods{LaserPct: 0.20, NuclearPct: 0.20, AntimatterPct: 0.20},
+				AttackRangePct: -0.20, // 0.8x multiplier
 			},
 			PositionFront: {
-				Damage:      DamageMods{LaserPct: 0.10, NuclearPct: 0.10, AntimatterPct: 0.10},
-				BucketHPPct: -0.10,
+				Damage:         DamageMods{LaserPct: 0.10, NuclearPct: 0.10, AntimatterPct: 0.10},
+				BucketHPPct:    -0.10,
+				AttackRangePct: -0.30, // 0.7x multiplier
 			},
 		},
 		SpecialProperties: []string{"mobile", "hit_and_run"},
@@ -323,14 +334,17 @@ var FormationCatalog = map[FormationType]FormationSpec{
 			PositionFront: {
 				LaserShieldDelta: 1,
 				Damage:           DamageMods{LaserPct: 0.12, NuclearPct: 0.12, AntimatterPct: 0.12},
+				AttackRangePct:   -0.30, // 0.7x multiplier
 			},
 			PositionFlank: {
-				SpeedDelta: 1,
-				CritPct:    0.08,
+				SpeedDelta:     1,
+				CritPct:        0.08,
+				AttackRangePct: -0.20, // 0.8x multiplier
 			},
 			PositionBack: {
 				AttackRangeDelta: 1,
 				AccuracyPct:      0.05,
+				AttackRangePct:   0.20, // 1.2x multiplier
 			},
 		},
 		SpecialProperties: []string{"asymmetric", "concentrated_defense"},
@@ -348,9 +362,11 @@ var FormationCatalog = map[FormationType]FormationSpec{
 				AntimatterShieldDelta: 1,
 				BucketHPPct:           0.15,
 				Damage:                DamageMods{LaserPct: 0.15, NuclearPct: 0.15, AntimatterPct: 0.15},
+				AttackRangePct:        -0.30, // 0.7x multiplier
 			},
 			PositionBack: {
 				AttackRangeDelta: 2,
+				AttackRangePct:   0.20, // 1.2x multiplier
 			},
 		},
 		SpecialProperties: []string{"frontal_fortress", "extreme_flank_weakness"},
@@ -363,13 +379,16 @@ var FormationCatalog = map[FormationType]FormationSpec{
 		ReconfigureTime: 100,
 		PositionBonuses: map[FormationPosition]StatMods{
 			PositionFront: {
-				SpeedDelta: 1,
+				SpeedDelta:     1,
+				AttackRangePct: -0.30, // 0.7x multiplier
 			},
 			PositionFlank: {
-				SpeedDelta: 1,
+				SpeedDelta:     1,
+				AttackRangePct: -0.20, // 0.8x multiplier
 			},
 			PositionBack: {
-				SpeedDelta: 1,
+				SpeedDelta:     1,
+				AttackRangePct: 0.20, // 1.2x multiplier
 			},
 		},
 		SpecialProperties: []string{"dispersed", "anti_aoe", "splash_resistant"},
