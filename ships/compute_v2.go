@@ -623,7 +623,7 @@ func ComputeStackAttackRange(stack *ShipStack, now time.Time) int {
 		// Get loadout modifiers (gems, bio, abilities)
 		loadout := stack.GetOrInitLoadout(assignment.ShipType)
 		loadoutMods := ZeroMods()
-		
+
 		// Gems
 		for _, gem := range loadout.Sockets {
 			loadoutMods = CombineMods(loadoutMods, gem.Mods)
@@ -676,6 +676,9 @@ func ComputeStackAttackRange(stack *ShipStack, now time.Time) int {
 	if effectiveRange < 1 {
 		effectiveRange = 1 // Minimum range of 1
 	}
+	// if effectiveRange > 5000 {
+	// 	effectiveRange = 5000 // Maximum range of 5000
+	// }
 
 	return effectiveRange
 }
