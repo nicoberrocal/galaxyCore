@@ -69,7 +69,7 @@ type ShipStack struct {
 	SavedFormations        map[FormationType]FormationWithSlots `bson:"savedFormations,omitempty" json:"savedFormations,omitempty"`
 
 	// Computed stack-wide stats (cached for performance)
-	EffectiveAttackRange int `bson:"effectiveAttackRange,omitempty" json:"effectiveAttackRange,omitempty"` // Weighted attack range from formation composition
+	Range int `bson:"range,omitempty" json:"range,omitempty"` // Weighted attack range from formation composition
 
 	// Current activity and movement
 	Movement    []*MovementState `bson:"movement,omitempty" json:"movement,omitempty"`
@@ -173,14 +173,14 @@ type CombatCounters struct {
 
 // BattleState tracks combat information for stacks in free space or mining locations
 type BattleState struct {
-	IsInCombat      bool             `bson:"isInCombat"`                               // Currently engaged in battle
-	EnemyStackID    []bson.ObjectID  `bson:"enemyStackId,omitempty"`                   // Opponent stack ID
-	EnemyPlayerID   []bson.ObjectID  `bson:"enemyPlayerId,omitempty"`                  // Opponent player ID
-	BattleStartedAt time.Time        `bson:"battleStartedAt,omitempty"`                // When battle began
-	BattleLocation  string           `bson:"battleLocation,omitempty"`                 // "empty_space", "asteroid", "nebula"
-	LocationID      bson.ObjectID    `bson:"locationId,omitempty"`                     // ID of asteroid/nebula if applicable
-	ProcessedAt     time.Time        `bson:"ProcessedAt,omitempty" json:"ProcessedAt"` // Last time this state was processed
-	Counters        *CombatCounters  `bson:"counters,omitempty" json:"counters,omitempty"` // Deterministic combat counters
+	IsInCombat      bool            `bson:"isInCombat"`                                   // Currently engaged in battle
+	EnemyStackID    []bson.ObjectID `bson:"enemyStackId,omitempty"`                       // Opponent stack ID
+	EnemyPlayerID   []bson.ObjectID `bson:"enemyPlayerId,omitempty"`                      // Opponent player ID
+	BattleStartedAt time.Time       `bson:"battleStartedAt,omitempty"`                    // When battle began
+	BattleLocation  string          `bson:"battleLocation,omitempty"`                     // "empty_space", "asteroid", "nebula"
+	LocationID      bson.ObjectID   `bson:"locationId,omitempty"`                         // ID of asteroid/nebula if applicable
+	ProcessedAt     time.Time       `bson:"ProcessedAt,omitempty" json:"ProcessedAt"`     // Last time this state was processed
+	Counters        *CombatCounters `bson:"counters,omitempty" json:"counters,omitempty"` // Deterministic combat counters
 }
 
 // MovementState tracks what the stack is currently doing in free space or at mining locations
@@ -397,6 +397,22 @@ func (s *ShipStack) GetEffectiveStackSpeed() int {
 	}
 
 	return slowest
+}
+
+// UpdateStackAttackRange recalculates and caches the stack-wide effective attack range.
+// This should be called after formation changes, gem socketing, or bio tree updates.
+// The result is stored in stack.Range for quick access.
+func (s *ShipStack) UpdateStackAttackRange(now time.Time) {
+	s.Range = ComputeStackAttackRange(s, now)
+}
+
+// GetStackAttackRange returns the cached stack-wide attack range.
+// If not yet computed, it calculates and caches it first.
+func (s *ShipStack) GetStackAttackRange(now time.Time) int {
+	if s.Range == 0 {
+		s.UpdateStackAttackRange(now)
+	}
+	return s.Range
 }
 
 // UpdateFormationAssignments refreshes formation assignments after combat or bucket changes.
